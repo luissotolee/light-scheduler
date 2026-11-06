@@ -1,61 +1,140 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { NewTask, Priority, Task } from '@/types'
+import type { NewShift, Shift, WeekKey } from '@/types'
+import { useWorkspaceStore } from '@/stores/workspace'
+import { addWeeks, getWeekKey } from '@/utils/calendar'
 import { createId } from '@/utils/id'
+import { formatMinutesToHhmm, shiftsOverlap, toShiftMinutes } from '@/utils/shifts'
+
+function dateFromWeekKey(weekKey: WeekKey): Date {
+  const [year, month, day] = weekKey.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
 
 export const useSchedulerStore = defineStore('scheduler', () => {
-  const tasks = ref<Task[]>([])
+  const draft = ref<NewShift | null>(null)
+  const error = ref<string | null>(null)
 
-  const total = computed(() => tasks.value.length)
-  const completed = computed(() => tasks.value.filter((task) => task.done).length)
-  const remaining = computed(() => total.value - completed.value)
-  const progress = computed(() =>
-    total.value === 0 ? 0 : Math.round((completed.value / total.value) * 100),
-  )
+  function workspace() {
+    return useWorkspaceStore()
+  }
 
-  function addTask(payload: NewTask): Task | null {
-    const title = payload.title.trim()
-    if (!title) return null
+  const currentWeekKey = computed(() => workspace().currentWeekKey)
+  const currentWeekShifts = computed(() => workspace().currentWeekShifts)
+  const members = computed(() => workspace().members)
+  const shiftCount = computed(() => currentWeekShifts.value.length)
 
-    const task: Task = {
-      id: createId(),
-      title,
-      priority: payload.priority,
-      done: false,
-      createdAt: Date.now(),
+  function moveWeek(delta: number): void {
+    const nextDate = addWeeks(dateFromWeekKey(currentWeekKey.value), delta)
+    workspace().setCurrentWeekKey(getWeekKey(nextDate))
+    error.value = null
+  }
+
+  function setWeekKey(weekKey: WeekKey): void {
+    workspace().setCurrentWeekKey(weekKey)
+    error.value = null
+  }
+
+  function goToNextWeek(): void {
+    moveWeek(1)
+  }
+
+  function goToPreviousWeek(): void {
+    moveWeek(-1)
+  }
+
+  function findOverlap(
+    candidate: { memberId: string; weekday: Shift['weekday']; startMinute: number; endMinute: number },
+    ignoreId?: string,
+  ): boolean {
+    return currentWeekShifts.value.some(
+      (shift) =>
+        shift.id !== ignoreId &&
+        shift.memberId === candidate.memberId &&
+        shift.weekday === candidate.weekday &&
+        shiftsOverlap(shift, candidate),
+    )
+  }
+
+  function addShift(payload: NewShift): Shift | null {
+    const range = toShiftMinutes(payload.start, payload.end)
+    if (!range) {
+      error.value = 'Shift times must be valid and start before end'
+      return null
     }
-    tasks.value.push(task)
-    return task
+
+    const candidate = {
+      memberId: payload.memberId,
+      weekday: payload.weekday,
+      ...range,
+    }
+
+    if (findOverlap(candidate)) {
+      error.value = 'Shift overlaps an existing shift for this member'
+      return null
+    }
+
+    const shift: Shift = { id: createId(), ...candidate }
+    workspace().setShiftsForWeek(currentWeekKey.value, [...currentWeekShifts.value, shift])
+    error.value = null
+    return shift
   }
 
-  function removeTask(id: string): void {
-    tasks.value = tasks.value.filter((task) => task.id !== id)
+  function removeShift(id: string): void {
+    workspace().setShiftsForWeek(
+      currentWeekKey.value,
+      currentWeekShifts.value.filter((shift) => shift.id !== id),
+    )
   }
 
-  function toggleTask(id: string): void {
-    const task = tasks.value.find((item) => item.id === id)
-    if (task) task.done = !task.done
+  function updateShift(id: string, patch: Partial<NewShift>): void {
+    const existing = currentWeekShifts.value.find((shift) => shift.id === id)
+    if (!existing) return
+
+    const start = patch.start ?? formatMinutesToHhmm(existing.startMinute)
+    const end = patch.end ?? formatMinutesToHhmm(existing.endMinute)
+    const range = toShiftMinutes(start, end)
+    if (!range) {
+      error.value = 'Shift times must be valid and start before end'
+      return
+    }
+
+    const candidate = {
+      id,
+      memberId: patch.memberId ?? existing.memberId,
+      weekday: patch.weekday ?? existing.weekday,
+      ...range,
+    }
+
+    if (findOverlap(candidate, id)) {
+      error.value = 'Shift overlaps an existing shift for this member'
+      return
+    }
+
+    workspace().setShiftsForWeek(
+      currentWeekKey.value,
+      currentWeekShifts.value.map((shift) => (shift.id === id ? candidate : shift)),
+    )
+    error.value = null
   }
 
-  function clearCompleted(): void {
-    tasks.value = tasks.value.filter((task) => !task.done)
-  }
-
-  function setPriority(id: string, priority: Priority): void {
-    const task = tasks.value.find((item) => item.id === id)
-    if (task) task.priority = priority
+  function clearError(): void {
+    error.value = null
   }
 
   return {
-    tasks,
-    total,
-    completed,
-    remaining,
-    progress,
-    addTask,
-    removeTask,
-    toggleTask,
-    clearCompleted,
-    setPriority,
+    draft,
+    error,
+    currentWeekKey,
+    currentWeekShifts,
+    members,
+    shiftCount,
+    setWeekKey,
+    goToNextWeek,
+    goToPreviousWeek,
+    addShift,
+    removeShift,
+    updateShift,
+    clearError,
   }
 })

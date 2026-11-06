@@ -1,44 +1,25 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
-import { nextTick } from 'vue'
+import { describe, expect, it } from 'vitest'
+import { mount, RouterLinkStub } from '@vue/test-utils'
 import HomeView from '@/views/HomeView.vue'
-import { useSchedulerStore } from '@/stores/scheduler'
 
 describe('HomeView', () => {
-  let pinia: ReturnType<typeof createPinia>
+  it('describes the application purpose', () => {
+    const wrapper = mount(HomeView, { global: { stubs: { RouterLink: RouterLinkStub } } })
 
-  beforeEach(() => {
-    pinia = createPinia()
-    setActivePinia(pinia)
+    expect(wrapper.text()).toContain('Light Scheduler')
+    expect(wrapper.text()).toContain('frontend-only')
+    expect(wrapper.text()).toContain('CSV files')
   })
 
-  it('adds tasks submitted through the form', async () => {
-    const wrapper = mount(HomeView, { global: { plugins: [pinia] } })
-    const store = useSchedulerStore()
+  it('links to every feature page and the scheduler CTA', () => {
+    const wrapper = mount(HomeView, { global: { stubs: { RouterLink: RouterLinkStub } } })
+    const links = wrapper.findAllComponents(RouterLinkStub)
+    const paths = links.map((link) => link.props('to'))
 
-    await wrapper.find('input').setValue('Ship release')
-    await wrapper.find('form').trigger('submit')
-    await nextTick()
-
-    expect(store.tasks.map((task) => task.title)).toEqual(['Ship release'])
-    expect(wrapper.text()).toContain('Ship release')
-  })
-
-  it('hides the clear action until something is completed', async () => {
-    const wrapper = mount(HomeView, { global: { plugins: [pinia] } })
-    const store = useSchedulerStore()
-
-    store.addTask({ title: 'one', priority: 'low' })
-    await nextTick()
-    expect(wrapper.find('.home__clear').exists()).toBe(false)
-
-    store.toggleTask(store.tasks[0].id)
-    await nextTick()
-    const clear = wrapper.find('.home__clear')
-    expect(clear.exists()).toBe(true)
-
-    await clear.trigger('click')
-    expect(store.tasks).toHaveLength(0)
+    expect(paths).toContain('/scheduler')
+    expect(paths).toContain('/employees')
+    expect(paths).toContain('/summary')
+    expect(paths).toContain('/history')
+    expect(paths).toContain('/csv')
   })
 })

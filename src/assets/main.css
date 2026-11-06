@@ -6,9 +6,14 @@
   --color-text: #e2e8f0;
   --color-muted: #94a3b8;
   --color-accent: #38bdf8;
+  --color-danger: #f87171;
   --radius-sm: 6px;
   --radius-md: 10px;
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --layout-max-width: 72rem;
+  --header-height: 3.5rem;
+  --nav-gap: 1rem;
+  --space-page-x: clamp(1rem, 4vw, 2.5rem);
 
   color-scheme: dark;
   color: var(--color-text);

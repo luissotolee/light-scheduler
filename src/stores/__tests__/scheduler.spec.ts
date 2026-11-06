@@ -1,102 +1,154 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSchedulerStore } from '@/stores/scheduler'
+import { useWorkspaceStore } from '@/stores/workspace'
+import type { NewShift } from '@/types'
+
+const baseShift: NewShift = {
+  memberId: 'member-1',
+  weekday: 'monday',
+  start: '09:00',
+  end: '12:00',
+}
 
 describe('scheduler store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  it('starts empty with zeroed stats', () => {
+  it('exposes the workspace current week and members', () => {
     const store = useSchedulerStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([{ id: 'member-1', name: 'Ada' }])
 
-    expect(store.tasks).toEqual([])
-    expect(store.total).toBe(0)
-    expect(store.completed).toBe(0)
-    expect(store.remaining).toBe(0)
-    expect(store.progress).toBe(0)
+    expect(store.currentWeekKey).toBe(workspace.currentWeekKey)
+    expect(store.currentWeekShifts).toEqual([])
+    expect(store.members).toEqual([{ id: 'member-1', name: 'Ada' }])
+    expect(store.shiftCount).toBe(0)
+    expect(store.draft).toBeNull()
+    expect(store.error).toBeNull()
   })
 
-  it('adds a trimmed task with the given priority', () => {
+  it('sets the shared week key', () => {
     const store = useSchedulerStore()
+    const workspace = useWorkspaceStore()
 
-    const task = store.addTask({ title: '  write tests  ', priority: 'high' })
+    store.setWeekKey('2026-11-02')
 
-    expect(task).not.toBeNull()
-    expect(store.tasks).toHaveLength(1)
-    expect(task?.title).toBe('write tests')
-    expect(task?.priority).toBe('high')
-    expect(task?.done).toBe(false)
-    expect(task?.id).toBeTruthy()
+    expect(store.currentWeekKey).toBe('2026-11-02')
+    expect(workspace.currentWeekKey).toBe('2026-11-02')
   })
 
-  it('rejects blank titles', () => {
+  it('moves one week forward and backward', () => {
     const store = useSchedulerStore()
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
 
-    const result = store.addTask({ title: '   ', priority: 'low' })
+    store.goToNextWeek()
+    expect(store.currentWeekKey).toBe('2026-11-09')
 
-    expect(result).toBeNull()
-    expect(store.tasks).toHaveLength(0)
+    store.goToPreviousWeek()
+    expect(store.currentWeekKey).toBe('2026-11-02')
+
+    store.goToPreviousWeek()
+    expect(store.currentWeekKey).toBe('2026-10-26')
   })
 
-  it('toggles completion and updates computed stats', () => {
+  it('adds a shift using canonical minutes', () => {
     const store = useSchedulerStore()
-    const first = store.addTask({ title: 'first', priority: 'low' })
-    store.addTask({ title: 'second', priority: 'medium' })
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
 
-    store.toggleTask(first!.id)
+    const shift = store.addShift(baseShift)
 
-    expect(store.total).toBe(2)
-    expect(store.completed).toBe(1)
-    expect(store.remaining).toBe(1)
-    expect(store.progress).toBe(50)
+    expect(shift).not.toBeNull()
+    expect(shift?.startMinute).toBe(540)
+    expect(shift?.endMinute).toBe(720)
+    expect(store.shiftCount).toBe(1)
+    expect(workspace.schedules['2026-11-02']).toEqual([shift])
+    expect(store.error).toBeNull()
   })
 
-  it('ignores toggles for unknown ids', () => {
+  it('rejects invalid times', () => {
     const store = useSchedulerStore()
-    store.addTask({ title: 'only', priority: 'low' })
 
-    store.toggleTask('missing')
-
-    expect(store.completed).toBe(0)
+    expect(store.addShift({ ...baseShift, start: '9:00' })).toBeNull()
+    expect(store.addShift({ ...baseShift, start: '12:00', end: '09:00' })).toBeNull()
+    expect(store.shiftCount).toBe(0)
+    expect(store.error).toBe('Shift times must be valid and start before end')
   })
 
-  it('removes a task by id', () => {
+  it('rejects overlapping shifts for the same member and weekday', () => {
     const store = useSchedulerStore()
-    const task = store.addTask({ title: 'remove me', priority: 'high' })
-    store.addTask({ title: 'keep me', priority: 'low' })
+    store.addShift(baseShift)
 
-    store.removeTask(task!.id)
+    const overlap = store.addShift({ ...baseShift, start: '11:00', end: '13:00' })
 
-    expect(store.tasks.map((item) => item.title)).toEqual(['keep me'])
+    expect(overlap).toBeNull()
+    expect(store.shiftCount).toBe(1)
+    expect(store.error).toBe('Shift overlaps an existing shift for this member')
   })
 
-  it('clears completed tasks only', () => {
+  it('allows touching ranges and other members or weekdays', () => {
     const store = useSchedulerStore()
-    const done = store.addTask({ title: 'done', priority: 'low' })
-    store.addTask({ title: 'pending', priority: 'high' })
-    store.toggleTask(done!.id)
+    store.addShift(baseShift)
 
-    store.clearCompleted()
-
-    expect(store.tasks.map((item) => item.title)).toEqual(['pending'])
+    expect(store.addShift({ ...baseShift, start: '12:00', end: '13:00' })).not.toBeNull()
+    expect(store.addShift({ ...baseShift, memberId: 'member-2' })).not.toBeNull()
+    expect(store.addShift({ ...baseShift, weekday: 'tuesday' })).not.toBeNull()
+    expect(store.shiftCount).toBe(4)
   })
 
-  it('updates a task priority', () => {
+  it('removes a shift and ignores unknown ids', () => {
     const store = useSchedulerStore()
-    const task = store.addTask({ title: 'reprioritize', priority: 'low' })
+    const shift = store.addShift(baseShift)
 
-    store.setPriority(task!.id, 'high')
+    store.removeShift('missing')
+    expect(store.shiftCount).toBe(1)
 
-    expect(store.tasks[0].priority).toBe('high')
+    store.removeShift(shift!.id)
+    expect(store.shiftCount).toBe(0)
   })
 
-  it('does nothing when setting priority for unknown ids', () => {
+  it('updates and revalidates a shift', () => {
     const store = useSchedulerStore()
-    store.addTask({ title: 'keep', priority: 'low' })
+    const shift = store.addShift(baseShift)
 
-    store.setPriority('missing', 'high')
+    store.updateShift(shift!.id, { start: '10:00', end: '11:00' })
 
-    expect(store.tasks[0].priority).toBe('low')
+    expect(store.currentWeekShifts[0]).toMatchObject({ startMinute: 600, endMinute: 660 })
+    expect(store.error).toBeNull()
+  })
+
+  it('rejects invalid shift updates', () => {
+    const store = useSchedulerStore()
+    const shift = store.addShift(baseShift)
+
+    store.updateShift(shift!.id, { start: '13:00', end: '12:00' })
+
+    expect(store.currentWeekShifts[0]).toMatchObject({ startMinute: 540, endMinute: 720 })
+    expect(store.error).toBe('Shift times must be valid and start before end')
+  })
+
+  it('rejects update overlaps while ignoring the edited shift', () => {
+    const store = useSchedulerStore()
+    store.addShift(baseShift)
+    const second = store.addShift({ ...baseShift, start: '12:00', end: '13:00' })
+
+    store.updateShift(second!.id, { start: '11:00' })
+
+    expect(store.currentWeekShifts[1]).toMatchObject({ startMinute: 720, endMinute: 780 })
+    expect(store.error).toBe('Shift overlaps an existing shift for this member')
+  })
+
+  it('ignores updates for unknown shifts and clears errors', () => {
+    const store = useSchedulerStore()
+    store.addShift({ ...baseShift, start: 'invalid' })
+    expect(store.error).not.toBeNull()
+
+    store.updateShift('missing', { start: '10:00' })
+    store.clearError()
+
+    expect(store.error).toBeNull()
   })
 })
