@@ -7,6 +7,13 @@
   --color-muted: #94a3b8;
   --color-accent: #38bdf8;
   --color-danger: #f87171;
+  --color-duty-manager: #fbbf24;
+  --color-duty-head-manager: #f472b6;
+  --color-duty-assistant: #a78bfa;
+  --color-duty-employee: #34d399;
+  --color-contract-fulltime: #60a5fa;
+  --color-contract-part-time: #fbbf24;
+  --color-contract-weekends: #f472b6;
   --radius-sm: 6px;
   --radius-md: 10px;
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

@@ -1,15 +1,43 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import EmployeeFormDialog from '@/components/EmployeeFormDialog.vue'
+import EmployeeTable from '@/components/EmployeeTable.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import HolidayWeeksDialog from '@/components/HolidayWeeksDialog.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { useEmployeesStore } from '@/stores/employees'
+import type { HolidayWeek, NewTeamMember } from '@/types'
 
 const store = useEmployeesStore()
-const { search, count, filteredMembers } = storeToRefs(store)
+const {
+  search,
+  count,
+  filteredMembers,
+  formVisible,
+  editingMember,
+  holidayVisible,
+  holidayTarget,
+} = storeToRefs(store)
 
 function handleSearch(event: Event): void {
   const target = event.target
   if (target instanceof HTMLInputElement) store.setSearch(target.value)
+}
+
+function handleFormVisibility(visible: boolean): void {
+  if (!visible) store.closeForm()
+}
+
+function handleHolidayVisibility(visible: boolean): void {
+  if (!visible) store.closeHolidays()
+}
+
+function handleSubmit(payload: NewTeamMember): void {
+  store.submitForm(payload)
+}
+
+function handleSaveHolidays(holidays: HolidayWeek[]): void {
+  if (holidayTarget.value) store.setHolidays(holidayTarget.value.id, holidays)
 }
 </script>
 
@@ -20,7 +48,12 @@ function handleSearch(event: Event): void {
       description="Manage the employee records used when building weekly schedules."
     >
       <template #actions>
-        <button type="button" class="employees__button" data-test="add-employee" disabled>
+        <button
+          type="button"
+          class="employees__button"
+          data-test="add-employee"
+          @click="store.openCreate"
+        >
           Add employee
         </button>
       </template>
@@ -42,15 +75,35 @@ function handleSearch(event: Event): void {
     <EmptyState
       v-if="filteredMembers.length === 0"
       :title="count === 0 ? 'No employees yet' : 'No matching employees'"
-      description="Employee editing is coming next. The list is already wired to the shared workspace data."
+      :description="
+        count === 0
+          ? 'Add your first employee to start building schedules.'
+          : 'Try a different name or email.'
+      "
     />
 
-    <ul v-else class="employees__list">
-      <li v-for="member in filteredMembers" :key="member.id" class="employees__member">
-        <span class="employees__name">{{ member.name }}</span>
-        <span v-if="member.email" class="employees__email">{{ member.email }}</span>
-      </li>
-    </ul>
+    <EmployeeTable
+      v-else
+      :members="filteredMembers"
+      @edit="store.openEdit"
+      @holidays="store.openHolidays"
+      @remove="store.removeMember"
+    />
+
+    <EmployeeFormDialog
+      :visible="formVisible"
+      :member="editingMember"
+      @update:visible="handleFormVisibility"
+      @submit="handleSubmit"
+    />
+
+    <HolidayWeeksDialog
+      :visible="holidayVisible"
+      :member-name="holidayTarget?.name ?? ''"
+      :selected="holidayTarget?.holidays ?? []"
+      @update:visible="handleHolidayVisibility"
+      @save="handleSaveHolidays"
+    />
   </section>
 </template>
 
@@ -108,36 +161,18 @@ function handleSearch(event: Event): void {
   cursor: pointer;
 }
 
+.employees__button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
 .employees__button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
 
-.employees__list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.employees__member {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-}
-
-.employees__name {
-  font-weight: 600;
-}
-
-.employees__email {
-  color: var(--color-muted);
+.employees__button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 </style>

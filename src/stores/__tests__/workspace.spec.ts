@@ -4,7 +4,15 @@ import { useWorkspaceStore } from '@/stores/workspace'
 import type { Shift, TeamMember } from '@/types'
 import { getWeekKey } from '@/utils/calendar'
 
-const member: TeamMember = { id: 'member-1', name: 'Ada', email: 'ada@example.com' }
+const member: TeamMember = {
+  id: 'member-1',
+  name: 'Ada',
+  duty: 'employee',
+  contract: 'fulltime',
+  weeklyHours: 40,
+  holidays: [],
+  email: 'ada@example.com',
+}
 const shift: Shift = {
   id: 'shift-1',
   memberId: member.id,

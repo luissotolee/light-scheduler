@@ -1,10 +1,39 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import PageHeader from '@/components/PageHeader.vue'
 import { useCsvStore } from '@/stores/csv'
 
+const MAX_CSV_BYTES = 5 * 1024 * 1024
+
 const store = useCsvStore()
 const { status, canExportMembers, canExportSchedule } = storeToRefs(store)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+function openEmployeePicker(): void {
+  fileInput.value?.click()
+}
+
+async function handleEmployeeFile(event: Event): Promise<void> {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement)) return
+
+  const file = target.files?.[0]
+  target.value = ''
+  if (!file) return
+
+  if (file.size > MAX_CSV_BYTES) {
+    store.setError('CSV file is too large (max 5 MB)')
+    return
+  }
+
+  try {
+    const text = await file.text()
+    store.importMembers(text)
+  } catch {
+    store.setError('Unable to read the selected file')
+  }
+}
 </script>
 
 <template>
@@ -44,9 +73,24 @@ const { status, canExportMembers, canExportSchedule } = storeToRefs(store)
 
     <div class="csv__panel">
       <h2 class="csv__heading">Import</h2>
-      <p class="csv__copy">Uploading employees and schedules is coming soon.</p>
+      <p class="csv__copy">
+        Upload an employees CSV to replace the current list. Schedule upload is coming soon.
+      </p>
       <div class="csv__actions">
-        <button type="button" class="csv__button" data-test="upload-employees" disabled>
+        <input
+          ref="fileInput"
+          class="csv__file"
+          type="file"
+          accept=".csv,text/csv"
+          data-test="employee-file"
+          @change="handleEmployeeFile"
+        />
+        <button
+          type="button"
+          class="csv__button"
+          data-test="upload-employees"
+          @click="openEmployeePicker"
+        >
           Upload Employees
         </button>
         <button type="button" class="csv__button" data-test="upload-schedule" disabled>
@@ -98,6 +142,10 @@ const { status, canExportMembers, canExportSchedule } = storeToRefs(store)
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.csv__file {
+  display: none;
 }
 
 .csv__button {

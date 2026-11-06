@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import type { TeamMember } from '@/types'
 import { useWorkspaceStore } from '@/stores/workspace'
-import { toCsv } from '@/utils/csv'
+import { parseCsv, toCsv } from '@/utils/csv'
 import { downloadTextFile, timestampedName } from '@/utils/download'
+import { EMPLOYEE_HEADERS, employeesToRows, validateEmployees } from '@/utils/employee'
+import { createId } from '@/utils/id'
 import { formatMinutesToHhmm } from '@/utils/shifts'
 
 export type CsvStatusState = 'idle' | 'success' | 'error'
@@ -29,10 +32,52 @@ export const useCsvStore = defineStore('csv', () => {
       return
     }
 
-    const rows = members.map((member) => [member.name, member.email ?? ''])
-    const text = `\uFEFF${toCsv(['name', 'email'], rows)}`
+    const text = `\uFEFF${toCsv([...EMPLOYEE_HEADERS], employeesToRows(members))}`
     downloadTextFile(timestampedName('employees', 'csv'), text)
     status.value = { state: 'success', message: 'Employees exported' }
+  }
+
+  function importMembers(text: string): void {
+    const parsed = parseCsv(text)
+    if (!parsed.ok) {
+      status.value = { state: 'error', message: parsed.error }
+      return
+    }
+
+    const validated = validateEmployees(parsed.headers, parsed.rows)
+    if (!validated.ok) {
+      const first = validated.errors[0]
+      status.value = {
+        state: 'error',
+        message: first ? `Row ${first.row}: ${first.message}` : 'Import failed',
+      }
+      return
+    }
+
+    const members: TeamMember[] = validated.data.map((member) => {
+      const email = member.email?.trim()
+      const phone = member.phone?.trim()
+      return {
+        id: createId(),
+        name: member.name,
+        duty: member.duty,
+        contract: member.contract,
+        weeklyHours: member.weeklyHours,
+        holidays: member.holidays ?? [],
+        ...(email ? { email } : {}),
+        ...(phone ? { phone } : {}),
+      }
+    })
+
+    workspace().setMembers(members)
+    status.value = {
+      state: 'success',
+      message: `Imported ${members.length} ${members.length === 1 ? 'employee' : 'employees'}`,
+    }
+  }
+
+  function setError(message: string): void {
+    status.value = { state: 'error', message }
   }
 
   function exportSchedule(): void {
@@ -66,6 +111,8 @@ export const useCsvStore = defineStore('csv', () => {
     canExportSchedule,
     exportMembers,
     exportSchedule,
+    importMembers,
+    setError,
     resetStatus,
   }
 })

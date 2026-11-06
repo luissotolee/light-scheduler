@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSchedulerStore } from '@/stores/scheduler'
 import { useWorkspaceStore } from '@/stores/workspace'
-import type { NewShift } from '@/types'
+import type { NewShift, TeamMember } from '@/types'
 
 const baseShift: NewShift = {
   memberId: 'member-1',
@@ -19,11 +19,19 @@ describe('scheduler store', () => {
   it('exposes the workspace current week and members', () => {
     const store = useSchedulerStore()
     const workspace = useWorkspaceStore()
-    workspace.setMembers([{ id: 'member-1', name: 'Ada' }])
+    const member: TeamMember = {
+      id: 'member-1',
+      name: 'Ada',
+      duty: 'employee',
+      contract: 'fulltime',
+      weeklyHours: 40,
+      holidays: [],
+    }
+    workspace.setMembers([member])
 
     expect(store.currentWeekKey).toBe(workspace.currentWeekKey)
     expect(store.currentWeekShifts).toEqual([])
-    expect(store.members).toEqual([{ id: 'member-1', name: 'Ada' }])
+    expect(store.members).toEqual([member])
     expect(store.shiftCount).toBe(0)
     expect(store.draft).toBeNull()
     expect(store.error).toBeNull()

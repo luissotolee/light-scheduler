@@ -2,7 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   addWeeks,
   formatWeekRange,
+  getIsoWeek,
+  getIsoWeekStart,
+  getIsoWeeksForYear,
+  getIsoWeeksInYear,
   getWeekKey,
+  holidayToWeekKey,
   startOfWeek,
   toLocalIsoDate,
 } from '@/utils/calendar'
@@ -73,5 +78,84 @@ describe('addWeeks', () => {
 describe('formatWeekRange', () => {
   it('formats a Monday-to-Sunday range', () => {
     expect(formatWeekRange('2026-11-02')).toBe('Nov 2 – Nov 8, 2026')
+  })
+})
+
+describe('getIsoWeek', () => {
+  it('returns the ISO year and week for a mid-year date', () => {
+    expect(getIsoWeek(new Date(2026, 6, 15))).toEqual({ year: 2026, week: 29 })
+  })
+
+  it('handles January 1 that belongs to the previous ISO year', () => {
+    expect(getIsoWeek(new Date(2026, 0, 1))).toEqual({ year: 2026, week: 1 })
+    expect(getIsoWeek(new Date(2027, 0, 1))).toEqual({ year: 2026, week: 53 })
+  })
+
+  it('handles December 31 at the end of a 52- or 53-week year', () => {
+    expect(getIsoWeek(new Date(2026, 11, 31))).toEqual({ year: 2026, week: 53 })
+    expect(getIsoWeek(new Date(2027, 11, 31))).toEqual({ year: 2027, week: 52 })
+  })
+})
+
+describe('getIsoWeekStart', () => {
+  it('returns the Monday of week 1, including days in the previous year', () => {
+    expect(toLocalIsoDate(getIsoWeekStart(2026, 1))).toBe('2025-12-29')
+    expect(getIsoWeekStart(2026, 1).getDay()).toBe(1)
+  })
+
+  it('returns the Monday of later weeks', () => {
+    expect(toLocalIsoDate(getIsoWeekStart(2026, 29))).toBe('2026-07-13')
+    expect(toLocalIsoDate(getIsoWeekStart(2026, 53))).toBe('2026-12-28')
+  })
+
+  it('is the inverse of getIsoWeek', () => {
+    for (const week of [1, 10, 29, 52, 53]) {
+      expect(getIsoWeek(getIsoWeekStart(2026, week))).toEqual({ year: 2026, week })
+    }
+  })
+})
+
+describe('getIsoWeeksInYear', () => {
+  it('distinguishes 52- and 53-week years', () => {
+    expect(getIsoWeeksInYear(2020)).toBe(53)
+    expect(getIsoWeeksInYear(2021)).toBe(52)
+    expect(getIsoWeeksInYear(2026)).toBe(53)
+    expect(getIsoWeeksInYear(2027)).toBe(52)
+  })
+})
+
+describe('getIsoWeeksForYear', () => {
+  it('builds labelled options for every ISO week', () => {
+    const weeks = getIsoWeeksForYear(2027)
+
+    expect(weeks).toHaveLength(52)
+    expect(weeks[0]).toEqual({
+      year: 2027,
+      week: 1,
+      label: 'Week 1 — Jan 4 – Jan 10',
+    })
+    expect(weeks[51]).toEqual({
+      year: 2027,
+      week: 52,
+      label: 'Week 52 — Dec 27 – Jan 2',
+    })
+  })
+
+  it('includes week 53 in a 53-week year', () => {
+    const weeks = getIsoWeeksForYear(2026)
+
+    expect(weeks).toHaveLength(53)
+    expect(weeks[52]).toEqual({
+      year: 2026,
+      week: 53,
+      label: 'Week 53 — Dec 28 – Jan 3',
+    })
+  })
+})
+
+describe('holidayToWeekKey', () => {
+  it('maps an ISO holiday week to its Monday week key', () => {
+    expect(holidayToWeekKey({ year: 2026, week: 1 })).toBe('2025-12-29')
+    expect(holidayToWeekKey({ year: 2026, week: 29 })).toBe('2026-07-13')
   })
 })

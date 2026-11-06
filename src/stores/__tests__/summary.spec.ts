@@ -48,8 +48,22 @@ describe('summary store', () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')
     workspace.setMembers([
-      { id: 'member-1', name: 'Ada' },
-      { id: 'member-2', name: 'Bo' },
+      {
+        id: 'member-1',
+        name: 'Ada',
+        duty: 'employee',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+      },
+      {
+        id: 'member-2',
+        name: 'Bo',
+        duty: 'employee',
+        contract: 'part_time',
+        weeklyHours: 20,
+        holidays: [],
+      },
     ])
     workspace.setShiftsForWeek('2026-11-02', shifts)
 
@@ -61,7 +75,16 @@ describe('summary store', () => {
   it('resolves member names and labels unknown members', () => {
     const store = useSummaryStore()
     const workspace = useWorkspaceStore()
-    workspace.setMembers([{ id: 'member-1', name: 'Ada' }])
+    workspace.setMembers([
+      {
+        id: 'member-1',
+        name: 'Ada',
+        duty: 'manager',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+      },
+    ])
 
     expect(store.memberNameOf('member-1')).toBe('Ada')
     expect(store.memberNameOf('missing')).toBe('Unknown member')
