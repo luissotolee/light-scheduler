@@ -1,0 +1,75 @@
+export type CsvParseResult =
+  | { ok: true; headers: string[]; rows: string[][] }
+  | { ok: false; error: string }
+
+export function inferDelimiter(text: string): string {
+  const firstLine = text.split('\n', 1)[0] ?? ''
+  if (firstLine.includes(',')) return ','
+  if (firstLine.includes(';')) return ';'
+  if (firstLine.includes('\t')) return '\t'
+  return ','
+}
+
+export function parseCsv(input: string): CsvParseResult {
+  const text = input.replace(/^\uFEFF/, '')
+  if (!text.trim()) return { ok: false, error: 'CSV file is empty' }
+
+  const delimiter = inferDelimiter(text)
+  const records: string[][] = []
+  let record: string[] = []
+  let field = ''
+  let inQuotes = false
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[index + 1] === '"') {
+          field += '"'
+          index += 1
+        } else {
+          inQuotes = false
+        }
+      } else {
+        field += char
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inQuotes = true
+    } else if (char === delimiter) {
+      record.push(field)
+      field = ''
+    } else if (char === '\n') {
+      record.push(field)
+      records.push(record)
+      record = []
+      field = ''
+    } else if (char !== '\r') {
+      field += char
+    }
+  }
+
+  if (inQuotes) return { ok: false, error: 'Unterminated quoted field' }
+
+  if (field.length > 0 || record.length > 0) {
+    record.push(field)
+    records.push(record)
+  }
+
+  const nonEmpty = records.filter((row) => row.some((cell) => cell.trim() !== ''))
+  if (nonEmpty.length === 0) return { ok: false, error: 'CSV file is empty' }
+
+  const [headers, ...rows] = nonEmpty
+  return { ok: true, headers, rows }
+}
+
+export function toCsv(headers: string[], rows: (string | number | boolean)[][]): string {
+  const escape = (cell: string | number | boolean): string => {
+    const value = String(cell)
+    return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+  }
+  return [headers, ...rows].map((row) => row.map(escape).join(',')).join('\r\n')
+}
