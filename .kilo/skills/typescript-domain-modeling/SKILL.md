@@ -5,9 +5,11 @@ description: Model shared domain types and keep the strict TypeScript codebase t
 
 # TypeScript Domain Modeling
 
+Read `workspace.md` first for the module map and where files belong.
+
 ## 1. Single source of truth
 
-All shared domain shapes live in `src/types.ts`. Do not declare inline interfaces for shared shapes in stores, components, or utilities.
+All shared domain shapes live in `src/types.ts`. Do not declare inline interfaces for shared shapes in stores, components, or utilities. Types used by only one module may live in `src/modules/<module>/types.ts`.
 
 - Use `interface` for entities (`Task`, `TeamMember`, `Shift`).
 - Use `type` for unions and aliases (`Priority`, `Weekday`, `Result<T>`).
@@ -36,7 +38,7 @@ export interface NewTask {
 
 ```ts
 import type { NewTask, Task } from '@/types'
-import { createId } from '@/utils/id'
+import { createId } from '@/shared/utils/id'
 ```
 
 Do not mix a type and a value in a single import when the type is erased. Avoid `import { type Foo }` unless the project already uses it; the established style is a separate `import type` line.

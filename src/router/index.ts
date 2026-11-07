@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouterHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
+import HomeView from '@/modules/home/views/HomeView.vue'
 
 export function createAppRouter(
   history: RouterHistory = createWebHashHistory(import.meta.env.BASE_URL),
@@ -12,27 +12,27 @@ export function createAppRouter(
       {
         path: '/scheduler',
         name: 'scheduler',
-        component: () => import('@/views/SchedulerView.vue'),
+        component: () => import('@/modules/scheduler/views/SchedulerView.vue'),
       },
       {
         path: '/employees',
         name: 'employees',
-        component: () => import('@/views/EmployeesView.vue'),
+        component: () => import('@/modules/employees/views/EmployeesView.vue'),
       },
       {
         path: '/summary',
         name: 'summary',
-        component: () => import('@/views/SummaryView.vue'),
+        component: () => import('@/modules/summary/views/SummaryView.vue'),
       },
       {
         path: '/history',
         name: 'history',
-        component: () => import('@/views/HistoryView.vue'),
+        component: () => import('@/modules/history/views/HistoryView.vue'),
       },
       {
         path: '/csv',
         name: 'csv',
-        component: () => import('@/views/CsvView.vue'),
+        component: () => import('@/modules/csv/views/CsvView.vue'),
       },
     ],
   })

@@ -5,6 +5,8 @@ description: Model and validate schedules: shifts defined as an hour range per t
 
 # Scheduling Calendar
 
+Read `workspace.md` first for the module map and where files belong.
+
 ## 1. Data model
 
 Add these future-proofed types to `src/types.ts`:
@@ -32,7 +34,7 @@ Canonical comparison always uses `startMinute` / `endMinute`. `'HH:mm'` is input
 
 ## 2. Hour-range validation
 
-Put pure helpers in `src/utils/shifts.ts`:
+Put pure helpers in `src/shared/utils/shifts.ts`:
 
 ```ts
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/
@@ -80,7 +82,7 @@ export function toShiftMinutes(
 
 ## 4. Current and following calendars
 
-Derive the views; do not persist them. Add ISO-week helpers in `src/utils/calendar.ts`:
+Derive the views; do not persist them. Add ISO-week helpers in `src/shared/utils/calendar.ts`:
 
 ```ts
 function toLocalIsoDate(date: Date): string {

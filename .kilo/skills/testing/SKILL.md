@@ -5,14 +5,16 @@ description: Write Vitest unit tests for stores, components, and views with fres
 
 # Testing
 
+Read `workspace.md` first for the module map and where files belong.
+
 ## 1. Placement and naming
 
 Co-locate specs next to the source in `__tests__/`:
 
-- `src/stores/__tests__/*.spec.ts`
-- `src/components/__tests__/*.spec.ts`
-- `src/views/__tests__/*.spec.ts`
-- `src/utils/__tests__/*.spec.ts`
+- `src/modules/<module>/__tests__/*.spec.ts`
+- `src/shared/components/__tests__/*.spec.ts`
+- `src/shared/stores/__tests__/*.spec.ts`
+- `src/shared/utils/__tests__/*.spec.ts`
 
 The Vitest glob is `src/**/*.spec.ts`. The root `src/__tests__/App.spec.ts` tests `App.vue`.
 
@@ -23,8 +25,8 @@ Import Vitest APIs explicitly and app modules through `@/`:
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { useSchedulerStore } from '@/stores/scheduler'
-import TaskForm from '@/components/TaskForm.vue'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import TaskForm from '@/shared/components/TaskForm.vue'
 ```
 
 ## 3. Store tests
@@ -34,7 +36,7 @@ Reset Pinia before each test:
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useSchedulerStore } from '@/stores/scheduler'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 
 describe('scheduler store', () => {
   beforeEach(() => {
@@ -59,7 +61,7 @@ Mount with props and assert rendered output plus emitted events:
 ```ts
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import TaskForm from '@/components/TaskForm.vue'
+import TaskForm from '@/shared/components/TaskForm.vue'
 
 describe('TaskForm', () => {
   it('emits a trimmed task on submit', async () => {
@@ -87,8 +89,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
-import HomeView from '@/views/HomeView.vue'
-import { useSchedulerStore } from '@/stores/scheduler'
+import HomeView from '@/modules/home/views/HomeView.vue'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 
 describe('HomeView', () => {
   beforeEach(() => {

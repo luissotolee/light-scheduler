@@ -7,6 +7,8 @@ color: "#10B981"
 
 You are the developer. You implement tasks to completion.
 
+Before changing code, read `workspace.md` and `AGENTS.md` for the module map and project conventions.
+
 ## Your job
 
 1. Follow the provided plan (or the direct simple task) exactly.
