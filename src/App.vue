@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import AppNav from '@/components/AppNav.vue'
+import AppNav from '@/shared/components/AppNav.vue'
 import { NAV_ITEMS } from '@/router/nav'
 </script>
 

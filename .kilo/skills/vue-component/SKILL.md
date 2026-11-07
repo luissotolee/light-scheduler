@@ -1,9 +1,11 @@
 ---
 name: vue-component
-description: Build Vue 3 single-file components and views with <script setup lang="ts">, typed defineProps/defineEmits, scoped styles using CSS custom-property design tokens, and accessibility best practices. Use when creating or editing presentational components in src/components/ or routed views in src/views/.
+description: Build Vue 3 single-file components and views with <script setup lang="ts">, typed defineProps/defineEmits, scoped styles using CSS custom-property design tokens, and accessibility best practices. Use when creating or editing presentational components in src/shared/components/ + src/modules/*/components/ or routed views in src/modules/*/views/.
 ---
 
 # Vue Component
+
+Read `workspace.md` first for the module map and where files belong.
 
 ## 1. SFC boilerplate
 
@@ -61,7 +63,7 @@ const emit = defineEmits<{
 
 ## 3. Component vs view
 
-| | Component (`src/components/`) | View (`src/views/`) |
+| | Components (`src/shared/components/`, `src/modules/*/components/`) | Views (`src/modules/*/views/`) |
 |---|---|---|
 | Responsibility | Presentational: props in, events out | Owns store/router state and composes components |
 | Pinia | Never | `useXxxStore()` + `storeToRefs` |
@@ -72,7 +74,7 @@ Views wire the store:
 
 ```ts
 import { storeToRefs } from 'pinia'
-import { useSchedulerStore } from '@/stores/scheduler'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 
 const store = useSchedulerStore()
 const { tasks, completed } = storeToRefs(store)
@@ -81,7 +83,7 @@ const { tasks, completed } = storeToRefs(store)
 Only views are registered in `src/router/index.ts`, which uses `createWebHashHistory`. New routes are lazily loaded:
 
 ```ts
-{ path: '/members', name: 'members', component: () => import('@/views/MembersView.vue') }
+{ path: '/members', name: 'members', component: () => import('@/modules/members/views/MembersView.vue') }
 ```
 
 ## 4. Styling

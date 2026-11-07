@@ -39,6 +39,29 @@ export interface NewTeamMember {
   phone?: string
 }
 
+export interface EmployeeFormInput {
+  name: string
+  duty: unknown
+  contract: unknown
+  weeklyHours: unknown
+  email: string
+  phone: string
+  holidays?: HolidayWeek[]
+}
+
+export interface EmployeeFormErrors {
+  name?: string
+  duty?: string
+  contract?: string
+  weeklyHours?: string
+  email?: string
+  phone?: string
+  holidays?: string
+}
+
+export type EmployeeFormValidation =
+  { ok: true; value: NewTeamMember } | { ok: false; errors: EmployeeFormErrors; message: string }
+
 export interface Shift {
   id: string
   memberId: string

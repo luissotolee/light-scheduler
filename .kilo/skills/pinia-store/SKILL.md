@@ -1,13 +1,15 @@
 ---
 name: pinia-store
-description: Create and extend Pinia stores using the Composition API setup-store style with typed state, getters, and actions. Use when adding or modifying state management in src/stores/ (team members, schedule, settings), wiring a view to a store with storeToRefs, or testing stores.
+description: Create and extend Pinia stores using the Composition API setup-store style with typed state, getters, and actions. Use when adding or modifying state management in src/shared/stores/ or src/modules/<module>/stores/ (team members, schedule, settings), wiring a view to a store with storeToRefs, or testing stores.
 ---
 
 # Pinia Store
 
+Read `workspace.md` first for the module map and where files belong.
+
 ## 1. Setup-store style only
 
-Every store in `src/stores/` uses a composition/setup store:
+Every store in `src/shared/stores/` or `src/modules/<module>/stores/` uses a composition/setup store:
 
 ```ts
 import { defineStore } from 'pinia'
@@ -18,7 +20,7 @@ export const useMembersStore = defineStore('members', () => {
 })
 ```
 
-Never use the Options API form (`state`, `getters`, `actions` as object keys). The store id string matches the filename: `src/stores/scheduler.ts` → `defineStore('scheduler', ...)`, `src/stores/members.ts` → `defineStore('members', ...)`.
+Never use the Options API form (`state`, `getters`, `actions` as object keys). The store id string matches the filename: `src/modules/scheduler/stores/scheduler.ts` → `defineStore('scheduler', ...)`, `src/modules/members/stores/members.ts` → `defineStore('members', ...)`. Cross-module stores live in `src/shared/stores/`.
 
 ## 2. Structure and typing
 
@@ -31,7 +33,7 @@ Never use the Options API form (`state`, `getters`, `actions` as object keys). T
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { NewTeamMember, TeamMember } from '@/types'
-import { createId } from '@/utils/id'
+import { createId } from '@/shared/utils/id'
 
 export const useMembersStore = defineStore('members', () => {
   const members = ref<TeamMember[]>([])
@@ -76,13 +78,13 @@ export const useMembersStore = defineStore('members', () => {
 })
 ```
 
-## 3. Conventions from `src/stores/scheduler.ts`
+## 3. Conventions from `src/modules/scheduler/stores/scheduler.ts`
 
 Match the existing scheduler store:
 
 - Failable creators return `T | null` (`addTask(payload): Task | null`, `addMember(payload): TeamMember | null`).
 - Input normalization (`.trim()`) lives in the store, not in components or tests.
-- Type-only imports use `import type { NewTask, Priority, Task } from '@/types'`; value imports are separate, e.g. `import { createId } from '@/utils/id'`.
+- Type-only imports use `import type { NewTask, Priority, Task } from '@/types'`; value imports are separate, e.g. `import { createId } from '@/shared/utils/id'`.
 - Immutability: replace arrays for removals (`filter`) and bulk changes (`map`); in-place mutation is only for a single-item update such as `toggleTask` or `updateMember`.
 - Derived values are `computed`, never duplicated state. Do not store `count` as a `ref` when it can be derived.
 - Actions that target an unknown id do nothing; do not throw for missing records.
@@ -93,7 +95,7 @@ Views use `storeToRefs` for state and getters, and call actions directly:
 
 ```ts
 import { storeToRefs } from 'pinia'
-import { useMembersStore } from '@/stores/members'
+import { useMembersStore } from '@/modules/members/stores/members'
 import type { NewTeamMember } from '@/types'
 
 const store = useMembersStore()
@@ -115,7 +117,7 @@ Reset Pinia before each test so every test gets a fresh store:
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useMembersStore } from '@/stores/members'
+import { useMembersStore } from '@/modules/members/stores/members'
 
 describe('members store', () => {
   beforeEach(() => {

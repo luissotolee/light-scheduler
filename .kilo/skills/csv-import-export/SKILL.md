@@ -5,18 +5,20 @@ description: Read and write plain CSV files in the browser. Use when implementin
 
 # CSV Import / Export
 
+Read `workspace.md` first for the module map and where files belong.
+
 ## 1. Purpose and module layout
 
 Keep the concerns separate:
 
-- `src/utils/csv.ts` — pure parsing and serialization. No DOM, no file input, no downloads.
-- `src/utils/download.ts` — the only browser side effect: Blob, object URL, temporary anchor.
+- `src/shared/utils/csv.ts` — pure parsing and serialization. No DOM, no file input, no downloads.
+- `src/shared/utils/download.ts` — the only browser side effect: Blob, object URL, temporary anchor.
 
 Import through the alias, never relative paths across folders:
 
 ```ts
-import { parseCsv, toCsv } from '@/utils/csv'
-import { downloadTextFile, timestampedName } from '@/utils/download'
+import { parseCsv, toCsv } from '@/shared/utils/csv'
+import { downloadTextFile, timestampedName } from '@/shared/utils/download'
 ```
 
 Both files are included by `vite.config.ts` coverage and must have unit tests.
@@ -167,7 +169,7 @@ Join records with `\r\n` (RFC 4180). Quote only when necessary.
 
 ## 5. Download: `downloadTextFile`
 
-Keep the side effect in `src/utils/download.ts`:
+Keep the side effect in `src/shared/utils/download.ts`:
 
 ```ts
 export function downloadTextFile(filename: string, text: string, mime = 'text/csv;charset=utf-8'): void {
