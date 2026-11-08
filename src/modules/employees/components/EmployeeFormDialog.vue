@@ -8,14 +8,14 @@
   >
     <form class="employee-form" data-test="employee-form" novalidate @submit.prevent="handleSubmit">
       <div class="employee-form__field">
-        <label class="employee-form__label" for="employee-name">Name *</label>
+        <label class="employee-form__label" for="employee-name">{{ t('employees.form.name') }}</label>
         <InputText
           id="employee-name"
           v-model="form.name"
           autocomplete="off"
           required
           aria-required="true"
-          placeholder="e.g. Jane Doe"
+          :placeholder="t('employees.form.namePlaceholder')"
           :aria-invalid="nameError ? 'true' : undefined"
           :aria-describedby="nameError ? 'employee-name-error' : undefined"
         />
@@ -30,7 +30,9 @@
       </div>
 
       <div class="employee-form__field">
-        <label class="employee-form__label" for="employee-duty">Duty *</label>
+        <label class="employee-form__label" for="employee-duty">
+          {{ t('employees.form.duty') }}
+        </label>
         <Select
           v-model="form.duty"
           input-id="employee-duty"
@@ -53,13 +55,15 @@
       </div>
 
       <div class="employee-form__field">
-        <label class="employee-form__label" for="employee-phone">Phone</label>
+        <label class="employee-form__label" for="employee-phone">
+          {{ t('employees.form.phone') }}
+        </label>
         <InputText
           id="employee-phone"
           v-model="form.phone"
           type="tel"
           autocomplete="tel"
-          placeholder="e.g. 612 345 678 or +34 612 345 678"
+          :placeholder="t('employees.form.phonePlaceholder')"
           :aria-invalid="phoneError ? 'true' : undefined"
           :aria-describedby="phoneError ? 'employee-phone-error' : undefined"
         />
@@ -74,13 +78,15 @@
       </div>
 
       <div class="employee-form__field">
-        <label class="employee-form__label" for="employee-email">Email</label>
+        <label class="employee-form__label" for="employee-email">
+          {{ t('employees.form.email') }}
+        </label>
         <InputText
           id="employee-email"
           v-model="form.email"
           type="email"
           autocomplete="email"
-          placeholder="e.g. jane@example.com"
+          :placeholder="t('employees.form.emailPlaceholder')"
           :aria-invalid="emailError ? 'true' : undefined"
           :aria-describedby="emailError ? 'employee-email-error' : undefined"
         />
@@ -95,7 +101,9 @@
       </div>
 
       <div class="employee-form__field">
-        <label class="employee-form__label" for="employee-hours">Weekly hours *</label>
+        <label class="employee-form__label" for="employee-hours">
+          {{ t('employees.form.weeklyHours') }}
+        </label>
         <InputNumber
           input-id="employee-hours"
           :model-value="form.weeklyHours"
@@ -105,7 +113,7 @@
           :use-grouping="false"
           required
           aria-required="true"
-          placeholder="e.g. 40"
+          :placeholder="t('employees.form.hoursPlaceholder')"
           :aria-invalid="hoursError ? 'true' : undefined"
           :aria-describedby="hoursError ? 'employee-hours-error' : undefined"
           @update:model-value="handleHours"
@@ -121,7 +129,9 @@
       </div>
 
       <div class="employee-form__field">
-        <label class="employee-form__label" for="employee-start-date">Start date</label>
+        <label class="employee-form__label" for="employee-start-date">
+          {{ t('employees.form.startDate') }}
+        </label>
         <DatePicker
           v-model="form.startDate"
           input-id="employee-start-date"
@@ -142,11 +152,11 @@
       </div>
 
       <fieldset class="employee-form__field employee-form__field--full">
-        <legend class="employee-form__label">Contract *</legend>
+        <legend class="employee-form__label">{{ t('employees.form.contract') }}</legend>
         <div
           class="employee-form__radio-group"
           role="radiogroup"
-          aria-label="Contract"
+          :aria-label="t('employees.form.contractGroup')"
           aria-required="true"
           :aria-invalid="contractError ? 'true' : undefined"
           :aria-describedby="contractError ? 'employee-contract-error' : undefined"
@@ -160,7 +170,7 @@
               required
             />
             <label class="employee-form__radio-label" :for="`employee-contract-${value}`">
-              {{ CONTRACT_LABELS[value] }}
+              {{ t(`contract.${value}`) }}
             </label>
           </div>
         </div>
@@ -186,12 +196,12 @@
       <div class="employee-form__actions employee-form__field--full">
         <Button
           type="button"
-          label="Cancel"
+          :label="t('common.cancel')"
           severity="secondary"
           data-test="cancel"
           @click="emit('update:visible', false)"
         />
-        <Button type="submit" label="Save" data-test="submit" />
+        <Button type="submit" :label="t('common.save')" data-test="submit" />
       </div>
     </form>
   </Dialog>
@@ -207,14 +217,9 @@ import InputText from 'primevue/inputtext'
 import RadioButton from 'primevue/radiobutton'
 import Select from 'primevue/select'
 import type { Contract, Duty, EmployeeFormErrors, NewTeamMember, TeamMember } from '@/types'
+import { useI18n } from '@/shared/i18n'
 import { isoDateToDate, toLocalIsoDate } from '@/shared/utils/calendar'
-import {
-  CONTRACTS,
-  CONTRACT_LABELS,
-  DUTIES,
-  DUTY_LABELS,
-  validateEmployeeForm,
-} from '@/shared/utils/employee'
+import { CONTRACTS, DUTIES, validateEmployeeForm } from '@/shared/utils/employee'
 
 const props = defineProps<{
   visible: boolean
@@ -225,6 +230,8 @@ const emit = defineEmits<{
   'update:visible': [visible: boolean]
   submit: [payload: NewTeamMember]
 }>()
+
+const { t } = useI18n()
 
 type FormState = {
   name: string
@@ -246,7 +253,9 @@ const form = reactive<FormState>({
   startDate: new Date(),
 })
 
-const dutyOptions = computed(() => DUTIES.map((value) => ({ label: DUTY_LABELS[value], value })))
+const dutyOptions = computed(() =>
+  DUTIES.map((value) => ({ label: t(`duty.${value}`), value })),
+)
 
 const validation = computed(() =>
   validateEmployeeForm({
@@ -264,16 +273,22 @@ const errors = computed<EmployeeFormErrors>(() =>
 
 const visibleErrors = computed<EmployeeFormErrors>(() => (submitted.value ? errors.value : {}))
 
-const nameError = computed(() => visibleErrors.value.name ?? '')
-const dutyError = computed(() => visibleErrors.value.duty ?? '')
-const phoneError = computed(() => visibleErrors.value.phone ?? '')
-const emailError = computed(() => visibleErrors.value.email ?? '')
-const hoursError = computed(() => visibleErrors.value.weeklyHours ?? '')
-const contractError = computed(() => visibleErrors.value.contract ?? '')
-const startDateError = computed(() => visibleErrors.value.startDate ?? '')
-const holidaysError = computed(() => visibleErrors.value.holidays ?? '')
+function errorText(key: EmployeeFormErrors[keyof EmployeeFormErrors]): string {
+  return key ? t(key) : ''
+}
 
-const title = computed(() => (props.member ? 'Edit employee' : 'Add employee'))
+const nameError = computed(() => errorText(visibleErrors.value.name))
+const dutyError = computed(() => errorText(visibleErrors.value.duty))
+const phoneError = computed(() => errorText(visibleErrors.value.phone))
+const emailError = computed(() => errorText(visibleErrors.value.email))
+const hoursError = computed(() => errorText(visibleErrors.value.weeklyHours))
+const contractError = computed(() => errorText(visibleErrors.value.contract))
+const startDateError = computed(() => errorText(visibleErrors.value.startDate))
+const holidaysError = computed(() => errorText(visibleErrors.value.holidays))
+
+const title = computed(() =>
+  props.member ? t('employees.form.editTitle') : t('employees.form.addTitle'),
+)
 
 function resetForm(): void {
   submitted.value = false

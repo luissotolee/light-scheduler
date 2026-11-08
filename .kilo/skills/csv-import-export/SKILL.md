@@ -25,12 +25,14 @@ Both files are included by `vite.config.ts` coverage and must have unit tests.
 
 ## 2. Parsing: `parseCsv`
 
-Return a discriminated union and never throw on malformed input:
+Return a discriminated union and never throw on malformed input. The error is a `MessageKey`, not a localized string — the view translates it in both languages:
 
 ```ts
+import type { MessageKey } from '@/shared/i18n/messages/en'
+
 export type CsvParseResult =
   | { ok: true; headers: string[]; rows: string[][] }
-  | { ok: false; error: string }
+  | { ok: false; error: MessageKey }
 ```
 
 Use an RFC 4180 state machine:
@@ -53,7 +55,7 @@ export function inferDelimiter(text: string): string {
 
 export function parseCsv(input: string): CsvParseResult {
   const text = input.replace(/^\uFEFF/, '')
-  if (!text.trim()) return { ok: false, error: 'CSV file is empty' }
+  if (!text.trim()) return { ok: false, error: 'csv.empty' }
 
   const delimiter = inferDelimiter(text)
   const records: string[][] = []
@@ -93,7 +95,7 @@ export function parseCsv(input: string): CsvParseResult {
     }
   }
 
-  if (inQuotes) return { ok: false, error: 'Unterminated quoted field' }
+  if (inQuotes) return { ok: false, error: 'csv.unterminated' }
 
   if (field.length > 0 || record.length > 0) {
     record.push(field)
@@ -101,7 +103,7 @@ export function parseCsv(input: string): CsvParseResult {
   }
 
   const nonEmpty = records.filter((row) => row.some((cell) => cell.trim() !== ''))
-  if (nonEmpty.length === 0) return { ok: false, error: 'CSV file is empty' }
+  if (nonEmpty.length === 0) return { ok: false, error: 'csv.empty' }
 
   const [headers, ...rows] = nonEmpty
   return { ok: true, headers, rows }
@@ -134,7 +136,7 @@ export function validateEmployees(
 }
 ```
 
-Show row-numbered errors to the user; do not silently drop bad rows.
+Show row-numbered errors to the user; do not silently drop bad rows. Each `RowError.message` is a `MessageKey` (e.g. `'errors.requiredName'`), translated at the view layer — add any new error key to **both** `en.ts` and `es.ts`.
 
 ## 4. Serialization: `toCsv`
 
@@ -195,7 +197,7 @@ An in-memory parse is acceptable at team/schedule scale. Before reading a select
 const MAX_CSV_BYTES = 5 * 1024 * 1024
 
 if (file.size > MAX_CSV_BYTES) {
-  return { ok: false, error: 'CSV file is too large (max 5 MB)' }
+  return { ok: false, error: 'csv.tooLarge' }
 }
 ```
 

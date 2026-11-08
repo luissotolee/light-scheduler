@@ -1,14 +1,11 @@
 <template>
   <section class="history">
-    <PageHeader
-      title="History"
-      description="Browse the weekly schedules you have saved in this workspace."
-    />
+    <PageHeader :title="t('history.title')" :description="t('history.description')" />
 
     <EmptyState
       v-if="availableWeeks.length === 0"
-      title="No past schedules yet"
-      description="Weekly schedules will appear here once they exist."
+      :title="t('history.emptyTitle')"
+      :description="t('history.emptyDescription')"
     />
 
     <div v-else class="history__weeks">
@@ -20,13 +17,13 @@
             :aria-pressed="selectedWeekKey === weekKey"
             @click="store.selectWeek(weekKey)"
           >
-            {{ formatWeekRange(weekKey) }}
+            {{ formatWeekRange(weekKey, locale) }}
           </button>
         </li>
       </ul>
 
       <p class="history__selected" data-test="selected-count">
-        Shifts in selected week: {{ selectedWeekShifts.length }}
+        {{ t('history.selectedCount', { count: selectedWeekShifts.length }) }}
       </p>
     </div>
   </section>
@@ -37,10 +34,12 @@ import { storeToRefs } from 'pinia'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import { useHistoryStore } from '@/modules/history/stores/history'
+import { useI18n } from '@/shared/i18n'
 import { formatWeekRange } from '@/shared/utils/calendar'
 
 const store = useHistoryStore()
 const { availableWeeks, selectedWeekKey, selectedWeekShifts } = storeToRefs(store)
+const { t, locale } = useI18n()
 </script>
 
 <style scoped>

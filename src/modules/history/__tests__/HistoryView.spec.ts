@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { nextTick } from 'vue'
 import HistoryView from '@/modules/history/views/HistoryView.vue'
+import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { Shift } from '@/types'
 
@@ -17,6 +19,8 @@ describe('HistoryView', () => {
   let pinia: ReturnType<typeof createPinia>
 
   beforeEach(() => {
+    localStorage.clear()
+    document.documentElement.lang = 'en'
     pinia = createPinia()
     setActivePinia(pinia)
   })
@@ -44,6 +48,18 @@ describe('HistoryView', () => {
 
     expect(weeks[0].attributes('aria-pressed')).toBe('true')
     expect(wrapper.find('[data-test="selected-count"]').text()).toContain('1')
+  })
+
+  it('renders Spanish week ranges live', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    const wrapper = mountView()
+
+    useLocaleStore().setLocale('es')
+    await nextTick()
+
+    expect(wrapper.findAll('.history__week')[0].text()).toBe('2 nov – 8 nov, 2026')
+    expect(wrapper.find('[data-test="selected-count"]').text()).toContain('Turnos en la semana')
   })
 
   it('starts with the current week when nothing is archived', () => {

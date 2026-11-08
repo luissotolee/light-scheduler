@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import type { NewShift, Shift, TeamMember } from '@/types'
+import type { DayOff, NewShift, Shift, TeamMember } from '@/types'
 
 const baseShift: NewShift = {
   memberId: 'member-1',
@@ -13,6 +13,7 @@ const baseShift: NewShift = {
 
 describe('scheduler store', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
   })
 
@@ -114,7 +115,7 @@ describe('scheduler store', () => {
     expect(store.addShift({ ...baseShift, start: '9:00' })).toBeNull()
     expect(store.addShift({ ...baseShift, start: '12:00', end: '09:00' })).toBeNull()
     expect(store.currentWeekShifts).toHaveLength(0)
-    expect(store.error).toBe('Shift times must be valid and start before end')
+    expect(store.error).toBe('errors.shiftTimes')
   })
 
   it('merges overlapping shifts for the same member and weekday into one survivor', () => {
@@ -184,7 +185,7 @@ describe('scheduler store', () => {
     store.updateShift(shift!.id, { start: '13:00', end: '12:00' })
 
     expect(store.currentWeekShifts[0]).toMatchObject({ startMinute: 540, endMinute: 720 })
-    expect(store.error).toBe('Shift times must be valid and start before end')
+    expect(store.error).toBe('errors.shiftTimes')
   })
 
   it('merges an update overlap into the edited shift and drops the absorbed shift', () => {
@@ -248,6 +249,7 @@ describe('scheduler weekday grid', () => {
   let workspace: ReturnType<typeof useWorkspaceStore>
 
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     store = useSchedulerStore()
     workspace = useWorkspaceStore()
@@ -343,7 +345,7 @@ describe('scheduler weekday grid', () => {
 
   it('rejects too-short ranges but merges overlapping ones', () => {
     expect(store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 550 })).toBeNull()
-    expect(store.error).toBe('Shift must be at least 30 minutes within 09:00–01:00')
+    expect(store.error).toBe('errors.shiftRange')
 
     store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
 
@@ -412,7 +414,7 @@ describe('scheduler weekday grid', () => {
     const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })
 
     expect(store.updateShiftRange({ id: shift!.id, startMinute: 540, endMinute: 550 })).toBeNull()
-    expect(store.error).toBe('Shift must be at least 30 minutes within 09:00–01:00')
+    expect(store.error).toBe('errors.shiftRange')
 
     expect(store.updateShiftRange({ id: 'missing', startMinute: 540, endMinute: 600 })).toBeNull()
     expect(store.currentWeekShifts[0]).toMatchObject({ startMinute: 540, endMinute: 720 })
@@ -436,6 +438,7 @@ describe('scheduler days off', () => {
   let workspace: ReturnType<typeof useWorkspaceStore>
 
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     store = useSchedulerStore()
     workspace = useWorkspaceStore()
@@ -467,26 +470,79 @@ describe('scheduler days off', () => {
     expect(store.error).toBeNull()
   })
 
-  it('caps day offs at two and reports an error for a third day', () => {
+  it("clears the member's existing shifts on the selected weekday when marked off", () => {
+    const mondayMemberOne: Shift = {
+      id: 'monday-member-1',
+      memberId: 'member-1',
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 720,
+    }
+    const mondayMemberTwo: Shift = {
+      id: 'monday-member-2',
+      memberId: 'member-2',
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 720,
+    }
+    const tuesdayMemberOne: Shift = {
+      id: 'tuesday-member-1',
+      memberId: 'member-1',
+      weekday: 'tuesday',
+      startMinute: 540,
+      endMinute: 720,
+    }
+    workspace.setShiftsForWeek('2026-11-02', [
+      mondayMemberOne,
+      mondayMemberTwo,
+      tuesdayMemberOne,
+    ])
+
     store.toggleDayOff('member-1')
+
+    expect(store.currentWeekDayOffs).toEqual([{ memberId: 'member-1', weekday: 'monday' }])
+    expect(store.currentWeekShifts.map((shift) => shift.id)).not.toContain('monday-member-1')
+    expect(store.currentWeekShifts.map((shift) => shift.id)).toContain('monday-member-2')
+    expect(rowFor('member-1')).toMatchObject({ isOff: true, bars: [] })
+
     store.selectWeekday('tuesday')
-    store.toggleDayOff('member-1')
 
-    expect(store.daysOffCountFor('member-1')).toBe(2)
-
-    store.selectWeekday('wednesday')
-    store.toggleDayOff('member-1')
-
-    expect(store.currentWeekDayOffs).toHaveLength(2)
-    expect(rowFor('member-1')?.isOff).toBe(false)
-    expect(store.error).toBe('At most 2 days off are allowed per week')
+    expect(rowFor('member-1')?.bars).toHaveLength(1)
   })
 
-  it('allows un-marking a day off while at the cap', () => {
+  it('does not restore cleared shifts when the day off is toggled back off', () => {
+    const mondayMemberOne: Shift = {
+      id: 'monday-member-1',
+      memberId: 'member-1',
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 720,
+    }
+    workspace.setShiftsForWeek('2026-11-02', [mondayMemberOne])
+
+    store.toggleDayOff('member-1')
+    store.toggleDayOff('member-1')
+
+    expect(store.currentWeekDayOffs).toEqual([])
+    expect(store.currentWeekShifts).toEqual([])
+  })
+
+  it('allows more than two days off in a week without reporting an error', () => {
     store.toggleDayOff('member-1')
     store.selectWeekday('tuesday')
     store.toggleDayOff('member-1')
     store.selectWeekday('wednesday')
+    store.toggleDayOff('member-1')
+
+    expect(store.currentWeekDayOffs).toHaveLength(3)
+    expect(store.daysOffCountFor('member-1')).toBe(3)
+    expect(rowFor('member-1')).toMatchObject({ isOff: true, daysOffCount: 3 })
+    expect(store.error).toBeNull()
+  })
+
+  it('allows un-marking a day off after reaching the minimum', () => {
+    store.toggleDayOff('member-1')
+    store.selectWeekday('tuesday')
     store.toggleDayOff('member-1')
 
     store.selectWeekday('monday')
@@ -547,11 +603,74 @@ describe('scheduler days off', () => {
   })
 })
 
+describe('scheduler reset current week', () => {
+  let store: ReturnType<typeof useSchedulerStore>
+  let workspace: ReturnType<typeof useWorkspaceStore>
+
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+    store = useSchedulerStore()
+    workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([makeMember({ id: 'member-1' })])
+  })
+
+  it('clears the current week shifts and days off and clears the error', () => {
+    store.addShift({ ...baseShift, weekday: 'tuesday' })
+    store.toggleDayOff('member-1')
+    store.addShift({ ...baseShift, start: 'invalid' })
+
+    expect(store.currentWeekShifts).toHaveLength(1)
+    expect(store.currentWeekDayOffs).toHaveLength(1)
+    expect(store.error).toBe('errors.shiftTimes')
+
+    store.resetCurrentWeek()
+
+    expect(store.currentWeekShifts).toEqual([])
+    expect(store.currentWeekDayOffs).toEqual([])
+    expect(store.error).toBeNull()
+    expect(workspace.schedules['2026-11-02']).toEqual([])
+    expect(workspace.dayOffs['2026-11-02']).toBeUndefined()
+  })
+
+  it('keeps other weeks and team members intact', () => {
+    const otherShift: Shift = {
+      id: 'other-shift',
+      memberId: 'member-1',
+      weekday: 'friday',
+      startMinute: 540,
+      endMinute: 660,
+    }
+    const otherOff: DayOff = { memberId: 'member-1', weekday: 'friday' }
+    workspace.setShiftsForWeek('2026-11-09', [otherShift])
+    workspace.setDayOffsForWeek('2026-11-09', [otherOff])
+    store.addShift(baseShift)
+    store.toggleDayOff('member-1')
+
+    store.resetCurrentWeek()
+
+    expect(workspace.schedules['2026-11-09']).toEqual([otherShift])
+    expect(workspace.dayOffs['2026-11-09']).toEqual([otherOff])
+    expect(workspace.members).toEqual([makeMember({ id: 'member-1' })])
+  })
+
+  it('keeps the selected week and weekday', () => {
+    store.selectWeekday('wednesday')
+
+    store.resetCurrentWeek()
+
+    expect(store.currentWeekKey).toBe('2026-11-02')
+    expect(store.selectedWeekday).toBe('wednesday')
+  })
+})
+
 describe('scheduler weekly hours groups', () => {
   let store: ReturnType<typeof useSchedulerStore>
   let workspace: ReturnType<typeof useWorkspaceStore>
 
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     store = useSchedulerStore()
     workspace = useWorkspaceStore()
@@ -571,12 +690,6 @@ describe('scheduler weekly hours groups', () => {
       'assistant',
       'manager',
       'employee',
-    ])
-    expect(store.weeklyHoursGroups.map((group) => group.label)).toEqual([
-      'Head managers',
-      'Assistants',
-      'Managers',
-      'Employees',
     ])
   })
 

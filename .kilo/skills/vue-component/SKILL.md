@@ -133,7 +133,26 @@ Only views are registered in `src/router/index.ts`, which uses `createWebHashHis
 </button>
 ```
 
-## 6. PrimeVue
+## 6. Text and labels (i18n)
+
+All user-facing text — headings, labels, placeholders, buttons, `aria-label`, `title`, tooltips, empty states, and messages — must come from `useI18n()`, never hardcoded literals:
+
+```vue
+<script setup lang="ts">
+import { useI18n } from '@/shared/i18n'
+const { t } = useI18n()
+</script>
+
+<template>
+  <button type="button" :aria-label="t('employees.removeAria', { name })">
+    <i class="pi pi-trash" aria-hidden="true" />
+  </button>
+</template>
+```
+
+The app ships two languages (English and Spanish). Every string must be added or edited in **both** `src/shared/i18n/messages/en.ts` and `src/shared/i18n/messages/es.ts` in the same change. Load the `i18n` skill when touching any label or text.
+
+## 7. PrimeVue
 
 - Import components from their package paths, e.g. `import Button from 'primevue/button'`.
 - Register global plugins (`PrimeVue`, `ToastService`) in `src/main.ts`.
@@ -148,7 +167,7 @@ vi.stubGlobal('matchMedia', () => ({
 }))
 ```
 
-## 7. Testing
+## 8. Testing
 
 Mount with explicit props and assert user-visible output:
 

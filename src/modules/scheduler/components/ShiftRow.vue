@@ -18,11 +18,18 @@
         {{ displayName }}
       </button>
       <span
+        v-tooltip.top="
+          t('shiftRow.daysOffTooltip', {
+            count: row.daysOffCount,
+            min: MIN_DAYS_OFF,
+            name: row.member.name,
+          })
+        "
         class="shift-row__day-off-chip"
-        :class="{ 'shift-row__day-off-chip--full': row.daysOffCount >= MAX_DAYS_OFF }"
+        :class="{ 'shift-row__day-off-chip--full': row.daysOffCount >= MIN_DAYS_OFF }"
         data-test="day-off-count"
       >
-        {{ row.daysOffCount }}/{{ MAX_DAYS_OFF }}
+        {{ row.daysOffCount }}/{{ MIN_DAYS_OFF }}
       </span>
     </div>
 
@@ -37,7 +44,7 @@
       data-test="shift-track"
       :tabindex="row.isOff ? -1 : 0"
       :aria-disabled="row.isOff"
-      :aria-label="`Shift track for ${row.member.name}. Press Enter to add a 3 hour shift.`"
+      :aria-label="t('shiftRow.trackAria', { name: row.member.name })"
       @pointerdown="startSelection"
       @pointermove="updateSelection"
       @pointerup="finishSelection"
@@ -88,14 +95,17 @@ import {
   rangeToPercentWidth,
 } from '@/modules/scheduler/utils/grid'
 import ShiftBar from '@/modules/scheduler/components/ShiftBar.vue'
+import { useI18n } from '@/shared/i18n'
 import { dutyModifier } from '@/shared/utils/employee'
 import { formatHours } from '@/modules/scheduler/utils/hours'
-import { MAX_DAYS_OFF } from '@/modules/scheduler/utils/off'
+import { MIN_DAYS_OFF } from '@/modules/scheduler/utils/off'
 
 const props = defineProps<{
   row: DayRow
   slots: DaySlot[]
 }>()
+
+const { t } = useI18n()
 
 const MAX_NAME_LENGTH = 20
 const displayName = computed(() => {
@@ -112,8 +122,8 @@ const emit = defineEmits<{
 
 const toggleAriaLabel = computed(() =>
   props.row.isOff
-    ? `Mark ${props.row.member.name} back on for this day`
-    : `Mark ${props.row.member.name} off for this day`,
+    ? t('shiftRow.markOn', { name: props.row.member.name })
+    : t('shiftRow.markOff', { name: props.row.member.name }),
 )
 
 const track = ref<HTMLElement | null>(null)
@@ -347,7 +357,7 @@ function handleKeydown(event: KeyboardEvent): void {
   flex: 1;
   min-width: 0;
   width: auto;
-  height: calc(var(--grid-header-height) + 0.25rem);
+  height: var(--grid-row-height);
   background: var(--color-surface);
   cursor: crosshair;
   touch-action: none;
@@ -383,8 +393,8 @@ function handleKeydown(event: KeyboardEvent): void {
 
 .shift-row__draft {
   position: absolute;
-  top: 0.35rem;
-  bottom: 0.35rem;
+  top: var(--grid-bar-inset);
+  bottom: var(--grid-bar-inset);
   box-sizing: border-box;
   border: 1px dashed var(--color-accent);
   border-radius: var(--radius-sm);

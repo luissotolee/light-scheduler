@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DOMWrapper, enableAutoUnmount, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
 import type { HolidayWeek } from '@/types'
@@ -13,6 +14,8 @@ function dialogBody(): DOMWrapper<HTMLElement> {
 
 describe('HolidayWeeksDialog', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),

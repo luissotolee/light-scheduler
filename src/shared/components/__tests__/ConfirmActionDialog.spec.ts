@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DOMWrapper, enableAutoUnmount, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import ConfirmActionDialog from '@/modules/employees/components/ConfirmActionDialog.vue'
+import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
 
 enableAutoUnmount(afterEach)
 
@@ -12,6 +13,8 @@ function dialogBody(): DOMWrapper<HTMLElement> {
 
 describe('ConfirmActionDialog', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),

@@ -1,8 +1,8 @@
 <template>
   <section class="scheduler">
     <PageHeader
-      title="Scheduler"
-      description="Click a cell for a 3-hour shift, drag to choose a custom range, drag a bar's edges to adjust, right-click a bar to remove it."
+      :title="t('scheduler.title')"
+      :description="t('scheduler.description')"
       description-tooltip
     />
 
@@ -13,7 +13,7 @@
         size="small"
         text
         rounded
-        aria-label="Previous week"
+        :aria-label="t('scheduler.previousWeek')"
         data-test="previous-week"
         @click="store.goToPreviousWeek"
       />
@@ -28,7 +28,7 @@
         size="small"
         text
         rounded
-        aria-label="Next week"
+        :aria-label="t('scheduler.nextWeek')"
         data-test="next-week"
         @click="store.goToNextWeek"
       />
@@ -38,7 +38,21 @@
       {{ selectedDayLabel }}
     </h2>
 
-    <p v-if="error" class="scheduler__error" role="alert">{{ error }}</p>
+    <p v-if="errorMessage" class="scheduler__error" role="alert">{{ errorMessage }}</p>
+
+    <div class="scheduler__actions">
+      <Button
+        type="button"
+        icon="pi pi-refresh"
+        size="small"
+        text
+        rounded
+        severity="danger"
+        :aria-label="t('scheduler.restart')"
+        data-test="restart-week"
+        @click="openRestartConfirm"
+      />
+    </div>
 
     <div class="scheduler__layout">
       <WeekdayTabs
@@ -58,21 +72,33 @@
     </div>
 
     <WeeklyHoursTable :groups="weeklyHoursGroups" />
+
+    <ConfirmActionDialog
+      :visible="resetDialogVisible"
+      :header="t('scheduler.confirm.restartHeader')"
+      :message="t('scheduler.confirm.restartMessage')"
+      :confirm-label="t('scheduler.confirm.restartLabel')"
+      severity="danger"
+      data-test="restart-confirm-dialog"
+      @update:visible="handleResetVisibility"
+      @confirm="confirmReset"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import Button from 'primevue/button'
+import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import WeekdayTabs from '@/modules/scheduler/components/WeekdayTabs.vue'
 import ShiftGrid from '@/modules/scheduler/components/ShiftGrid.vue'
 import WeeklyHoursTable from '@/modules/scheduler/components/WeeklyHoursTable.vue'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 import type { ShiftRangeInput, ShiftResizeInput } from '@/modules/scheduler/types'
+import { useI18n } from '@/shared/i18n'
 import {
-  WEEKDAY_LABELS,
   WEEKDAY_ORDER,
   formatFullDate,
   formatWeekRange,
@@ -81,20 +107,41 @@ import {
 import { buildDaySlots } from '@/shared/utils/shifts'
 
 const store = useSchedulerStore()
-const { currentWeekKey, dayRows, error, selectedWeekday, selectedWeekdayDate, weeklyHoursGroups } =
-  storeToRefs(store)
+const {
+  currentWeekKey,
+  dayRows,
+  error,
+  selectedWeekday,
+  selectedWeekdayDate,
+  weeklyHoursGroups,
+} = storeToRefs(store)
+const { t, locale } = useI18n()
 
 const weekdayOptions = computed(() =>
   WEEKDAY_ORDER.map((value) => ({
     value,
-    label: WEEKDAY_LABELS[value],
+    label: t(`weekday.${value}`),
     dayOfMonth: weekdayDayOfMonth(currentWeekKey.value, value),
   })),
 )
-const selectedDayLabel = computed(() => formatFullDate(selectedWeekdayDate.value))
+const selectedDayLabel = computed(() => formatFullDate(selectedWeekdayDate.value, locale.value))
+const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value, locale.value))
+const errorMessage = computed(() => (error.value ? t(error.value) : ''))
 const slots = buildDaySlots()
+const resetDialogVisible = ref(false)
 
-const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value))
+function openRestartConfirm(): void {
+  resetDialogVisible.value = true
+}
+
+function handleResetVisibility(visible: boolean): void {
+  resetDialogVisible.value = visible
+}
+
+function confirmReset(): void {
+  store.resetCurrentWeek()
+  resetDialogVisible.value = false
+}
 
 function handleCreate(input: ShiftRangeInput): void {
   store.addShiftRange(input)
@@ -150,6 +197,12 @@ function handleRemove(id: string): void {
   border-radius: var(--radius-sm);
   background: var(--color-inactive-bg);
   color: var(--color-danger);
+}
+
+.scheduler__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0.25rem;
 }
 
 .scheduler__layout {

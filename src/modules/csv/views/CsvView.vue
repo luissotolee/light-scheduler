@@ -1,16 +1,10 @@
 <template>
   <section class="csv">
-    <PageHeader
-      title="CSV I/O"
-      description="Export employees and weekly schedules, or import files to resume work later."
-    />
+    <PageHeader :title="t('csv.title')" :description="t('csv.description')" />
 
     <div class="csv__panel">
-      <h2 class="csv__heading">Export</h2>
-      <p class="csv__copy">
-        Download the current workspace data as CSV. Files use UTF-8 with a byte-order mark so
-        spreadsheet tools open them correctly.
-      </p>
+      <h2 class="csv__heading">{{ t('csv.exportHeading') }}</h2>
+      <p class="csv__copy">{{ t('csv.exportCopy') }}</p>
       <div class="csv__actions">
         <button
           type="button"
@@ -19,7 +13,7 @@
           :disabled="!canExportMembers"
           @click="store.exportMembers"
         >
-          Export Employees
+          {{ t('csv.exportEmployees') }}
         </button>
         <button
           type="button"
@@ -28,16 +22,14 @@
           :disabled="!canExportSchedule"
           @click="store.exportSchedule"
         >
-          Export Schedule
+          {{ t('csv.exportSchedule') }}
         </button>
       </div>
     </div>
 
     <div class="csv__panel">
-      <h2 class="csv__heading">Import</h2>
-      <p class="csv__copy">
-        Upload an employees CSV to replace the current list. Schedule upload is coming soon.
-      </p>
+      <h2 class="csv__heading">{{ t('csv.importHeading') }}</h2>
+      <p class="csv__copy">{{ t('csv.importCopy') }}</p>
       <div class="csv__actions">
         <input
           ref="fileInput"
@@ -53,10 +45,10 @@
           data-test="upload-employees"
           @click="openEmployeePicker"
         >
-          Upload Employees
+          {{ t('csv.uploadEmployees') }}
         </button>
         <button type="button" class="csv__button" data-test="upload-schedule" disabled>
-          Upload Schedule
+          {{ t('csv.uploadSchedule') }}
         </button>
       </div>
     </div>
@@ -68,22 +60,40 @@
       data-test="status"
       role="status"
     >
-      {{ status.message }}
+      {{ statusText }}
     </p>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import { useCsvStore } from '@/modules/csv/stores/csv'
+import { useI18n } from '@/shared/i18n'
 
 const MAX_CSV_BYTES = 5 * 1024 * 1024
 
 const store = useCsvStore()
 const { status, canExportMembers, canExportSchedule } = storeToRefs(store)
+const { t, tc } = useI18n()
 const fileInput = ref<HTMLInputElement | null>(null)
+
+const statusText = computed(() => {
+  const message = status.value.message
+  if (!message) return ''
+
+  if (message.kind === 'rowError') {
+    return t('csv.rowError', { row: message.row, message: t(message.messageCode) })
+  }
+
+  if (message.code === 'csv.importedOne' || message.code === 'csv.importedMany') {
+    const count = Number(message.params?.count ?? 0)
+    return tc('csv.importedOne', 'csv.importedMany', count, message.params)
+  }
+
+  return t(message.code, message.params)
+})
 
 function openEmployeePicker(): void {
   fileInput.value?.click()
@@ -98,7 +108,7 @@ async function handleEmployeeFile(event: Event): Promise<void> {
   if (!file) return
 
   if (file.size > MAX_CSV_BYTES) {
-    store.setError('CSV file is too large (max 5 MB)')
+    store.setError('csv.tooLarge')
     return
   }
 
@@ -106,7 +116,7 @@ async function handleEmployeeFile(event: Event): Promise<void> {
     const text = await file.text()
     store.importMembers(text)
   } catch {
-    store.setError('Unable to read the selected file')
+    store.setError('csv.unreadable')
   }
 }
 </script>

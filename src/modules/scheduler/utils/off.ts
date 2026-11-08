@@ -1,6 +1,6 @@
 import type { DayOff } from '@/types'
 
-export const MAX_DAYS_OFF = 2
+export const MIN_DAYS_OFF = 2
 
 export function countDaysOffByMember(dayOffs: readonly DayOff[]): Map<string, number> {
   const counts = new Map<string, number>()

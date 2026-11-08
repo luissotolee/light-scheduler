@@ -23,6 +23,8 @@ export interface DaySlot {
   startMinute: number
   endMinute: number
   label: string
+  hourLabel: string
+  minuteLabel: string
   isNextDay: boolean
 }
 
@@ -93,11 +95,14 @@ export function buildDaySlots(): DaySlot[] {
     startMinute < DAY_END_MINUTE;
     startMinute += SLOT_MINUTES
   ) {
+    const label = formatExtendedMinutes(startMinute)
     slots.push({
       index: slots.length,
       startMinute,
       endMinute: startMinute + SLOT_MINUTES,
-      label: formatExtendedMinutes(startMinute),
+      label,
+      hourLabel: label.slice(0, 2),
+      minuteLabel: label.slice(3),
       isNextDay: isNextDayMinute(startMinute),
     })
   }

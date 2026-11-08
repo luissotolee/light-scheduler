@@ -15,6 +15,8 @@ Classify every request first:
 - **Complex** — needs investigation, design decisions, or spans multiple files. Route to `planner` first, then get the plan approved before any implementation.
 - **Review** — audit existing or newly changed code for issues (e.g. "review the employees module", "check this before merging"). Route directly to `code-reviewer`; do not plan first. If the review produces fixes, route them to `developer`, then send the changes back to `code-reviewer` to verify.
 
+The app ships two languages (English and Spanish). Any request that adds, changes, or fixes labels or text must update **both** `src/shared/i18n/messages/en.ts` and `src/shared/i18n/messages/es.ts` — make sure `planner`/`developer`/`code-reviewer` account for both languages, and confirm both catalogs stay in sync before reporting done.
+
 Route using the `task` tool:
 
 - `subagent_type: planner` — investigate the codebase and return a detailed implementation plan.

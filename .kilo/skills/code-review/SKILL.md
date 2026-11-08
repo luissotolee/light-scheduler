@@ -1,11 +1,11 @@
 ---
 name: code-review
-description: Audit code for correctness, security, TypeScript strictness, Vue/Pinia conventions, dead code, and accessibility. Use when asked to review code, validate implementation quality, or find bugs before merging.
+description: Audit code for correctness, security, TypeScript strictness, Vue/Pinia conventions, i18n parity (both languages), dead code, and accessibility. Use when asked to review code, validate implementation quality, or find bugs before merging.
 ---
 
 # Code Review
 
-Read `workspace.md` for the module map. The conventions this checklist checks live in the area skills (`vue-component`, `pinia-store`, `typescript-domain-modeling`, `testing`, `csv-import-export`, `scheduling-calendar`).
+Read `workspace.md` for the module map. The conventions this checklist checks live in the area skills (`vue-component`, `pinia-store`, `typescript-domain-modeling`, `testing`, `csv-import-export`, `scheduling-calendar`, `i18n`).
 
 ## Review checklist
 
@@ -80,7 +80,16 @@ Read `workspace.md` for the module map. The conventions this checklist checks li
 - Semantic elements (`<form>`, `<ul>`, `<li>`, `<button type="button">`) instead of `div`/`span` click handlers.
 - Visible `:focus-visible` outline.
 
-### 12. Tests
+### 12. i18n (two languages)
+
+- Every user-facing string is translated via `t()`/`tc()` from `@/shared/i18n` — no hardcoded labels, placeholders, empty states, toast messages, `title`, or `aria-label` literals in components/views.
+- Domain code (utils, stores, validators) returns a `MessageKey`, never a localized literal; the view translates at the boundary.
+- Any new/edited/removed key is mirrored in **both** `src/shared/i18n/messages/en.ts` and `src/shared/i18n/messages/es.ts` in the same change.
+- The `es` catalog stays key-for-key in sync with `en` (`Object.keys(es))` equals `Object.keys(en)`; the sync test covers this).
+- New error conditions add an `errors.*` key to both catalogs.
+- New locale-aware PrimeVue strings are added to both entries in `src/shared/i18n/primevue.ts`.
+
+### 13. Tests
 - Co-located `__tests__/*.spec.ts` next to the owning folder.
 - Store tests reset Pinia: `beforeEach(() => setActivePinia(createPinia()))`.
 - Component tests assert rendered output and `wrapper.emitted()`; never assert internal state.

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DOMWrapper, enableAutoUnmount, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import DatePicker from 'primevue/datepicker'
 import InputNumber from 'primevue/inputnumber'
@@ -31,6 +32,8 @@ function dialogBody(): DOMWrapper<HTMLElement> {
 
 describe('EmployeeFormDialog', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),

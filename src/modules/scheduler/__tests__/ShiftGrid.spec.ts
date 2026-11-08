@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import ShiftGrid from '@/modules/scheduler/components/ShiftGrid.vue'
 import ShiftRow from '@/modules/scheduler/components/ShiftRow.vue'
 import type { DayRow } from '@/modules/scheduler/types'
@@ -43,6 +44,8 @@ const rows: DayRow[] = [
 
 describe('ShiftGrid', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),
@@ -60,16 +63,35 @@ describe('ShiftGrid', () => {
     })
   }
 
-  it('renders a sticky header with 32 half-hour slot labels', () => {
+  it('renders a two-row header with unique hours over half-hour slot labels', () => {
     const wrapper = mountGrid()
 
     expect(wrapper.find('[data-test="shift-grid"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="shift-grid-hours"]').text()).toBe('Hours')
-    const labels = wrapper.findAll('.shift-grid__slot')
-    expect(labels).toHaveLength(32)
-    expect(labels[0].text()).toBe('09:00')
-    expect(labels[31].text()).toBe('00:30')
-    expect(wrapper.findAll('.shift-grid__slot--next-day')).toHaveLength(2)
+    const hourCells = wrapper.findAll('.shift-grid__time-row:first-child .shift-grid__time-cell')
+    const minuteCells = wrapper.findAll('.shift-grid__time-row:last-child .shift-grid__time-cell')
+    expect(hourCells).toHaveLength(16)
+    expect(minuteCells).toHaveLength(32)
+
+    const hourTexts = hourCells.map((cell) => cell.text())
+    expect(hourTexts[0]).toBe('09')
+    expect(hourTexts[hourTexts.length - 1]).toBe('00')
+    expect(new Set(hourTexts).size).toBe(hourTexts.length)
+
+    const minuteTexts = minuteCells.map((cell) => cell.text())
+    expect(minuteTexts[0]).toBe('00')
+    expect(minuteTexts[1]).toBe('30')
+    minuteTexts.forEach((label, index) => {
+      expect(label).toBe(index % 2 === 0 ? '00' : '30')
+    })
+
+    expect(wrapper.findAll('.shift-grid__time-cell--next-day')).toHaveLength(3)
+    expect(
+      wrapper.findAll('.shift-grid__time-row:first-child .shift-grid__time-cell--next-day'),
+    ).toHaveLength(1)
+    expect(
+      wrapper.findAll('.shift-grid__time-row:last-child .shift-grid__time-cell--next-day'),
+    ).toHaveLength(2)
   })
 
   it('renders one row per employee and the employee name column', () => {

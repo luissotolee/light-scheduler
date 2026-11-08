@@ -1,4 +1,6 @@
 import type { HolidayWeek, HolidayWeekOption, WeekKey, Weekday } from '@/types'
+import { messages, translate } from '@/shared/i18n'
+import type { Locale } from '@/shared/i18n'
 
 export const WEEKDAY_ORDER: readonly Weekday[] = [
   'monday',
@@ -10,14 +12,13 @@ export const WEEKDAY_ORDER: readonly Weekday[] = [
   'sunday',
 ]
 
-export const WEEKDAY_LABELS: Record<Weekday, string> = {
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
+const INTL_LOCALES: Record<Locale, string> = {
+  en: 'en-US',
+  es: 'es-ES',
+}
+
+function intlLocale(locale: Locale): string {
+  return INTL_LOCALES[locale]
 }
 
 export function addDays(date: Date, days: number): Date {
@@ -59,23 +60,23 @@ export function parseIsoDate(value: unknown): string | null {
   return trimmed
 }
 
-export function formatIsoDate(isoDate: string): string {
+export function formatIsoDate(isoDate: string, locale: Locale = 'en'): string {
   const parsed = parseIsoDate(isoDate)
   if (!parsed) return '—'
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   }).format(isoDateToDate(parsed))
 }
 
-export function formatFullDate(isoDate: string): string {
+export function formatFullDate(isoDate: string, locale: Locale = 'en'): string {
   const parsed = parseIsoDate(isoDate)
   if (!parsed) return '—'
 
   const date = isoDateToDate(parsed)
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = new Intl.DateTimeFormat(intlLocale(locale), {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -83,7 +84,9 @@ export function formatFullDate(isoDate: string): string {
   }).formatToParts(date)
 
   return parts
-    .map((part) => (part.type === 'day' ? formatOrdinal(date.getDate()) : part.value))
+    .map((part) =>
+      locale === 'en' && part.type === 'day' ? formatOrdinal(date.getDate()) : part.value,
+    )
     .join('')
 }
 
@@ -108,7 +111,9 @@ export function weekdayDayOfMonth(weekKey: WeekKey, weekday: Weekday): number {
   return isoDateToDate(weekdayIsoDate(weekKey, weekday)).getDate()
 }
 
-export function formatOrdinal(day: number): string {
+export function formatOrdinal(day: number, locale: Locale = 'en'): string {
+  if (locale === 'es') return String(day)
+
   const remainder100 = day % 100
   if (remainder100 >= 11 && remainder100 <= 13) return `${day}th`
 
@@ -123,17 +128,20 @@ export function addWeeks(date: Date, weeks: number): Date {
   return addDays(date, weeks * 7)
 }
 
-function formatWeekRangeShort(weekKey: WeekKey): string {
+export function formatWeekRangeShort(weekKey: WeekKey, locale: Locale = 'en'): string {
   const start = isoDateToDate(weekKey)
   const end = addDays(start, 6)
-  const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
+  const formatter = new Intl.DateTimeFormat(intlLocale(locale), {
+    month: 'short',
+    day: 'numeric',
+  })
   return `${formatter.format(start)} – ${formatter.format(end)}`
 }
 
-export function formatWeekRange(weekKey: WeekKey): string {
+export function formatWeekRange(weekKey: WeekKey, locale: Locale = 'en'): string {
   const start = isoDateToDate(weekKey)
   const end = addDays(start, 6)
-  return `${formatWeekRangeShort(weekKey)}, ${end.getFullYear()}`
+  return `${formatWeekRangeShort(weekKey, locale)}, ${end.getFullYear()}`
 }
 
 export function getIsoWeek(date: Date): { year: number; week: number } {
@@ -159,12 +167,19 @@ export function getIsoWeeksInYear(year: number): number {
   return getIsoWeek(new Date(year, 11, 28)).week
 }
 
-export function getIsoWeeksForYear(year: number): HolidayWeekOption[] {
+export function getIsoWeeksForYear(year: number, locale: Locale = 'en'): HolidayWeekOption[] {
   const weeks = getIsoWeeksInYear(year)
   return Array.from({ length: weeks }, (_, index) => {
     const week = index + 1
     const weekKey = getWeekKey(getIsoWeekStart(year, week))
-    return { year, week, label: `Week ${week} — ${formatWeekRangeShort(weekKey)}` }
+    return {
+      year,
+      week,
+      label: translate(messages[locale], 'calendar.weekLabel', {
+        week,
+        range: formatWeekRangeShort(weekKey, locale),
+      }),
+    }
   })
 }
 

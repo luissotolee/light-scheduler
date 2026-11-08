@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { TeamMember } from '@/types'
+import type { MessageKey } from '@/shared/i18n/messages/en'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { todayIsoDate } from '@/shared/utils/calendar'
 import { parseCsv, toCsv } from '@/shared/utils/csv'
@@ -11,9 +12,13 @@ import { formatMinutesToHhmm } from '@/shared/utils/shifts'
 
 export type CsvStatusState = 'idle' | 'success' | 'error'
 
+export type CsvStatusMessage =
+  | { kind: 'simple'; code: MessageKey; params?: Record<string, string | number> }
+  | { kind: 'rowError'; row: number; messageCode: MessageKey }
+
 export interface CsvStatus {
   state: CsvStatusState
-  message: string | null
+  message: CsvStatusMessage | null
 }
 
 export const useCsvStore = defineStore('csv', () => {
@@ -29,19 +34,28 @@ export const useCsvStore = defineStore('csv', () => {
   function exportMembers(): void {
     const members = workspace().members
     if (members.length === 0) {
-      status.value = { state: 'error', message: 'No employees to export' }
+      status.value = {
+        state: 'error',
+        message: { kind: 'simple', code: 'csv.noEmployees' },
+      }
       return
     }
 
     const text = `\uFEFF${toCsv([...EMPLOYEE_HEADERS], employeesToRows(members))}`
     downloadTextFile(timestampedName('employees', 'csv'), text)
-    status.value = { state: 'success', message: 'Employees exported' }
+    status.value = {
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.employeesExported' },
+    }
   }
 
   function importMembers(text: string): void {
     const parsed = parseCsv(text)
     if (!parsed.ok) {
-      status.value = { state: 'error', message: parsed.error }
+      status.value = {
+        state: 'error',
+        message: { kind: 'simple', code: parsed.error },
+      }
       return
     }
 
@@ -50,7 +64,9 @@ export const useCsvStore = defineStore('csv', () => {
       const first = validated.errors[0]
       status.value = {
         state: 'error',
-        message: first ? `Row ${first.row}: ${first.message}` : 'Import failed',
+        message: first
+          ? { kind: 'rowError', row: first.row, messageCode: first.message }
+          : { kind: 'simple', code: 'csv.importFailed' },
       }
       return
     }
@@ -77,18 +93,25 @@ export const useCsvStore = defineStore('csv', () => {
     workspace().setMembers(members)
     status.value = {
       state: 'success',
-      message: `Imported ${members.length} ${members.length === 1 ? 'employee' : 'employees'}`,
+      message: {
+        kind: 'simple',
+        code: members.length === 1 ? 'csv.importedOne' : 'csv.importedMany',
+        params: { count: members.length },
+      },
     }
   }
 
-  function setError(message: string): void {
-    status.value = { state: 'error', message }
+  function setError(message: MessageKey): void {
+    status.value = { state: 'error', message: { kind: 'simple', code: message } }
   }
 
   function exportSchedule(): void {
     const shifts = workspace().currentWeekShifts
     if (shifts.length === 0) {
-      status.value = { state: 'error', message: 'No shifts to export for this week' }
+      status.value = {
+        state: 'error',
+        message: { kind: 'simple', code: 'csv.noShifts' },
+      }
       return
     }
 
@@ -103,7 +126,10 @@ export const useCsvStore = defineStore('csv', () => {
     })
     const text = `\uFEFF${toCsv(['member', 'weekday', 'start', 'end'], rows)}`
     downloadTextFile(timestampedName('schedule', 'csv'), text)
-    status.value = { state: 'success', message: 'Schedule exported' }
+    status.value = {
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.scheduleExported' },
+    }
   }
 
   function resetStatus(): void {

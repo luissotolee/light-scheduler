@@ -70,6 +70,7 @@ Match `src/shared/stores/workspace.ts`, `src/modules/scheduler/stores/scheduler.
 - Immutability: replace arrays for removals (`filter`) and bulk changes (`map`); in-place mutation is only for a single-item update.
 - Derived values are `computed`, never duplicated state. Do not store a count as a `ref` when it can be derived.
 - Actions that target an unknown id do nothing; do not throw for missing records.
+- Error state is a `MessageKey | null` (`import type { MessageKey } from '@/shared/i18n/messages/en'`), translated at the view boundary — never a localized literal. Add any new error key to both `en.ts` and `es.ts` (see the `i18n` skill).
 - The shared `workspace` store is the single source of truth for `members` and `schedules`; module stores read/write it through `useWorkspaceStore()` rather than duplicating state.
 
 ## 4. Wiring views

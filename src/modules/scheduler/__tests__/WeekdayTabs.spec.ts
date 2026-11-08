@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import WeekdayTabs from '@/modules/scheduler/components/WeekdayTabs.vue'
 import type { Weekday } from '@/types'
 
@@ -10,6 +11,8 @@ const weekdays: { value: Weekday; label: string; dayOfMonth: number }[] = [
 
 describe('WeekdayTabs', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),

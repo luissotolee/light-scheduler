@@ -5,7 +5,7 @@
     data-test="employee-table"
     class="employee-table"
   >
-    <Column field="name" header="Name">
+    <Column field="name" :header="t('employees.column.name')">
       <template #body="{ data }">
         <button
           type="button"
@@ -13,8 +13,8 @@
           :data-test="`details-${data.id}`"
           :aria-label="
             data.active
-              ? `View details for ${data.name}`
-              : `View details for ${data.name} (inactive)`
+              ? t('employees.detailsFor', { name: data.name })
+              : t('employees.detailsForInactive', { name: data.name })
           "
           @click="emit('details', data.id)"
         >
@@ -27,7 +27,7 @@
       </template>
     </Column>
 
-    <Column field="duty" header="Duty">
+    <Column field="duty" :header="t('employees.column.duty')">
       <template #body="{ data }">
         <Chip
           :label="dutyLabel(data.duty)"
@@ -36,7 +36,7 @@
       </template>
     </Column>
 
-    <Column field="contract" header="Contract">
+    <Column field="contract" :header="t('employees.column.contract')">
       <template #body="{ data }">
         <Chip
           :label="contractLabel(data.contract)"
@@ -48,30 +48,30 @@
       </template>
     </Column>
 
-    <Column field="weeklyHours" header="Weekly hours">
+    <Column field="weeklyHours" :header="t('employees.column.weeklyHours')">
       <template #body="{ data }">
         <span class="employee-table__hours">{{ data.weeklyHours }}</span>
       </template>
     </Column>
 
-    <Column header="Contact">
+    <Column :header="t('employees.column.contact')">
       <template #body="{ data }">
         <div class="employee-table__contact">
           <span
             v-if="data.phone"
-            v-tooltip.top="`Phone: ${data.phone}`"
+            v-tooltip.top="t('employees.phone', { phone: data.phone })"
             class="employee-table__contact-icon"
             role="img"
-            :aria-label="`Phone: ${data.phone}`"
+            :aria-label="t('employees.phone', { phone: data.phone })"
           >
             <i class="pi pi-phone" aria-hidden="true" />
           </span>
           <span
             v-if="data.email"
-            v-tooltip.top="`Email: ${data.email}`"
+            v-tooltip.top="t('employees.email', { email: data.email })"
             class="employee-table__contact-icon"
             role="img"
-            :aria-label="`Email: ${data.email}`"
+            :aria-label="t('employees.email', { email: data.email })"
           >
             <i class="pi pi-envelope" aria-hidden="true" />
           </span>
@@ -79,67 +79,67 @@
       </template>
     </Column>
 
-    <Column header="Actions">
+    <Column :header="t('employees.column.actions')">
       <template #body="{ data }">
         <div class="employee-table__actions">
           <Button
             v-if="data.active"
-            v-tooltip.top="'Edit'"
+            v-tooltip.top="t('common.edit')"
             type="button"
             icon="pi pi-pencil"
             size="small"
             text
             rounded
-            :aria-label="`Edit ${data.name}`"
+            :aria-label="t('employees.editAria', { name: data.name })"
             :data-test="`edit-${data.id}`"
             @click="emit('edit', data.id)"
           />
           <Button
             v-if="data.active"
-            v-tooltip.top="'Holidays'"
+            v-tooltip.top="t('common.holidays')"
             type="button"
             icon="pi pi-calendar"
             size="small"
             text
             rounded
-            :aria-label="`Holidays for ${data.name}`"
+            :aria-label="t('employees.holidaysAria', { name: data.name })"
             :data-test="`holidays-${data.id}`"
             @click="emit('holidays', data.id)"
           />
           <Button
             v-if="data.active"
-            v-tooltip.top="'Deactivate'"
+            v-tooltip.top="t('common.deactivate')"
             type="button"
             icon="pi pi-user-minus"
             size="small"
             text
             rounded
             severity="warn"
-            :aria-label="`Deactivate ${data.name}`"
+            :aria-label="t('employees.deactivateAria', { name: data.name })"
             :data-test="`deactivate-${data.id}`"
             @click="emit('deactivate', data.id)"
           />
           <Button
             v-else
-            v-tooltip.top="'Reactivate'"
+            v-tooltip.top="t('common.reactivate')"
             type="button"
             icon="pi pi-user-plus"
             size="small"
             text
             rounded
-            :aria-label="`Reactivate ${data.name}`"
+            :aria-label="t('employees.reactivateAria', { name: data.name })"
             :data-test="`reactivate-${data.id}`"
             @click="emit('reactivate', data.id)"
           />
           <Button
-            v-tooltip.top="'Remove'"
+            v-tooltip.top="t('common.remove')"
             type="button"
             icon="pi pi-trash"
             size="small"
             text
             rounded
             severity="danger"
-            :aria-label="`Remove ${data.name}`"
+            :aria-label="t('employees.removeAria', { name: data.name })"
             :data-test="`remove-${data.id}`"
             @click="emit('remove', data.id)"
           />
@@ -155,13 +155,8 @@ import Chip from 'primevue/chip'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import type { TeamMember } from '@/types'
-import {
-  CONTRACT_LABELS,
-  DUTY_LABELS,
-  dutyModifier,
-  isContract,
-  isDuty,
-} from '@/shared/utils/employee'
+import { useI18n } from '@/shared/i18n'
+import { dutyModifier, isContract, isDuty } from '@/shared/utils/employee'
 
 defineProps<{
   members: TeamMember[]
@@ -176,16 +171,18 @@ const emit = defineEmits<{
   reactivate: [id: string]
 }>()
 
+const { t } = useI18n()
+
 function rowClass(data: TeamMember): string {
   return data.active ? '' : 'employee-table__row--inactive'
 }
 
 function dutyLabel(value: unknown): string {
-  return isDuty(value) ? DUTY_LABELS[value] : ''
+  return isDuty(value) ? t(`duty.${value}`) : ''
 }
 
 function contractLabel(value: unknown): string {
-  return isContract(value) ? CONTRACT_LABELS[value] : ''
+  return isContract(value) ? t(`contract.${value}`) : ''
 }
 
 function contractModifier(value: unknown): string {

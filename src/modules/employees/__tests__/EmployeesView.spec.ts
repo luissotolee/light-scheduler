@@ -4,12 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
-import ConfirmActionDialog from '@/modules/employees/components/ConfirmActionDialog.vue'
+import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
 import EmployeeDetailsDialog from '@/modules/employees/components/EmployeeDetailsDialog.vue'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
 import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
 import EmployeesView from '@/modules/employees/views/EmployeesView.vue'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
+import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
@@ -41,6 +42,8 @@ describe('EmployeesView', () => {
   let pinia: ReturnType<typeof createPinia>
 
   beforeEach(() => {
+    localStorage.clear()
+    document.documentElement.lang = 'en'
     pinia = createPinia()
     setActivePinia(pinia)
     vi.stubGlobal('matchMedia', () => ({
@@ -319,6 +322,26 @@ describe('EmployeesView', () => {
 
     expect(store.confirmVisible).toBe(false)
     expect(store.pendingAction).toBeNull()
+  })
+
+  it('re-renders the same mounted view in Spanish when the locale changes', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const wrapper = mountView()
+    const root = wrapper.find('.employees').element
+    const localeStore = useLocaleStore()
+
+    expect(wrapper.text()).toContain('Employees: 1')
+    expect(wrapper.find('[data-test="add-employee"]').text()).toBe('Add employee')
+
+    localeStore.setLocale('es')
+    await nextTick()
+
+    expect(wrapper.find('.employees').element).toBe(root)
+    expect(wrapper.text()).toContain('Empleados: 1')
+    expect(wrapper.find('[data-test="add-employee"]').text()).toBe('Añadir empleado')
+    expect(wrapper.find('input[type="search"]').attributes('placeholder')).toBe('Buscar por nombre')
+    expect(document.documentElement.lang).toBe('es')
   })
 
   it('opens the employee details dialog from the name', async () => {

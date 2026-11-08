@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useCsvStore } from '@/modules/csv/stores/csv'
+import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
@@ -41,6 +42,7 @@ describe('csv store', () => {
   let downloadName = ''
 
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     blobs.length = 0
     downloadName = ''
@@ -77,7 +79,10 @@ describe('csv store', () => {
 
     store.exportMembers()
 
-    expect(store.status).toEqual({ state: 'error', message: 'No employees to export' })
+    expect(store.status).toEqual({
+      state: 'error',
+      message: { kind: 'simple', code: 'csv.noEmployees' },
+    })
     expect(createObjectURL).not.toHaveBeenCalled()
   })
 
@@ -89,7 +94,10 @@ describe('csv store', () => {
     store.exportMembers()
 
     expect(store.canExportMembers).toBe(true)
-    expect(store.status).toEqual({ state: 'success', message: 'Employees exported' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.employeesExported' },
+    })
     expect(downloadName).toBe('employees-2026-11-05T20-57-00-000Z.csv')
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
 
@@ -115,7 +123,10 @@ describe('csv store', () => {
         'Cy,assistant,weekends,12,2026-W20;2026-W19,cy@example.com,+1 555 010 0003',
     )
 
-    expect(store.status).toEqual({ state: 'success', message: 'Imported 2 employees' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.importedMany', params: { count: 2 } },
+    })
     expect(workspace.members).toHaveLength(2)
     expect(workspace.members[0]).toMatchObject({
       name: 'Bo',
@@ -151,7 +162,10 @@ describe('csv store', () => {
     const text = await blobs[0].text()
     store.importMembers(text)
 
-    expect(store.status).toEqual({ state: 'success', message: 'Imported 2 employees' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.importedMany', params: { count: 2 } },
+    })
     expect(workspace.members[0]).toMatchObject({
       name: 'Ada',
       email: 'ada@example.com',
@@ -183,7 +197,10 @@ describe('csv store', () => {
     const text = await blobs[0].text()
     store.importMembers(text)
 
-    expect(store.status).toEqual({ state: 'success', message: 'Imported 1 employee' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.importedOne', params: { count: 1 } },
+    })
     expect(workspace.members[0]).toMatchObject({
       name: 'Ada',
       active: false,
@@ -200,7 +217,10 @@ describe('csv store', () => {
       'name,duty,contract,weeklyHours,holidays\r\nAda,manager,fulltime,40,2026-W10',
     )
 
-    expect(store.status).toEqual({ state: 'success', message: 'Imported 1 employee' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.importedOne', params: { count: 1 } },
+    })
     expect(workspace.members[0]).toMatchObject({
       name: 'Ada',
       active: true,
@@ -216,12 +236,18 @@ describe('csv store', () => {
       'name,duty,contract,weeklyHours,holidays,email,phone\r\n' +
         'Ada,manager,fulltime,40,,not-an-email,5551234',
     )
-    expect(store.status).toEqual({ state: 'error', message: 'Row 2: Email is invalid' })
+    expect(store.status).toEqual({
+      state: 'error',
+      message: { kind: 'rowError', row: 2, messageCode: 'errors.invalidEmail' },
+    })
 
     store.importMembers(
       'name,duty,contract,weeklyHours,holidays,email,phone\r\n' + 'Ada,manager,fulltime,40,,,123',
     )
-    expect(store.status).toEqual({ state: 'error', message: 'Row 2: Phone is invalid' })
+    expect(store.status).toEqual({
+      state: 'error',
+      message: { kind: 'rowError', row: 2, messageCode: 'errors.invalidPhone' },
+    })
   })
 
   it('imports legacy employees without the optional phone header', () => {
@@ -233,7 +259,10 @@ describe('csv store', () => {
         'Ada,manager,fulltime,40,,ada@example.com',
     )
 
-    expect(store.status).toEqual({ state: 'success', message: 'Imported 1 employee' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.importedOne', params: { count: 1 } },
+    })
     expect(workspace.members[0]).toMatchObject({
       name: 'Ada',
       email: 'ada@example.com',
@@ -248,7 +277,10 @@ describe('csv store', () => {
       'name,duty,contract,weeklyHours,holidays\r\nAda,manager,fulltime,40,2026-W1',
     )
 
-    expect(store.status).toEqual({ state: 'success', message: 'Imported 1 employee' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.importedOne', params: { count: 1 } },
+    })
   })
 
   it('reports the first row error and leaves the workspace unchanged', () => {
@@ -262,7 +294,10 @@ describe('csv store', () => {
         'Bo,employee,part_time,20,',
     )
 
-    expect(store.status).toEqual({ state: 'error', message: 'Row 2: Duty is invalid' })
+    expect(store.status).toEqual({
+      state: 'error',
+      message: { kind: 'rowError', row: 2, messageCode: 'errors.invalidDuty' },
+    })
     expect(workspace.members).toEqual([ada])
   })
 
@@ -271,27 +306,36 @@ describe('csv store', () => {
 
     store.importMembers('name,email\r\nAda,ada@example.com')
 
-    expect(store.status).toEqual({ state: 'error', message: 'Row 1: Unexpected CSV headers' })
+    expect(store.status).toEqual({
+      state: 'error',
+      message: { kind: 'rowError', row: 1, messageCode: 'errors.unexpectedHeaders' },
+    })
   })
 
   it('reports empty and malformed CSV input', () => {
     const store = useCsvStore()
 
     store.importMembers('   ')
-    expect(store.status).toEqual({ state: 'error', message: 'CSV file is empty' })
+    expect(store.status).toEqual({
+      state: 'error',
+      message: { kind: 'simple', code: 'csv.empty' },
+    })
 
     store.importMembers('name,duty\r\n"Ada,employee')
-    expect(store.status).toEqual({ state: 'error', message: 'Unterminated quoted field' })
+    expect(store.status).toEqual({
+      state: 'error',
+      message: { kind: 'simple', code: 'csv.unterminated' },
+    })
   })
 
   it('exposes a setter for import errors', () => {
     const store = useCsvStore()
 
-    store.setError('CSV file is too large (max 5 MB)')
+    store.setError('csv.tooLarge')
 
     expect(store.status).toEqual({
       state: 'error',
-      message: 'CSV file is too large (max 5 MB)',
+      message: { kind: 'simple', code: 'csv.tooLarge' },
     })
   })
 
@@ -302,7 +346,7 @@ describe('csv store', () => {
 
     expect(store.status).toEqual({
       state: 'error',
-      message: 'No shifts to export for this week',
+      message: { kind: 'simple', code: 'csv.noShifts' },
     })
     expect(createObjectURL).not.toHaveBeenCalled()
   })
@@ -332,7 +376,10 @@ describe('csv store', () => {
     store.exportSchedule()
 
     expect(store.canExportSchedule).toBe(true)
-    expect(store.status).toEqual({ state: 'success', message: 'Schedule exported' })
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'csv.scheduleExported' },
+    })
     expect(downloadName).toBe('schedule-2026-11-05T20-57-00-000Z.csv')
 
     const blob = blobs[0]
@@ -342,6 +389,63 @@ describe('csv store', () => {
     expect(await blob.slice(3).text()).toBe(
       'member,weekday,start,end\r\nAda,monday,09:00,17:00\r\nmissing-member,tuesday,10:00,11:00',
     )
+  })
+
+  it('exports byte-identical CSV regardless of the active locale', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada, bo])
+    workspace.setShiftsForWeek('2026-11-02', [
+      {
+        id: 'shift-1',
+        memberId: 'member-1',
+        weekday: 'monday',
+        startMinute: 540,
+        endMinute: 1020,
+      },
+    ])
+    const store = useCsvStore()
+    const localeStore = useLocaleStore()
+
+    localeStore.setLocale('en')
+    store.exportMembers()
+    const enMembers = await blobs[0].text()
+    const enMembersName = downloadName
+
+    localeStore.setLocale('es')
+    store.exportMembers()
+    const esMembers = await blobs[1].text()
+    const esMembersName = downloadName
+
+    expect(esMembers).toBe(enMembers)
+    expect(esMembersName).toBe(enMembersName)
+
+    localeStore.setLocale('en')
+    store.exportSchedule()
+    const enSchedule = await blobs[2].text()
+    const enScheduleName = downloadName
+
+    localeStore.setLocale('es')
+    store.exportSchedule()
+    const esSchedule = await blobs[3].text()
+    const esScheduleName = downloadName
+
+    expect(esSchedule).toBe(enSchedule)
+    expect(esScheduleName).toBe(enScheduleName)
+    expect(new Uint8Array(await blobs[0].slice(0, 3).arrayBuffer())).toEqual(
+      new Uint8Array([0xef, 0xbb, 0xbf]),
+    )
+    expect(enMembers).toContain('\r\n')
+    expect(enMembers).toContain(
+      'name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate',
+    )
+    expect(enMembers).toContain('true,')
+    expect(enMembers).toContain('part_time')
+    expect(enMembers).toContain('2025-01-15')
+    expect(enMembersName.startsWith('employees-')).toBe(true)
+    expect(enScheduleName.startsWith('schedule-')).toBe(true)
+    expect(enSchedule).toContain('member,weekday,start,end')
+    expect(enSchedule).toContain('monday,09:00,17:00')
   })
 
   it('resets the status', () => {

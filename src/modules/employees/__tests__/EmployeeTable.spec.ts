@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import Tooltip from 'primevue/tooltip'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
 import type { TeamMember } from '@/types'
@@ -32,6 +33,8 @@ const members: TeamMember[] = [
 
 describe('EmployeeTable', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),

@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import Tooltip from 'primevue/tooltip'
 import WeeklyHoursTable from '@/modules/scheduler/components/WeeklyHoursTable.vue'
 import type { WeeklyHoursGroup } from '@/modules/scheduler/utils/hours'
@@ -7,7 +8,6 @@ import type { WeeklyHoursGroup } from '@/modules/scheduler/utils/hours'
 const groups: WeeklyHoursGroup[] = [
   {
     duty: 'manager',
-    label: 'Managers',
     rows: [
       {
         memberId: 'ada',
@@ -21,7 +21,6 @@ const groups: WeeklyHoursGroup[] = [
   },
   {
     duty: 'employee',
-    label: 'Employees',
     rows: [
       {
         memberId: 'bo',
@@ -51,6 +50,11 @@ function mountTable(tableGroups: WeeklyHoursGroup[] = groups) {
 }
 
 describe('WeeklyHoursTable', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+  })
+
   it('renders the heading and a visually hidden caption', () => {
     const wrapper = mountTable()
 
@@ -102,9 +106,7 @@ describe('WeeklyHoursTable', () => {
       contractHours: 40,
       diffHours: 0,
     }))
-    const wrapper = mountTable([
-      { duty: 'employee', label: 'Employees', rows: manyRows },
-    ])
+    const wrapper = mountTable([{ duty: 'employee', rows: manyRows }])
 
     expect(wrapper.find('.weekly-hours__scroll').exists()).toBe(true)
     expect(wrapper.findAll('.weekly-hours__name')).toHaveLength(12)
@@ -148,7 +150,6 @@ describe('WeeklyHoursTable', () => {
       groups: [
         {
           duty: 'manager',
-          label: 'Managers',
           rows: [
             {
               memberId: 'ada',

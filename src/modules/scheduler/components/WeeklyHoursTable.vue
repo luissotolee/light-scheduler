@@ -1,16 +1,16 @@
 <template>
   <section class="weekly-hours" data-test="weekly-hours">
-    <h2 class="weekly-hours__title">Weekly hours</h2>
+    <h2 class="weekly-hours__title">{{ t('weeklyHours.title') }}</h2>
 
     <div v-if="groups.length > 0" class="weekly-hours__scroll">
       <table class="weekly-hours__table">
         <caption class="weekly-hours__caption visually-hidden">
-          Weekly scheduled and contract hours per employee
+          {{ t('weeklyHours.caption') }}
         </caption>
         <thead>
           <tr>
             <th scope="col" rowspan="2" class="weekly-hours__corner">
-              <span class="visually-hidden">Metric</span>
+              <span class="visually-hidden">{{ t('weeklyHours.metric') }}</span>
             </th>
             <th
               v-for="group in groups"
@@ -20,7 +20,7 @@
               class="weekly-hours__group"
               :data-test="`weekly-hours-group-${group.duty}`"
             >
-              {{ group.label }}
+              {{ t(`hours.group.${group.duty}`) }}
             </th>
           </tr>
           <tr>
@@ -39,7 +39,7 @@
         </thead>
         <tbody>
           <tr data-test="weekly-hours-metric-current">
-            <th scope="row" class="weekly-hours__metric">Current</th>
+            <th scope="row" class="weekly-hours__metric">{{ t('weeklyHours.current') }}</th>
             <td
               v-for="row in flatRows"
               :key="row.memberId"
@@ -50,7 +50,7 @@
             </td>
           </tr>
           <tr data-test="weekly-hours-metric-contract">
-            <th scope="row" class="weekly-hours__metric">Contract</th>
+            <th scope="row" class="weekly-hours__metric">{{ t('weeklyHours.contract') }}</th>
             <td
               v-for="row in flatRows"
               :key="row.memberId"
@@ -61,7 +61,7 @@
             </td>
           </tr>
           <tr data-test="weekly-hours-metric-diff">
-            <th scope="row" class="weekly-hours__metric">Diff</th>
+            <th scope="row" class="weekly-hours__metric">{{ t('weeklyHours.diff') }}</th>
             <td
               v-for="row in flatRows"
               :key="row.memberId"
@@ -76,7 +76,7 @@
       </table>
     </div>
 
-    <p v-else class="weekly-hours__empty">No active employees.</p>
+    <p v-else class="weekly-hours__empty">{{ t('weeklyHours.empty') }}</p>
   </section>
 </template>
 
@@ -84,10 +84,13 @@
 import { computed } from 'vue'
 import type { WeeklyHoursGroup, WeeklyHoursRow } from '@/modules/scheduler/utils/hours'
 import { formatDiff, formatHours } from '@/modules/scheduler/utils/hours'
+import { useI18n } from '@/shared/i18n'
 
 const props = defineProps<{
   groups: WeeklyHoursGroup[]
 }>()
+
+const { t } = useI18n()
 
 const flatRows = computed<WeeklyHoursRow[]>(() => props.groups.flatMap((group) => group.rows))
 

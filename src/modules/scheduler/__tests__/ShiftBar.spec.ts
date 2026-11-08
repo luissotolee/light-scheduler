@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import ShiftBar from '@/modules/scheduler/components/ShiftBar.vue'
 import type { Shift } from '@/types'
@@ -40,6 +41,8 @@ function stubTrackRect(width = 1536): void {
 
 describe('ShiftBar', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),

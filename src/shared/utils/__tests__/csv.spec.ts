@@ -92,12 +92,12 @@ describe('parseCsv', () => {
   })
 
   it('returns an error for empty input', () => {
-    expect(parseCsv('')).toEqual({ ok: false, error: 'CSV file is empty' })
-    expect(parseCsv('   \n')).toEqual({ ok: false, error: 'CSV file is empty' })
+    expect(parseCsv('')).toEqual({ ok: false, error: 'csv.empty' })
+    expect(parseCsv('   \n')).toEqual({ ok: false, error: 'csv.empty' })
   })
 
   it('returns an error for an unterminated quoted field', () => {
-    expect(parseCsv('name\n"Ada')).toEqual({ ok: false, error: 'Unterminated quoted field' })
+    expect(parseCsv('name\n"Ada')).toEqual({ ok: false, error: 'csv.unterminated' })
   })
 })
 

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Duty, Shift, TeamMember } from '@/types'
 import {
-  WEEKLY_HOURS_GROUP_LABELS,
   buildWeeklyHoursGroups,
   compareMembersByDuty,
   compareNames,
@@ -184,11 +183,6 @@ describe('buildWeeklyHoursGroups', () => {
     const groups = buildWeeklyHoursGroups(members, [])
 
     expect(groups.map((group) => group.duty)).toEqual(['assistant', 'manager', 'employee'])
-    expect(groups.map((group) => group.label)).toEqual([
-      WEEKLY_HOURS_GROUP_LABELS.assistant,
-      WEEKLY_HOURS_GROUP_LABELS.manager,
-      WEEKLY_HOURS_GROUP_LABELS.employee,
-    ])
     expect(groups.some((group) => group.duty === 'head_manager')).toBe(false)
   })
 
