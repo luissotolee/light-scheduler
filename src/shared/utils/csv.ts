@@ -1,6 +1,8 @@
+import type { MessageKey } from '@/shared/i18n/messages/en'
+
 export type CsvParseResult =
   | { ok: true; headers: string[]; rows: string[][] }
-  | { ok: false; error: string }
+  | { ok: false; error: MessageKey }
 
 export function inferDelimiter(text: string): string {
   const firstLine = text.split('\n', 1)[0] ?? ''
@@ -12,7 +14,7 @@ export function inferDelimiter(text: string): string {
 
 export function parseCsv(input: string): CsvParseResult {
   const text = input.replace(/^\uFEFF/, '')
-  if (!text.trim()) return { ok: false, error: 'CSV file is empty' }
+  if (!text.trim()) return { ok: false, error: 'csv.empty' }
 
   const delimiter = inferDelimiter(text)
   const records: string[][] = []
@@ -52,7 +54,7 @@ export function parseCsv(input: string): CsvParseResult {
     }
   }
 
-  if (inQuotes) return { ok: false, error: 'Unterminated quoted field' }
+  if (inQuotes) return { ok: false, error: 'csv.unterminated' }
 
   if (field.length > 0 || record.length > 0) {
     record.push(field)
@@ -60,7 +62,7 @@ export function parseCsv(input: string): CsvParseResult {
   }
 
   const nonEmpty = records.filter((row) => row.some((cell) => cell.trim() !== ''))
-  if (nonEmpty.length === 0) return { ok: false, error: 'CSV file is empty' }
+  if (nonEmpty.length === 0) return { ok: false, error: 'csv.empty' }
 
   const [headers, ...rows] = nonEmpty
   return { ok: true, headers, rows }

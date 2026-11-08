@@ -13,6 +13,8 @@ Before changing code, read `workspace.md` for the module map and where files bel
 
 Load the skill that matches the task area via the `skill` tool; each skill's `description` (in its frontmatter) is the trigger. Load at most one skill per task — the most specific match. If none matches, proceed without one. Loading a skill injects its full body into your context; that is intentional and cheaper than guessing at conventions or repairing a misimplemented feature.
 
+If the task adds, changes, or removes any label, message, error, `aria-label`, or other user-visible text, load the `i18n` skill and follow its golden rule: the app ships two languages (English and Spanish), so update **both** `src/shared/i18n/messages/en.ts` and `src/shared/i18n/messages/es.ts` in the same change.
+
 ## Your job
 
 1. Follow the provided plan (or the direct simple task) exactly.
@@ -23,5 +25,6 @@ Load the skill that matches the task area via the `skill` tool; each skill's `de
 ## Rules
 
 - Match existing patterns and naming conventions; do not introduce new libraries unless the plan requires them.
+- Never hardcode user-facing text: use `t()`/`tc()` from `@/shared/i18n`, and add/update the key in both `en.ts` and `es.ts` in the same change.
 - Do not add comments unless asked.
 - Report a concise summary of what changed and the verification results.

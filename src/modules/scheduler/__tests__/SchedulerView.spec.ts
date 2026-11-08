@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
+import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
 import SchedulerView from '@/modules/scheduler/views/SchedulerView.vue'
 import ShiftGrid from '@/modules/scheduler/components/ShiftGrid.vue'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { Shift, TeamMember } from '@/types'
 import { formatWeekRange, getWeekKey } from '@/shared/utils/calendar'
@@ -52,6 +54,8 @@ describe('SchedulerView', () => {
   let pinia: ReturnType<typeof createPinia>
 
   beforeEach(() => {
+    localStorage.clear()
+    document.documentElement.lang = 'en'
     pinia = createPinia()
     setActivePinia(pinia)
     vi.stubGlobal('matchMedia', () => ({
@@ -67,7 +71,11 @@ describe('SchedulerView', () => {
 
   function mountView() {
     return mount(SchedulerView, {
-      global: { plugins: [pinia], directives: { tooltip: Tooltip } },
+      global: {
+        plugins: [pinia, PrimeVue],
+        stubs: { teleport: true },
+        directives: { tooltip: Tooltip },
+      },
     })
   }
 
@@ -99,6 +107,57 @@ describe('SchedulerView', () => {
     expect(previous.find('.pi-chevron-left').exists()).toBe(true)
     expect(next.find('.pi-chevron-right').exists()).toBe(true)
     expect(toolbar.find('strong').text()).toBe(formatWeekRange(getWeekKey(new Date())))
+  })
+
+  it('renders a right-aligned restart button with an accessible label', () => {
+    const wrapper = mountView()
+    const actions = wrapper.find('.scheduler__actions')
+    const restart = actions.find('[data-test="restart-week"]')
+
+    expect(actions.exists()).toBe(true)
+    expect(restart.element.tagName).toBe('BUTTON')
+    expect(restart.attributes('aria-label')).toBe('Restart week schedule')
+    expect(restart.text()).toBe('')
+    expect(restart.find('.pi-refresh').exists()).toBe(true)
+  })
+
+  it('clears the current week after confirming the restart dialog', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada, bo])
+    workspace.setShiftsForWeek('2026-11-02', [mondayShift, tuesdayShift])
+    workspace.setDayOffsForWeek('2026-11-02', [{ memberId: 'member-1', weekday: 'monday' }])
+    const wrapper = mountView()
+
+    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(false)
+
+    await wrapper.find('[data-test="restart-week"]').trigger('click')
+
+    expect(wrapper.find('[data-test="confirm-message"]').text()).toBe(
+      'This clears all shifts and days off for the current week. Team members are kept. This cannot be undone.',
+    )
+
+    await wrapper.find('[data-test="confirm-accept"]').trigger('click')
+
+    expect(workspace.currentWeekShifts).toEqual([])
+    expect(workspace.currentWeekDayOffs).toEqual([])
+    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(false)
+  })
+
+  it('keeps the current week when the restart dialog is cancelled', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada, bo])
+    workspace.setShiftsForWeek('2026-11-02', [mondayShift, tuesdayShift])
+    workspace.setDayOffsForWeek('2026-11-02', [{ memberId: 'member-1', weekday: 'monday' }])
+    const wrapper = mountView()
+
+    await wrapper.find('[data-test="restart-week"]').trigger('click')
+    await wrapper.find('[data-test="confirm-cancel"]').trigger('click')
+
+    expect(workspace.currentWeekShifts).toEqual([mondayShift, tuesdayShift])
+    expect(workspace.currentWeekDayOffs).toEqual([{ memberId: 'member-1', weekday: 'monday' }])
+    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(false)
   })
 
   it('navigates to the next and previous week', async () => {
@@ -260,6 +319,23 @@ describe('SchedulerView', () => {
     expect(track().classes()).toContain('shift-row__track--disabled')
   })
 
+  it('clears an existing shift when the member is marked off for the day', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada, bo])
+    workspace.setShiftsForWeek('2026-11-02', [mondayShift])
+    const wrapper = mountView()
+
+    expect(wrapper.text()).toContain('09:00–12:00')
+
+    await wrapper
+      .find('[data-test="shift-row-member-1"] [data-test="shift-row-name-toggle"]')
+      .trigger('click')
+
+    expect(wrapper.text()).not.toContain('09:00–12:00')
+    expect(workspace.currentWeekShifts).toEqual([])
+  })
+
   it('shows the store error in an alert', () => {
     const store = useSchedulerStore()
     store.addShiftRange({ memberId: 'member-1', startMinute: 540, endMinute: 550 })
@@ -311,6 +387,27 @@ describe('SchedulerView', () => {
     expect(wrapper.find('[data-test="weekly-hours-row-member-1-diff"]').text()).toBe('-37.0')
     expect(wrapper.find('[data-test="weekly-hours-row-member-2-current"]').text()).toBe('1.0')
     expect(wrapper.find('[data-test="weekly-hours-row-member-2-diff"]').text()).toBe('-19.0')
+  })
+
+  it('renders Spanish weekday labels and dates live', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    const wrapper = mountView()
+
+    useLocaleStore().setLocale('es')
+    await nextTick()
+
+    expect(wrapper.find('[data-test="weekday-tab-monday"]').text()).toBe('Lunes 2')
+    expect(wrapper.find('[data-test="scheduler-selected-day"]').text()).toBe(
+      'lunes, 2 de noviembre de 2026',
+    )
+    expect(wrapper.find('[data-test="previous-week"]').attributes('aria-label')).toBe(
+      'Semana anterior',
+    )
+    expect(wrapper.find('[data-test="restart-week"]').attributes('aria-label')).toBe(
+      'Reiniciar planificación semanal',
+    )
+    expect(wrapper.find('.weekly-hours__title').text()).toBe('Horas semanales')
   })
 
   it('updates a weekly hours cell when the store changes', async () => {

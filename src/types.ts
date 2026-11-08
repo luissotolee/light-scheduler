@@ -1,3 +1,5 @@
+import type { MessageKey } from '@/shared/i18n/messages/en'
+
 export type Weekday =
   'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
 
@@ -60,18 +62,19 @@ export interface EmployeeFormInput {
 }
 
 export interface EmployeeFormErrors {
-  name?: string
-  duty?: string
-  contract?: string
-  weeklyHours?: string
-  email?: string
-  phone?: string
-  holidays?: string
-  startDate?: string
+  name?: MessageKey
+  duty?: MessageKey
+  contract?: MessageKey
+  weeklyHours?: MessageKey
+  email?: MessageKey
+  phone?: MessageKey
+  holidays?: MessageKey
+  startDate?: MessageKey
 }
 
 export type EmployeeFormValidation =
-  { ok: true; value: NewTeamMember } | { ok: false; errors: EmployeeFormErrors; message: string }
+  | { ok: true; value: NewTeamMember }
+  | { ok: false; errors: EmployeeFormErrors; message: MessageKey }
 
 export interface Shift {
   id: string
@@ -110,6 +113,6 @@ export interface WeekSchedule {
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string }
 
-export type RowError = { row: number; message: string }
+export type RowError = { row: number; message: MessageKey }
 
 export type Validated<T> = { ok: true; data: T[] } | { ok: false; errors: RowError[] }

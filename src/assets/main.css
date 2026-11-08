@@ -23,6 +23,8 @@
   --grid-name-width: 168px;
   --grid-hours-width: 4rem;
   --grid-header-height: 2.25rem;
+  --grid-row-height: var(--grid-header-height);
+  --grid-bar-inset: 0.2rem;
   --header-height: 3.5rem;
   --nav-gap: 1rem;
   --space-page-x: clamp(1rem, 4vw, 2.5rem);

@@ -1,57 +1,56 @@
 <template>
   <section class="home">
-    <PageHeader
-      title="Light Scheduler"
-      description="A light, modern weekly shift scheduler for teams. It is frontend-only: all data stays in your browser and round-trips through CSV files so you can pick up where you left off."
-    />
+    <PageHeader title="Light Scheduler" :description="t('home.description')" />
 
-    <p class="home__intro">
-      Plan daily shifts across a week for many employees, review the result, and keep a history of
-      past schedules without a backend.
-    </p>
+    <p class="home__intro">{{ t('home.intro') }}</p>
 
     <ul class="home__features">
       <li v-for="feature in features" :key="feature.path" class="home__feature">
-        <RouterLink class="home__feature-link" :to="feature.path">{{ feature.title }}</RouterLink>
-        <p class="home__feature-description">{{ feature.description }}</p>
+        <RouterLink class="home__feature-link" :to="feature.path">
+          {{ t(feature.titleKey) }}
+        </RouterLink>
+        <p class="home__feature-description">{{ t(feature.descriptionKey) }}</p>
       </li>
     </ul>
 
-    <RouterLink class="home__cta" to="/scheduler">Start scheduling</RouterLink>
+    <RouterLink class="home__cta" to="/scheduler">{{ t('home.cta') }}</RouterLink>
   </section>
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import PageHeader from '@/shared/components/PageHeader.vue'
+import { useI18n } from '@/shared/i18n'
+
+const { t } = useI18n()
 
 const features = [
   {
-    title: 'Scheduler',
-    description: 'Build weekly shifts for every employee on your team.',
+    titleKey: 'home.feature.scheduler.title',
+    descriptionKey: 'home.feature.scheduler.description',
     path: '/scheduler',
   },
   {
-    title: 'Employees',
-    description: 'Keep the employee records used by every schedule.',
+    titleKey: 'home.feature.employees.title',
+    descriptionKey: 'home.feature.employees.description',
     path: '/employees',
   },
   {
-    title: 'Summary',
-    description: 'Review a week and print it or save it as a PDF.',
+    titleKey: 'home.feature.summary.title',
+    descriptionKey: 'home.feature.summary.description',
     path: '/summary',
   },
   {
-    title: 'History',
-    description: 'Browse the weekly schedules you have saved.',
+    titleKey: 'home.feature.history.title',
+    descriptionKey: 'home.feature.history.description',
     path: '/history',
   },
   {
-    title: 'CSV I/O',
-    description: 'Export employees and schedules, or import files to resume work.',
+    titleKey: 'home.feature.csv.title',
+    descriptionKey: 'home.feature.csv.description',
     path: '/csv',
   },
-]
+] as const
 </script>
 
 <style scoped>

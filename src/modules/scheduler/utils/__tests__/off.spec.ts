@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { DayOff } from '@/types'
-import { MAX_DAYS_OFF, countDaysOffByMember } from '@/modules/scheduler/utils/off'
+import { MIN_DAYS_OFF, countDaysOffByMember } from '@/modules/scheduler/utils/off'
 
 describe('off utils', () => {
-  it('exposes the weekly cap of two days off', () => {
-    expect(MAX_DAYS_OFF).toBe(2)
+  it('exposes the weekly minimum of two days off', () => {
+    expect(MIN_DAYS_OFF).toBe(2)
   })
 
   it('returns an empty map when there are no days off', () => {

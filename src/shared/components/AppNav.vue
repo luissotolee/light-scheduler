@@ -1,7 +1,7 @@
 <template>
-  <nav class="app-nav" aria-label="Primary">
+  <nav class="app-nav" :aria-label="t('app.navPrimary')">
     <RouterLink v-for="item in items" :key="item.name" class="app-nav__link" :to="item.path">
-      {{ item.label }}
+      {{ t(item.labelKey) }}
     </RouterLink>
   </nav>
 </template>
@@ -9,10 +9,13 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import type { NavItem } from '@/router/nav'
+import { useI18n } from '@/shared/i18n'
 
 defineProps<{
   items: NavItem[]
 }>()
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

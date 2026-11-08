@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
+import type { Directive } from 'vue'
 import ShiftRow from '@/modules/scheduler/components/ShiftRow.vue'
 import ShiftBar from '@/modules/scheduler/components/ShiftBar.vue'
 import type { DayRow } from '@/modules/scheduler/types'
 import type { Shift, TeamMember } from '@/types'
+import { useI18n } from '@/shared/i18n'
+import { MIN_DAYS_OFF } from '@/modules/scheduler/utils/off'
 import { buildDaySlots } from '@/shared/utils/shifts'
 
 const member: TeamMember = {
@@ -66,6 +70,8 @@ function stubTrackRect(width = 1536): void {
 
 describe('ShiftRow', () => {
   beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
     vi.stubGlobal('matchMedia', () => ({
       matches: false,
       addEventListener: vi.fn(),
@@ -159,12 +165,47 @@ describe('ShiftRow', () => {
     )
   })
 
-  it('highlights the chip when the weekly cap is reached', () => {
-    const wrapper = mountRow([], { daysOffCount: 2 })
+  it('flags the chip once the weekly minimum is reached', () => {
+    const belowMinimum = mountRow([], { daysOffCount: 1 })
+    const atMinimum = mountRow([], { daysOffCount: MIN_DAYS_OFF })
 
+    const belowChip = belowMinimum.find('[data-test="day-off-count"]')
+    expect(belowChip.text()).toBe('1/2')
+    expect(belowChip.classes()).not.toContain('shift-row__day-off-chip--full')
+
+    const atChip = atMinimum.find('[data-test="day-off-count"]')
+    expect(atChip.text()).toBe('2/2')
+    expect(atChip.classes()).toContain('shift-row__day-off-chip--full')
+  })
+
+  it('binds the days-off tooltip through the tooltip directive', () => {
+    const tooltipBindings: Array<{ el: HTMLElement; value: string }> = []
+    const recordingTooltip: Directive<HTMLElement, string> = {
+      mounted(el, binding) {
+        tooltipBindings.push({ el, value: binding.value })
+      },
+    }
+
+    const wrapper = mount(ShiftRow, {
+      props: { row: makeRow([], { daysOffCount: 1 }), slots: buildDaySlots() },
+      global: { stubs: { teleport: true }, directives: { tooltip: recordingTooltip } },
+    })
+
+    const { t } = useI18n()
     const chip = wrapper.find('[data-test="day-off-count"]')
-    expect(chip.text()).toBe('2/2')
-    expect(chip.classes()).toContain('shift-row__day-off-chip--full')
+
+    expect(chip.attributes('title')).toBeUndefined()
+    expect(tooltipBindings).toEqual([
+      {
+        el: chip.element,
+        value: t('shiftRow.daysOffTooltip', {
+          count: 1,
+          min: MIN_DAYS_OFF,
+          name: 'Ada',
+        }),
+      },
+    ])
+    expect(tooltipBindings[0]?.value).toBe('1 days off scheduled for Ada this week (minimum 2).')
   })
 
   it('emits toggleOff when the employee name is clicked', async () => {

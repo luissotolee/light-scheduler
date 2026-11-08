@@ -10,7 +10,7 @@
     <div class="confirm-dialog__actions">
       <Button
         type="button"
-        label="Cancel"
+        :label="t('common.cancel')"
         severity="secondary"
         data-test="confirm-cancel"
         @click="emit('update:visible', false)"
@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
+import { useI18n } from '@/shared/i18n'
 
 type Severity = 'secondary' | 'success' | 'info' | 'warn' | 'danger' | 'contrast' | 'help'
 
@@ -44,6 +45,8 @@ const emit = defineEmits<{
   'update:visible': [visible: boolean]
   confirm: []
 }>()
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

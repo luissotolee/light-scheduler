@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSummaryStore } from '@/modules/summary/stores/summary'
+import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { Shift } from '@/types'
 
@@ -30,6 +31,7 @@ const shifts: Shift[] = [
 
 describe('summary store', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
   })
 
@@ -76,6 +78,19 @@ describe('summary store', () => {
     expect(store.assignedMemberCount).toBe(2)
   })
 
+  it('reformats the week range when the locale changes', () => {
+    const store = useSummaryStore()
+    const localeStore = useLocaleStore()
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+
+    expect(store.weekRangeLabel).toBe('Nov 2 – Nov 8, 2026')
+
+    localeStore.setLocale('es')
+
+    expect(store.weekRangeLabel).toBe('2 nov – 8 nov, 2026')
+  })
+
   it('resolves member names and labels unknown members', () => {
     const store = useSummaryStore()
     const workspace = useWorkspaceStore()
@@ -93,6 +108,6 @@ describe('summary store', () => {
     ])
 
     expect(store.memberNameOf('member-1')).toBe('Ada')
-    expect(store.memberNameOf('missing')).toBe('Unknown member')
+    expect(store.memberNameOf('missing')).toBeNull()
   })
 })

@@ -1,7 +1,14 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { DayOff, Shift, TeamMember, WeekKey } from '@/types'
 import { getWeekKey } from '@/shared/utils/calendar'
+import {
+  parsePersistedWorkspace,
+  serializeWorkspace,
+  WORKSPACE_SCHEMA_VERSION,
+  WORKSPACE_STORAGE_KEY,
+} from '@/shared/utils/persistence'
+import { readJson, removeStorageValue, writeJson } from '@/shared/utils/storage'
 
 export const useWorkspaceStore = defineStore('workspace', () => {
   const members = ref<TeamMember[]>([])
@@ -9,7 +16,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const dayOffs = ref<Record<WeekKey, DayOff[]>>({})
   const currentWeekKey = ref<WeekKey>(getWeekKey(new Date()))
   const dataLoaded = ref(false)
-  const schemaVersion = 1
+  const schemaVersion = WORKSPACE_SCHEMA_VERSION
 
   const memberCount = computed(() => members.value.length)
   const activeMembers = computed(() => members.value.filter((member) => member.active))
@@ -20,6 +27,34 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       members.value.length > 0 ||
       Object.keys(schedules.value).length > 0 ||
       Object.keys(dayOffs.value).length > 0,
+  )
+
+  function hydrate(): void {
+    const persisted = readJson(WORKSPACE_STORAGE_KEY, parsePersistedWorkspace)
+    if (persisted === null) return
+
+    members.value = persisted.members
+    schedules.value = persisted.schedules
+    dayOffs.value = persisted.dayOffs
+    currentWeekKey.value = persisted.currentWeekKey
+  }
+
+  hydrate()
+
+  watch(
+    [members, schedules, dayOffs, currentWeekKey],
+    () => {
+      writeJson(
+        WORKSPACE_STORAGE_KEY,
+        serializeWorkspace({
+          members: members.value,
+          schedules: schedules.value,
+          dayOffs: dayOffs.value,
+          currentWeekKey: currentWeekKey.value,
+        }),
+      )
+    },
+    { deep: true, flush: 'sync' },
   )
 
   function setMembers(loaded: TeamMember[]): void {
@@ -79,12 +114,17 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     dataLoaded.value = true
   }
 
+  function clearPersistedWorkspace(): void {
+    removeStorageValue(WORKSPACE_STORAGE_KEY)
+  }
+
   function reset(): void {
     members.value = []
     schedules.value = {}
     dayOffs.value = {}
     currentWeekKey.value = getWeekKey(new Date())
     dataLoaded.value = false
+    clearPersistedWorkspace()
   }
 
   return {

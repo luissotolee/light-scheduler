@@ -1,13 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { nextTick } from 'vue'
 import CsvView from '@/modules/csv/views/CsvView.vue'
+import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 
 describe('CsvView', () => {
   let pinia: ReturnType<typeof createPinia>
 
   beforeEach(() => {
+    localStorage.clear()
+    document.documentElement.lang = 'en'
     pinia = createPinia()
     setActivePinia(pinia)
     vi.stubGlobal('URL', {
@@ -124,6 +128,32 @@ describe('CsvView', () => {
     await upload(wrapper, file)
 
     expect(wrapper.find('[data-test="status"]').text()).toBe('Row 1: Unexpected CSV headers')
+  })
+
+  it('renders Spanish copy and statuses live', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([
+      {
+        id: 'member-1',
+        name: 'Ada',
+        duty: 'manager',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+        active: true,
+        startDate: '2025-01-15',
+      },
+    ])
+    const wrapper = mountView()
+
+    useLocaleStore().setLocale('es')
+    await nextTick()
+
+    expect(wrapper.text()).toContain('Exportar empleados')
+    expect(wrapper.text()).toContain('Subir empleados')
+
+    await wrapper.find('[data-test="export-employees"]').trigger('click')
+    expect(wrapper.find('[data-test="status"]').text()).toBe('Empleados exportados')
   })
 
   it('rejects files larger than 5 MB', async () => {

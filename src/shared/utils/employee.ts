@@ -10,31 +10,17 @@ import type {
   TeamMember,
   Validated,
 } from '@/types'
+import type { MessageKey } from '@/shared/i18n/messages/en'
 import { getIsoWeeksInYear, parseIsoDate } from '@/shared/utils/calendar'
 
 export const MAX_HOLIDAY_WEEKS = 6
-
-export const WEEKLY_HOURS_ERROR = 'Weekly hours must be a number greater than 0 and at most 168'
 
 export const DUTIES: readonly Duty[] = ['manager', 'employee', 'assistant', 'head_manager']
 
 export const CONTRACTS: readonly Contract[] = ['fulltime', 'part_time', 'weekends']
 
-export const DUTY_LABELS: Record<Duty, string> = {
-  manager: 'Manager',
-  employee: 'Employee',
-  assistant: 'Assistant',
-  head_manager: 'Head manager',
-}
-
 export function dutyModifier(duty: Duty): string {
   return duty.replace('_', '-')
-}
-
-export const CONTRACT_LABELS: Record<Contract, string> = {
-  fulltime: 'Full-time',
-  part_time: 'Part-time',
-  weekends: 'Weekends',
 }
 
 const HOLIDAY_TOKEN_RE = /^(\d{4})-W([1-9]|[1-4]\d|5[0-3])$/
@@ -106,7 +92,7 @@ export function parseWeeklyHours(value: unknown): number | null {
   return parsed
 }
 
-export function firstEmployeeFormError(errors: EmployeeFormErrors): string {
+export function firstEmployeeFormError(errors: EmployeeFormErrors): MessageKey {
   const order: readonly (keyof EmployeeFormErrors)[] = [
     'name',
     'duty',
@@ -123,38 +109,38 @@ export function firstEmployeeFormError(errors: EmployeeFormErrors): string {
     if (message) return message
   }
 
-  return 'Invalid employee'
+  return 'errors.invalidEmployee'
 }
 
 export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormValidation {
   const errors: EmployeeFormErrors = {}
 
   const name = input.name.trim()
-  if (!name) errors.name = 'Name is required'
+  if (!name) errors.name = 'errors.requiredName'
 
   const duty = parseDuty(input.duty)
-  if (duty === null) errors.duty = 'Duty is invalid'
+  if (duty === null) errors.duty = 'errors.invalidDuty'
 
   const contract = parseContract(input.contract)
-  if (contract === null) errors.contract = 'Contract is invalid'
+  if (contract === null) errors.contract = 'errors.invalidContract'
 
   const weeklyHours = parseWeeklyHours(input.weeklyHours)
-  if (weeklyHours === null) errors.weeklyHours = WEEKLY_HOURS_ERROR
+  if (weeklyHours === null) errors.weeklyHours = 'errors.weeklyHours'
 
   const email = input.email.trim()
-  if (email && !isValidEmail(email)) errors.email = 'Email is invalid'
+  if (email && !isValidEmail(email)) errors.email = 'errors.invalidEmail'
 
   const phone = input.phone.trim()
-  if (phone && !isValidPhone(phone)) errors.phone = 'Phone is invalid'
+  if (phone && !isValidPhone(phone)) errors.phone = 'errors.invalidPhone'
 
   const holidays = normalizeHolidays(input.holidays ?? [])
   if (holidays.length > MAX_HOLIDAY_WEEKS) {
-    errors.holidays = 'At most 6 holiday weeks are allowed'
+    errors.holidays = 'errors.maxHolidays'
   }
 
   const rawStartDate = input.startDate?.trim() ?? ''
   const startDate = rawStartDate ? parseIsoDate(rawStartDate) : undefined
-  if (startDate === null) errors.startDate = 'Start date is invalid'
+  if (startDate === null) errors.startDate = 'errors.invalidStartDate'
 
   if (
     duty === null ||
@@ -247,7 +233,7 @@ export function validateEmployees(
     normalizedHeaders.every((header) => allowedHeaders.includes(header))
 
   if (!headersValid) {
-    return { ok: false, errors: [{ row: 1, message: 'Unexpected CSV headers' }] }
+    return { ok: false, errors: [{ row: 1, message: 'errors.unexpectedHeaders' }] }
   }
 
   const indexOf = (header: string): number => normalizedHeaders.indexOf(header.toLowerCase())
@@ -261,29 +247,29 @@ export function validateEmployees(
     const rowErrors: RowError[] = []
 
     const name = valueAt(row, 'name').trim()
-    if (!name) rowErrors.push({ row: rowNumber, message: 'Name is required' })
+    if (!name) rowErrors.push({ row: rowNumber, message: 'errors.requiredName' })
 
     const duty = parseDuty(valueAt(row, 'duty').trim())
-    if (duty === null) rowErrors.push({ row: rowNumber, message: 'Duty is invalid' })
+    if (duty === null) rowErrors.push({ row: rowNumber, message: 'errors.invalidDuty' })
 
     const contract = parseContract(valueAt(row, 'contract').trim())
     if (contract === null) {
-      rowErrors.push({ row: rowNumber, message: 'Contract is invalid' })
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidContract' })
     }
 
     const weeklyHours = parseWeeklyHours(valueAt(row, 'weeklyHours'))
     if (weeklyHours === null) {
-      rowErrors.push({ row: rowNumber, message: WEEKLY_HOURS_ERROR })
+      rowErrors.push({ row: rowNumber, message: 'errors.weeklyHours' })
     }
 
     const parsedHolidays = parseHolidays(valueAt(row, 'holidays'))
     if (parsedHolidays === null) {
-      rowErrors.push({ row: rowNumber, message: 'Holidays are invalid' })
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidHolidays' })
     }
 
     const holidays = parsedHolidays ? normalizeHolidays(parsedHolidays) : []
     if (holidays.length > MAX_HOLIDAY_WEEKS) {
-      rowErrors.push({ row: rowNumber, message: 'At most 6 holiday weeks are allowed' })
+      rowErrors.push({ row: rowNumber, message: 'errors.maxHolidays' })
     }
 
     if (
@@ -299,41 +285,41 @@ export function validateEmployees(
 
     const email = valueAt(row, 'email').trim()
     if (email && !isValidEmail(email)) {
-      rowErrors.push({ row: rowNumber, message: 'Email is invalid' })
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidEmail' })
     }
 
     const phone = valueAt(row, 'phone').trim()
     if (phone && !isValidPhone(phone)) {
-      rowErrors.push({ row: rowNumber, message: 'Phone is invalid' })
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidPhone' })
     }
 
     const active = parseBoolean(valueAt(row, 'active').trim())
     if (active === null) {
-      rowErrors.push({ row: rowNumber, message: 'Active is invalid' })
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidActive' })
     }
 
     const rawStartDate = valueAt(row, 'startDate').trim()
     const startDate = rawStartDate ? parseIsoDate(rawStartDate) : undefined
     if (startDate === null) {
-      rowErrors.push({ row: rowNumber, message: 'Start date is invalid' })
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidStartDate' })
     }
 
     const rawEndDate = valueAt(row, 'endDate').trim()
     const endDate = rawEndDate ? parseIsoDate(rawEndDate) : undefined
     if (endDate === null) {
-      rowErrors.push({ row: rowNumber, message: 'End date is invalid' })
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidEndDate' })
     }
 
     if (startDate && endDate && endDate < startDate) {
-      rowErrors.push({ row: rowNumber, message: 'End date cannot be before start date' })
+      rowErrors.push({ row: rowNumber, message: 'errors.endBeforeStart' })
     }
 
     if (active === false && !rawEndDate) {
-      rowErrors.push({ row: rowNumber, message: 'End date is required for inactive employees' })
+      rowErrors.push({ row: rowNumber, message: 'errors.endRequiredInactive' })
     }
 
     if (active === true && rawEndDate) {
-      rowErrors.push({ row: rowNumber, message: 'End date is not allowed for active employees' })
+      rowErrors.push({ row: rowNumber, message: 'errors.endNotAllowedActive' })
     }
 
     if (rowErrors.length > 0) {

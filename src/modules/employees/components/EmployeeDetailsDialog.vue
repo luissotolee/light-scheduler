@@ -9,65 +9,72 @@
     <div v-if="member" class="employee-details__body">
       <dl class="employee-details__list">
         <div class="employee-details__item">
-          <dt class="employee-details__label">Duty</dt>
+          <dt class="employee-details__label">{{ t('employees.details.duty') }}</dt>
           <dd class="employee-details__value" data-test="details-duty">{{ dutyLabel }}</dd>
         </div>
         <div class="employee-details__item">
-          <dt class="employee-details__label">Contract</dt>
+          <dt class="employee-details__label">{{ t('employees.details.contract') }}</dt>
           <dd class="employee-details__value" data-test="details-contract">{{ contractLabel }}</dd>
         </div>
         <div class="employee-details__item">
-          <dt class="employee-details__label">Weekly hours</dt>
+          <dt class="employee-details__label">{{ t('employees.details.weeklyHours') }}</dt>
           <dd class="employee-details__value" data-test="details-hours">
             {{ member.weeklyHours }}
           </dd>
         </div>
         <div class="employee-details__item">
-          <dt class="employee-details__label">Email</dt>
+          <dt class="employee-details__label">{{ t('employees.details.email') }}</dt>
           <dd class="employee-details__value" data-test="details-email">
-            {{ member.email || '—' }}
+            {{ member.email || t('common.dash') }}
           </dd>
         </div>
         <div class="employee-details__item">
-          <dt class="employee-details__label">Phone</dt>
+          <dt class="employee-details__label">{{ t('employees.details.phone') }}</dt>
           <dd class="employee-details__value" data-test="details-phone">
-            {{ member.phone || '—' }}
+            {{ member.phone || t('common.dash') }}
           </dd>
         </div>
         <div class="employee-details__item">
-          <dt class="employee-details__label">Status</dt>
+          <dt class="employee-details__label">{{ t('employees.details.status') }}</dt>
           <dd class="employee-details__value" data-test="details-status">
-            {{ member.active ? 'Active' : 'Inactive' }}
+            {{ member.active ? t('employees.status.active') : t('employees.status.inactive') }}
           </dd>
         </div>
         <div class="employee-details__item">
-          <dt class="employee-details__label">Start date</dt>
+          <dt class="employee-details__label">{{ t('employees.details.startDate') }}</dt>
           <dd class="employee-details__value" data-test="details-start-date">
-            {{ formatIsoDate(member.startDate) }}
+            {{ formatIsoDate(member.startDate, locale) }}
           </dd>
         </div>
         <div v-if="member.endDate" class="employee-details__item">
-          <dt class="employee-details__label">End date</dt>
+          <dt class="employee-details__label">{{ t('employees.details.endDate') }}</dt>
           <dd class="employee-details__value" data-test="details-end-date">
-            {{ formatIsoDate(member.endDate) }}
+            {{ formatIsoDate(member.endDate, locale) }}
           </dd>
         </div>
       </dl>
 
       <div class="employee-details__holidays">
-        <h3 class="employee-details__section-title">Holidays</h3>
+        <h3 class="employee-details__section-title">{{ t('employees.details.holidays') }}</h3>
         <ul v-if="member.holidays.length > 0" class="employee-details__holiday-list">
           <li v-for="holiday in member.holidays" :key="`${holiday.year}-${holiday.week}`">
-            Week {{ holiday.week }} ({{ formatWeekRange(holidayToWeekKey(holiday)) }})
+            {{
+              t('employees.details.holidayItem', {
+                week: holiday.week,
+                range: formatWeekRange(holidayToWeekKey(holiday), locale),
+              })
+            }}
           </li>
         </ul>
-        <p v-else class="employee-details__empty" data-test="details-no-holidays">No holidays</p>
+        <p v-else class="employee-details__empty" data-test="details-no-holidays">
+          {{ t('employees.details.noHolidays') }}
+        </p>
       </div>
 
       <div class="employee-details__actions">
         <Button
           type="button"
-          label="Close"
+          :label="t('common.close')"
           severity="secondary"
           data-test="close-details"
           @click="emit('update:visible', false)"
@@ -82,8 +89,9 @@ import { computed } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import type { TeamMember } from '@/types'
+import { useI18n } from '@/shared/i18n'
 import { formatIsoDate, formatWeekRange, holidayToWeekKey } from '@/shared/utils/calendar'
-import { CONTRACT_LABELS, DUTY_LABELS, isContract, isDuty } from '@/shared/utils/employee'
+import { isContract, isDuty } from '@/shared/utils/employee'
 
 const props = defineProps<{
   visible: boolean
@@ -94,14 +102,18 @@ const emit = defineEmits<{
   'update:visible': [visible: boolean]
 }>()
 
-const title = computed(() => props.member?.name ?? 'Employee details')
+const { t, locale } = useI18n()
+
+const title = computed(() => props.member?.name ?? t('employees.details.title'))
 
 const dutyLabel = computed(() =>
-  props.member && isDuty(props.member.duty) ? DUTY_LABELS[props.member.duty] : '—',
+  props.member && isDuty(props.member.duty) ? t(`duty.${props.member.duty}`) : t('common.dash'),
 )
 
 const contractLabel = computed(() =>
-  props.member && isContract(props.member.contract) ? CONTRACT_LABELS[props.member.contract] : '—',
+  props.member && isContract(props.member.contract)
+    ? t(`contract.${props.member.contract}`)
+    : t('common.dash'),
 )
 </script>
 

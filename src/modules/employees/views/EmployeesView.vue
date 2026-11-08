@@ -1,9 +1,6 @@
 <template>
   <section class="employees">
-    <PageHeader
-      title="Employees"
-      description="Manage the employee records used when building weekly schedules."
-    >
+    <PageHeader :title="t('employees.title')" :description="t('employees.description')">
       <template #actions>
         <button
           type="button"
@@ -11,40 +8,40 @@
           data-test="add-employee"
           @click="store.openCreate"
         >
-          Add employee
+          {{ t('employees.add') }}
         </button>
       </template>
     </PageHeader>
 
     <div class="employees__toolbar">
-      <label class="employees__search-label" for="employee-search">Search employees</label>
+      <label class="employees__search-label" for="employee-search">
+        {{ t('employees.searchLabel') }}
+      </label>
       <input
         id="employee-search"
         class="employees__search"
         type="search"
-        placeholder="Search by name"
+        :placeholder="t('employees.searchPlaceholder')"
         :value="search"
         @input="handleSearch"
       />
-      <span class="employees__count">Employees: {{ count }}</span>
+      <span class="employees__count">{{ t('employees.count', { count }) }}</span>
     </div>
 
     <p
-      v-if="status.error && !formVisible"
+      v-if="errorMessage && !formVisible"
       class="employees__error"
       role="alert"
       data-test="employees-error"
     >
-      {{ status.error }}
+      {{ errorMessage }}
     </p>
 
     <EmptyState
       v-if="filteredMembers.length === 0"
-      :title="count === 0 ? 'No employees yet' : 'No matching employees'"
+      :title="t(count === 0 ? 'employees.emptyTitle' : 'employees.noMatchTitle')"
       :description="
-        count === 0
-          ? 'Add your first employee to start building schedules.'
-          : 'Try a different name.'
+        t(count === 0 ? 'employees.emptyDescription' : 'employees.noMatchDescription')
       "
     />
 
@@ -95,7 +92,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import ConfirmActionDialog from '@/modules/employees/components/ConfirmActionDialog.vue'
+import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
 import EmployeeDetailsDialog from '@/modules/employees/components/EmployeeDetailsDialog.vue'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
@@ -103,6 +100,7 @@ import EmptyState from '@/shared/components/EmptyState.vue'
 import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
+import { useI18n } from '@/shared/i18n'
 import type { HolidayWeek, NewTeamMember } from '@/types'
 
 const store = useEmployeesStore()
@@ -121,20 +119,25 @@ const {
   detailsVisible,
   detailsTarget,
 } = storeToRefs(store)
+const { t } = useI18n()
+
+const errorMessage = computed(() => (status.value.error ? t(status.value.error) : ''))
 
 const confirmHeader = computed(() =>
-  pendingAction.value?.kind === 'remove' ? 'Remove employee' : 'Deactivate employee',
+  pendingAction.value?.kind === 'remove'
+    ? t('employees.confirm.removeHeader')
+    : t('employees.confirm.deactivateHeader'),
 )
 
 const confirmMessage = computed(() => {
-  const name = pendingMember.value?.name ?? 'this employee'
+  const name = pendingMember.value?.name ?? t('employees.thisEmployee')
   return pendingAction.value?.kind === 'remove'
-    ? `Remove ${name}? This cannot be undone.`
-    : `Deactivate ${name}? Their end date will be set to today and they will be excluded from schedules.`
+    ? t('employees.confirm.removeMessage', { name })
+    : t('employees.confirm.deactivateMessage', { name })
 })
 
 const confirmLabel = computed(() =>
-  pendingAction.value?.kind === 'remove' ? 'Remove' : 'Deactivate',
+  pendingAction.value?.kind === 'remove' ? t('common.remove') : t('common.deactivate'),
 )
 
 const confirmSeverity = computed(() =>

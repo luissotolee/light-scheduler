@@ -14,6 +14,7 @@ const shift: Shift = {
 
 describe('history store', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
   })
 

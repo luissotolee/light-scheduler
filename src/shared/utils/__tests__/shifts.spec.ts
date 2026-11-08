@@ -162,6 +162,8 @@ describe('buildDaySlots', () => {
       startMinute: DAY_START_MINUTE,
       endMinute: 570,
       label: '09:00',
+      hourLabel: '09',
+      minuteLabel: '00',
       isNextDay: false,
     })
     expect(slots[31]).toEqual({
@@ -169,6 +171,8 @@ describe('buildDaySlots', () => {
       startMinute: 1470,
       endMinute: DAY_END_MINUTE,
       label: '00:30',
+      hourLabel: '00',
+      minuteLabel: '30',
       isNextDay: true,
     })
     expect(slots.every((slot) => slot.endMinute - slot.startMinute === 30)).toBe(true)

@@ -4,7 +4,6 @@ import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
 import { todayIsoDate } from '@/shared/utils/calendar'
-import { WEEKLY_HOURS_ERROR } from '@/shared/utils/employee'
 
 const ada: TeamMember = {
   id: 'member-1',
@@ -40,6 +39,7 @@ const basePayload: NewTeamMember = {
 
 describe('employees store', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
   })
 
@@ -123,7 +123,7 @@ describe('employees store', () => {
 
     expect(store.addMember({ ...basePayload, name: '   ' })).toBeNull()
     expect(store.count).toBe(0)
-    expect(store.status.error).toBe('Name is required')
+    expect(store.status.error).toBe('errors.requiredName')
   })
 
   it('adds a member without a phone and validates the format when provided', () => {
@@ -137,7 +137,7 @@ describe('employees store', () => {
     expect(withBlankPhone?.phone).toBeUndefined()
 
     expect(store.addMember({ ...basePayload, phone: '123' })).toBeNull()
-    expect(store.status.error).toBe('Phone is invalid')
+    expect(store.status.error).toBe('errors.invalidPhone')
 
     expect(store.count).toBe(2)
   })
@@ -146,7 +146,7 @@ describe('employees store', () => {
     const store = useEmployeesStore()
 
     expect(store.addMember({ ...basePayload, email: 'not-an-email' })).toBeNull()
-    expect(store.status.error).toBe('Email is invalid')
+    expect(store.status.error).toBe('errors.invalidEmail')
     expect(store.count).toBe(0)
   })
 
@@ -155,11 +155,11 @@ describe('employees store', () => {
 
     // @ts-expect-error runtime guard for invalid input
     expect(store.addMember({ ...basePayload, duty: 'chef' })).toBeNull()
-    expect(store.status.error).toBe('Duty is invalid')
+    expect(store.status.error).toBe('errors.invalidDuty')
 
     // @ts-expect-error runtime guard for invalid input
     expect(store.addMember({ ...basePayload, contract: 'contractor' })).toBeNull()
-    expect(store.status.error).toBe('Contract is invalid')
+    expect(store.status.error).toBe('errors.invalidContract')
     expect(store.count).toBe(0)
   })
 
@@ -168,7 +168,7 @@ describe('employees store', () => {
 
     for (const weeklyHours of [0, -1, 169, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(store.addMember({ ...basePayload, weeklyHours })).toBeNull()
-      expect(store.status.error).toBe(WEEKLY_HOURS_ERROR)
+      expect(store.status.error).toBe('errors.weeklyHours')
     }
 
     expect(store.addMember({ ...basePayload, weeklyHours: 168 })).not.toBeNull()
@@ -182,7 +182,7 @@ describe('employees store', () => {
     }))
 
     expect(store.addMember({ ...basePayload, holidays })).toBeNull()
-    expect(store.status.error).toBe('At most 6 holiday weeks are allowed')
+    expect(store.status.error).toBe('errors.maxHolidays')
     expect(store.count).toBe(0)
   })
 
@@ -239,18 +239,18 @@ describe('employees store', () => {
     workspace.setMembers([ada])
 
     store.updateMember(ada.id, { name: '   ' })
-    expect(store.status.error).toBe('Name is required')
+    expect(store.status.error).toBe('errors.requiredName')
 
     // @ts-expect-error runtime guard for invalid input
     store.updateMember(ada.id, { duty: 'chef' })
-    expect(store.status.error).toBe('Duty is invalid')
+    expect(store.status.error).toBe('errors.invalidDuty')
 
     // @ts-expect-error runtime guard for invalid input
     store.updateMember(ada.id, { contract: 'contractor' })
-    expect(store.status.error).toBe('Contract is invalid')
+    expect(store.status.error).toBe('errors.invalidContract')
 
     store.updateMember(ada.id, { weeklyHours: 0 })
-    expect(store.status.error).toBe(WEEKLY_HOURS_ERROR)
+    expect(store.status.error).toBe('errors.weeklyHours')
 
     expect(store.filteredMembers[0]).toEqual(ada)
   })
@@ -261,10 +261,10 @@ describe('employees store', () => {
     workspace.setMembers([ada])
 
     store.updateMember(ada.id, { phone: '123' })
-    expect(store.status.error).toBe('Phone is invalid')
+    expect(store.status.error).toBe('errors.invalidPhone')
 
     store.updateMember(ada.id, { email: 'not-an-email' })
-    expect(store.status.error).toBe('Email is invalid')
+    expect(store.status.error).toBe('errors.invalidEmail')
 
     expect(store.filteredMembers[0]).toEqual(ada)
   })
@@ -328,7 +328,7 @@ describe('employees store', () => {
 
     store.updateMember(ada.id, { holidays })
 
-    expect(store.status.error).toBe('At most 6 holiday weeks are allowed')
+    expect(store.status.error).toBe('errors.maxHolidays')
     expect(store.filteredMembers[0].holidays).toEqual(ada.holidays)
   })
 
@@ -352,7 +352,7 @@ describe('employees store', () => {
     expect(store.filteredMembers[0].name).toBe('Ada Lovelace')
 
     expect(store.updateMember(ada.id, { name: '   ' })).toBe(false)
-    expect(store.status.error).toBe('Name is required')
+    expect(store.status.error).toBe('errors.requiredName')
 
     store.openCreate()
     expect(store.updateMember('missing', { name: 'Nobody' })).toBe(false)
@@ -381,7 +381,7 @@ describe('employees store', () => {
       Array.from({ length: 7 }, (_, index) => ({ year: 2026, week: index + 1 })),
     )
 
-    expect(store.status.error).toBe('At most 6 holiday weeks are allowed')
+    expect(store.status.error).toBe('errors.maxHolidays')
     expect(store.filteredMembers[0].holidays).toEqual([
       { year: 2025, week: 1 },
       { year: 2026, week: 12 },
@@ -452,7 +452,7 @@ describe('employees store', () => {
 
     expect(store.count).toBe(0)
     expect(store.formVisible).toBe(true)
-    expect(store.status.error).toBe('Name is required')
+    expect(store.status.error).toBe('errors.requiredName')
   })
 
   it('submits an edit and closes the form on success', () => {
@@ -481,7 +481,7 @@ describe('employees store', () => {
     store.submitForm({ ...basePayload, weeklyHours: 0 })
 
     expect(store.formVisible).toBe(true)
-    expect(store.status.error).toBe(WEEKLY_HOURS_ERROR)
+    expect(store.status.error).toBe('errors.weeklyHours')
   })
 
   it('opens and closes the holiday dialog for a target member', () => {
@@ -514,7 +514,7 @@ describe('employees store', () => {
     const store = useEmployeesStore()
 
     expect(store.addMember({ ...basePayload, startDate: '2026-13-01' })).toBeNull()
-    expect(store.status.error).toBe('Start date is invalid')
+    expect(store.status.error).toBe('errors.invalidStartDate')
     expect(store.count).toBe(0)
   })
 

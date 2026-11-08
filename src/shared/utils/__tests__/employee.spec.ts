@@ -2,15 +2,12 @@ import { describe, expect, it } from 'vitest'
 import type { EmployeeFormInput, HolidayWeek, TeamMember } from '@/types'
 import {
   CONTRACTS,
-  CONTRACT_LABELS,
   DUTIES,
-  DUTY_LABELS,
   EMPLOYEE_HEADERS,
   MAX_HOLIDAY_WEEKS,
   PHONE_PREFIX_MAX_DIGITS,
   PHONE_PREFIX_MIN_DIGITS,
   SPANISH_PHONE_DIGITS,
-  WEEKLY_HOURS_ERROR,
   dutyModifier,
   employeeToRow,
   employeesToRows,
@@ -60,21 +57,10 @@ const member: TeamMember = {
   startDate: '2025-01-15',
 }
 
-describe('employee constants and labels', () => {
-  it('exposes every duty and contract with a display label', () => {
+describe('employee constants', () => {
+  it('exposes every duty, contract, and canonical header', () => {
     expect(DUTIES).toEqual(['manager', 'employee', 'assistant', 'head_manager'])
     expect(CONTRACTS).toEqual(['fulltime', 'part_time', 'weekends'])
-    expect(DUTY_LABELS).toEqual({
-      manager: 'Manager',
-      employee: 'Employee',
-      assistant: 'Assistant',
-      head_manager: 'Head manager',
-    })
-    expect(CONTRACT_LABELS).toEqual({
-      fulltime: 'Full-time',
-      part_time: 'Part-time',
-      weekends: 'Weekends',
-    })
     expect(MAX_HOLIDAY_WEEKS).toBe(6)
     expect(EMPLOYEE_HEADERS).toEqual([
       'name',
@@ -261,30 +247,30 @@ describe('validateEmployeeForm', () => {
   it('rejects a blank name', () => {
     expect(validateEmployeeForm({ ...validInput, name: '   ' })).toEqual({
       ok: false,
-      errors: { name: 'Name is required' },
-      message: 'Name is required',
+      errors: { name: 'errors.requiredName' },
+      message: 'errors.requiredName',
     })
   })
 
   it('rejects an invalid duty and contract', () => {
     expect(validateEmployeeForm({ ...validInput, duty: 'chef' })).toEqual({
       ok: false,
-      errors: { duty: 'Duty is invalid' },
-      message: 'Duty is invalid',
+      errors: { duty: 'errors.invalidDuty' },
+      message: 'errors.invalidDuty',
     })
 
     expect(validateEmployeeForm({ ...validInput, contract: 'contractor' })).toEqual({
       ok: false,
-      errors: { contract: 'Contract is invalid' },
-      message: 'Contract is invalid',
+      errors: { contract: 'errors.invalidContract' },
+      message: 'errors.invalidContract',
     })
   })
 
   it.each([0, -1, 169, null, 'abc'])('rejects weekly hours %s', (weeklyHours) => {
     expect(validateEmployeeForm({ ...validInput, weeklyHours })).toEqual({
       ok: false,
-      errors: { weeklyHours: WEEKLY_HOURS_ERROR },
-      message: WEEKLY_HOURS_ERROR,
+      errors: { weeklyHours: 'errors.weeklyHours' },
+      message: 'errors.weeklyHours',
     })
   })
 
@@ -300,14 +286,14 @@ describe('validateEmployeeForm', () => {
   it('rejects invalid email and phone values', () => {
     expect(validateEmployeeForm({ ...validInput, email: 'not-an-email' })).toEqual({
       ok: false,
-      errors: { email: 'Email is invalid' },
-      message: 'Email is invalid',
+      errors: { email: 'errors.invalidEmail' },
+      message: 'errors.invalidEmail',
     })
 
     expect(validateEmployeeForm({ ...validInput, phone: '123' })).toEqual({
       ok: false,
-      errors: { phone: 'Phone is invalid' },
-      message: 'Phone is invalid',
+      errors: { phone: 'errors.invalidPhone' },
+      message: 'errors.invalidPhone',
     })
   })
 
@@ -319,8 +305,8 @@ describe('validateEmployeeForm', () => {
 
     expect(validateEmployeeForm({ ...validInput, holidays })).toEqual({
       ok: false,
-      errors: { holidays: 'At most 6 holiday weeks are allowed' },
-      message: 'At most 6 holiday weeks are allowed',
+      errors: { holidays: 'errors.maxHolidays' },
+      message: 'errors.maxHolidays',
     })
   })
 
@@ -344,20 +330,20 @@ describe('validateEmployeeForm', () => {
     ).toEqual({
       ok: false,
       errors: {
-        name: 'Name is required',
-        duty: 'Duty is invalid',
-        contract: 'Contract is invalid',
-        weeklyHours: WEEKLY_HOURS_ERROR,
-        email: 'Email is invalid',
-        phone: 'Phone is invalid',
-        holidays: 'At most 6 holiday weeks are allowed',
-        startDate: 'Start date is invalid',
+        name: 'errors.requiredName',
+        duty: 'errors.invalidDuty',
+        contract: 'errors.invalidContract',
+        weeklyHours: 'errors.weeklyHours',
+        email: 'errors.invalidEmail',
+        phone: 'errors.invalidPhone',
+        holidays: 'errors.maxHolidays',
+        startDate: 'errors.invalidStartDate',
       },
-      message: 'Name is required',
+      message: 'errors.requiredName',
     })
 
-    expect(firstEmployeeFormError({ phone: 'Phone is invalid', email: 'Email is invalid' })).toBe(
-      'Email is invalid',
+    expect(firstEmployeeFormError({ phone: 'errors.invalidPhone', email: 'errors.invalidEmail' })).toBe(
+      'errors.invalidEmail',
     )
   })
 
@@ -378,13 +364,13 @@ describe('validateEmployeeForm', () => {
   it('rejects an invalid start date', () => {
     expect(validateEmployeeForm({ ...validInput, startDate: '2026-13-01' })).toEqual({
       ok: false,
-      errors: { startDate: 'Start date is invalid' },
-      message: 'Start date is invalid',
+      errors: { startDate: 'errors.invalidStartDate' },
+      message: 'errors.invalidStartDate',
     })
   })
 
   it('falls back to a generic message when there are no errors', () => {
-    expect(firstEmployeeFormError({})).toBe('Invalid employee')
+    expect(firstEmployeeFormError({})).toBe('errors.invalidEmployee')
   })
 })
 
@@ -530,7 +516,7 @@ describe('validateEmployees', () => {
 
     expect(result).toEqual({
       ok: false,
-      errors: [{ row: 1, message: 'Unexpected CSV headers' }],
+      errors: [{ row: 1, message: 'errors.unexpectedHeaders' }],
     })
   })
 
@@ -543,11 +529,11 @@ describe('validateEmployees', () => {
     expect(result).toEqual({
       ok: false,
       errors: [
-        { row: 3, message: 'Name is required' },
-        { row: 3, message: 'Duty is invalid' },
-        { row: 3, message: 'Contract is invalid' },
-        { row: 3, message: WEEKLY_HOURS_ERROR },
-        { row: 3, message: 'Holidays are invalid' },
+        { row: 3, message: 'errors.requiredName' },
+        { row: 3, message: 'errors.invalidDuty' },
+        { row: 3, message: 'errors.invalidContract' },
+        { row: 3, message: 'errors.weeklyHours' },
+        { row: 3, message: 'errors.invalidHolidays' },
       ],
     })
   })
@@ -566,7 +552,7 @@ describe('validateEmployees', () => {
 
     expect(result).toEqual({
       ok: false,
-      errors: [{ row: 2, message: 'At most 6 holiday weeks are allowed' }],
+      errors: [{ row: 2, message: 'errors.maxHolidays' }],
     })
   })
 
@@ -577,7 +563,7 @@ describe('validateEmployees', () => {
 
     expect(result).toEqual({
       ok: false,
-      errors: [{ row: 2, message: 'Holidays are invalid' }],
+      errors: [{ row: 2, message: 'errors.invalidHolidays' }],
     })
   })
 
@@ -588,7 +574,7 @@ describe('validateEmployees', () => {
 
     expect(result).toEqual({
       ok: false,
-      errors: [{ row: 2, message: 'End date cannot be before start date' }],
+      errors: [{ row: 2, message: 'errors.endBeforeStart' }],
     })
   })
 
@@ -600,8 +586,8 @@ describe('validateEmployees', () => {
     expect(result).toEqual({
       ok: false,
       errors: [
-        { row: 2, message: 'Email is invalid' },
-        { row: 2, message: 'Phone is invalid' },
+        { row: 2, message: 'errors.invalidEmail' },
+        { row: 2, message: 'errors.invalidPhone' },
       ],
     })
   })
@@ -689,9 +675,9 @@ describe('validateEmployees', () => {
     expect(result).toEqual({
       ok: false,
       errors: [
-        { row: 2, message: 'Active is invalid' },
-        { row: 2, message: 'Start date is invalid' },
-        { row: 2, message: 'End date is invalid' },
+        { row: 2, message: 'errors.invalidActive' },
+        { row: 2, message: 'errors.invalidStartDate' },
+        { row: 2, message: 'errors.invalidEndDate' },
       ],
     })
   })
@@ -702,7 +688,7 @@ describe('validateEmployees', () => {
     ])
     expect(inactiveWithoutEnd).toEqual({
       ok: false,
-      errors: [{ row: 2, message: 'End date is required for inactive employees' }],
+      errors: [{ row: 2, message: 'errors.endRequiredInactive' }],
     })
 
     const activeWithEnd = validateEmployees(headers, [
@@ -710,7 +696,7 @@ describe('validateEmployees', () => {
     ])
     expect(activeWithEnd).toEqual({
       ok: false,
-      errors: [{ row: 2, message: 'End date is not allowed for active employees' }],
+      errors: [{ row: 2, message: 'errors.endNotAllowedActive' }],
     })
   })
 
@@ -720,9 +706,9 @@ describe('validateEmployees', () => {
     expect(result).toEqual({
       ok: false,
       errors: [
-        { row: 2, message: 'Duty is invalid' },
-        { row: 2, message: 'Contract is invalid' },
-        { row: 2, message: WEEKLY_HOURS_ERROR },
+        { row: 2, message: 'errors.invalidDuty' },
+        { row: 2, message: 'errors.invalidContract' },
+        { row: 2, message: 'errors.weeklyHours' },
       ],
     })
   })

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { NewShift, Shift, Weekday, WeekKey } from '@/types'
+import type { MessageKey } from '@/shared/i18n/messages/en'
 import type { DayRow, ShiftRangeInput, ShiftResizeInput } from '@/modules/scheduler/types'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { addWeeks, getWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
@@ -17,7 +18,7 @@ import {
   minutesToHours,
   sumShiftMinutes,
 } from '@/modules/scheduler/utils/hours'
-import { MAX_DAYS_OFF, countDaysOffByMember } from '@/modules/scheduler/utils/off'
+import { countDaysOffByMember } from '@/modules/scheduler/utils/off'
 
 function dateFromWeekKey(weekKey: WeekKey): Date {
   const [year, month, day] = weekKey.split('-').map(Number)
@@ -26,7 +27,7 @@ function dateFromWeekKey(weekKey: WeekKey): Date {
 
 export const useSchedulerStore = defineStore('scheduler', () => {
   const draft = ref<NewShift | null>(null)
-  const error = ref<string | null>(null)
+  const error = ref<MessageKey | null>(null)
   const selectedWeekday = ref<Weekday>('monday')
 
   function workspace() {
@@ -125,7 +126,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   function addShift(payload: NewShift): Shift | null {
     const range = toShiftMinutes(payload.start, payload.end)
     if (!range) {
-      error.value = 'Shift times must be valid and start before end'
+      error.value = 'errors.shiftTimes'
       return null
     }
 
@@ -142,7 +143,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   function addShiftRange(input: ShiftRangeInput): Shift | null {
     const range = normalizeGridRange(input.startMinute, input.endMinute)
     if (!range) {
-      error.value = 'Shift must be at least 30 minutes within 09:00–01:00'
+      error.value = 'errors.shiftRange'
       return null
     }
 
@@ -162,7 +163,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
 
     const range = normalizeGridRange(input.startMinute, input.endMinute)
     if (!range) {
-      error.value = 'Shift must be at least 30 minutes within 09:00–01:00'
+      error.value = 'errors.shiftRange'
       return null
     }
 
@@ -178,6 +179,12 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     )
   }
 
+  function resetCurrentWeek(): void {
+    workspace().setShiftsForWeek(currentWeekKey.value, [])
+    workspace().setDayOffsForWeek(currentWeekKey.value, [])
+    error.value = null
+  }
+
   function updateShift(id: string, patch: Partial<NewShift>): void {
     const existing = currentWeekShifts.value.find((shift) => shift.id === id)
     if (!existing) return
@@ -186,7 +193,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const end = patch.end ?? formatMinutesToHhmm(existing.endMinute)
     const range = toShiftMinutes(start, end)
     if (!range) {
-      error.value = 'Shift times must be valid and start before end'
+      error.value = 'errors.shiftTimes'
       return
     }
 
@@ -228,15 +235,19 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       return
     }
 
-    if (daysOffCountFor(memberId) >= MAX_DAYS_OFF) {
-      error.value = 'At most 2 days off are allowed per week'
-      return
-    }
-
     workspace().setDayOffsForWeek(currentWeekKey.value, [
       ...current,
       { memberId, weekday: selectedWeekday.value },
     ])
+
+    // A day off takes precedence over a shift: clear any shifts already
+    // scheduled for this member on the selected weekday.
+    workspace().setShiftsForWeek(
+      currentWeekKey.value,
+      currentWeekShifts.value.filter(
+        (shift) => !(shift.memberId === memberId && shift.weekday === selectedWeekday.value),
+      ),
+    )
     error.value = null
   }
 
@@ -262,6 +273,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     addShiftRange,
     updateShiftRange,
     removeShift,
+    resetCurrentWeek,
     updateShift,
     clearError,
     daysOffCountFor,

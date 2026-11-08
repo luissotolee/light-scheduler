@@ -14,7 +14,7 @@
           data-test="previous-year"
           @click="changeYear(-1)"
         >
-          Previous year
+          {{ t('holidays.previousYear') }}
         </button>
         <span class="holiday-dialog__year-label" data-test="current-year">{{ year }}</span>
         <button
@@ -23,15 +23,15 @@
           data-test="next-year"
           @click="changeYear(1)"
         >
-          Next year
+          {{ t('holidays.nextYear') }}
         </button>
       </div>
 
       <p class="holiday-dialog__counter" data-test="counter">
-        {{ count }} of {{ MAX_HOLIDAY_WEEKS }} selected
+        {{ t('holidays.counter', { count, max: MAX_HOLIDAY_WEEKS }) }}
       </p>
 
-      <div class="holiday-dialog__grid" role="group" aria-label="ISO weeks">
+      <div class="holiday-dialog__grid" role="group" :aria-label="t('holidays.group')">
         <button
           v-for="option in weeks"
           :key="option.week"
@@ -50,12 +50,12 @@
       <div class="holiday-dialog__actions">
         <Button
           type="button"
-          label="Cancel"
+          :label="t('common.cancel')"
           severity="secondary"
           data-test="cancel-holidays"
           @click="emit('update:visible', false)"
         />
-        <Button type="button" label="Save" data-test="save-holidays" @click="save" />
+        <Button type="button" :label="t('common.save')" data-test="save-holidays" @click="save" />
       </div>
     </div>
   </Dialog>
@@ -66,6 +66,7 @@ import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import type { HolidayWeek, HolidayWeekOption } from '@/types'
+import { useI18n } from '@/shared/i18n'
 import { getIsoWeek, getIsoWeeksForYear } from '@/shared/utils/calendar'
 import { MAX_HOLIDAY_WEEKS, holidayKey, normalizeHolidays } from '@/shared/utils/employee'
 
@@ -81,12 +82,14 @@ const emit = defineEmits<{
   save: [holidays: HolidayWeek[]]
 }>()
 
+const { t, locale } = useI18n()
+
 const year = ref(getIsoWeek(new Date()).year)
 const selectedKeys = ref<Set<string>>(new Set())
 
-const weeks = computed(() => getIsoWeeksForYear(year.value))
+const weeks = computed(() => getIsoWeeksForYear(year.value, locale.value))
 const count = computed(() => selectedKeys.value.size)
-const title = computed(() => `Holiday weeks — ${props.memberName}`)
+const title = computed(() => t('holidays.title', { name: props.memberName }))
 
 function reset(): void {
   year.value = props.initialYear ?? props.selected[0]?.year ?? getIsoWeek(new Date()).year

@@ -1,5 +1,10 @@
 <template>
-  <nav class="weekday-tabs" aria-label="Weekdays" role="tablist" aria-orientation="vertical">
+  <nav
+    class="weekday-tabs"
+    :aria-label="t('scheduler.weekdays')"
+    role="tablist"
+    aria-orientation="vertical"
+  >
     <button
       v-for="weekday in weekdays"
       :key="weekday.value"
@@ -12,13 +17,15 @@
       :data-test="`weekday-tab-${weekday.value}`"
       @click="emit('update:modelValue', weekday.value)"
     >
-      {{ weekday.label }} <span class="weekday-tabs__day">{{ formatOrdinal(weekday.dayOfMonth) }}</span>
+      {{ weekday.label }}
+      <span class="weekday-tabs__day">{{ formatOrdinal(weekday.dayOfMonth, locale) }}</span>
     </button>
   </nav>
 </template>
 
 <script setup lang="ts">
 import type { Weekday } from '@/types'
+import { useI18n } from '@/shared/i18n'
 import { formatOrdinal } from '@/shared/utils/calendar'
 
 defineProps<{
@@ -29,6 +36,8 @@ defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [weekday: Weekday]
 }>()
+
+const { t, locale } = useI18n()
 </script>
 
 <style scoped>

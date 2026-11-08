@@ -154,7 +154,28 @@ afterEach(() => {
 })
 ```
 
-## 7. Coverage thresholds
+## 7. i18n
+
+The app ships two languages (English and Spanish). When a test asserts user-visible text:
+
+- Assert through the catalog, not a hardcoded literal, so key renames stay green:
+  ```ts
+  import { en } from '@/shared/i18n/messages/en'
+  expect(wrapper.text()).toContain(en['nav.home'])
+  ```
+- For language-dependent behavior, switch the locale and assert the Spanish string too:
+  ```ts
+  import { useLocaleStore } from '@/shared/stores/locale'
+  import { es } from '@/shared/i18n/messages/es'
+
+  const localeStore = useLocaleStore()
+  localeStore.setLocale('es')
+  expect(wrapper.text()).toContain(es['nav.home'])
+  ```
+- Keep the catalogs in sync: `src/shared/i18n/__tests__/i18n.spec.ts` asserts `Object.keys(es)` equals `Object.keys(en)`. When you add a string, add it to both catalogs in the same change.
+- Translation helpers (`translate`, `t`, `tc`) and PrimeVue locale options have their own specs (`i18n.spec.ts`, `primevue.spec.ts`); extend them when adding keys or locale fields.
+
+## 8. Coverage thresholds
 
 Configured in `vite.config.ts`:
 

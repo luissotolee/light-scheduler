@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  WEEKDAY_LABELS,
   WEEKDAY_ORDER,
   addDays,
   addWeeks,
@@ -8,6 +7,7 @@ import {
   formatIsoDate,
   formatOrdinal,
   formatWeekRange,
+  formatWeekRangeShort,
   getIsoWeek,
   getIsoWeekStart,
   getIsoWeeksForYear,
@@ -232,18 +232,6 @@ describe('weekday constants', () => {
       'sunday',
     ])
   })
-
-  it('labels every weekday', () => {
-    expect(WEEKDAY_LABELS).toEqual({
-      monday: 'Monday',
-      tuesday: 'Tuesday',
-      wednesday: 'Wednesday',
-      thursday: 'Thursday',
-      friday: 'Friday',
-      saturday: 'Saturday',
-      sunday: 'Sunday',
-    })
-  })
 })
 
 describe('addWeeks', () => {
@@ -345,5 +333,33 @@ describe('holidayToWeekKey', () => {
   it('maps an ISO holiday week to its Monday week key', () => {
     expect(holidayToWeekKey({ year: 2026, week: 1 })).toBe('2025-12-29')
     expect(holidayToWeekKey({ year: 2026, week: 29 })).toBe('2026-07-13')
+  })
+})
+
+describe('Spanish date formatting', () => {
+  it('formats ISO and full dates with Spanish locale names', () => {
+    expect(formatIsoDate('2026-11-08', 'es')).toBe('8 nov 2026')
+    expect(formatFullDate('2026-11-02', 'es')).toBe('lunes, 2 de noviembre de 2026')
+  })
+
+  it('returns the bare day number for Spanish ordinals', () => {
+    expect(formatOrdinal(1, 'es')).toBe('1')
+    expect(formatOrdinal(2, 'es')).toBe('2')
+    expect(formatOrdinal(23, 'es')).toBe('23')
+  })
+
+  it('formats week ranges with Spanish month names', () => {
+    expect(formatWeekRangeShort('2026-11-02', 'es')).toBe('2 nov – 8 nov')
+    expect(formatWeekRange('2026-11-02', 'es')).toBe('2 nov – 8 nov, 2026')
+  })
+
+  it('labels ISO weeks in Spanish', () => {
+    const weeks = getIsoWeeksForYear(2027, 'es')
+
+    expect(weeks[0]).toEqual({
+      year: 2027,
+      week: 1,
+      label: 'Semana 1 — 4 ene – 10 ene',
+    })
   })
 })

@@ -2,23 +2,28 @@
   <div class="app">
     <header class="app__header">
       <RouterLink class="app__brand" to="/">Light Scheduler</RouterLink>
-      <AppNav :items="NAV_ITEMS" />
+      <div class="app__controls">
+        <AppNav :items="NAV_ITEMS" />
+        <LanguageSwitcher />
+      </div>
     </header>
 
     <main class="app__main">
       <RouterView />
     </main>
 
-    <footer class="app__footer">
-      Light Scheduler — a frontend-only weekly shift scheduler. We recommend saving your work locally by exporting CSV files.
-    </footer>
+    <footer class="app__footer">{{ t('app.footer') }}</footer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import AppNav from '@/shared/components/AppNav.vue'
+import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
+import { useI18n } from '@/shared/i18n'
 import { NAV_ITEMS } from '@/router/nav'
+
+const { t } = useI18n()
 </script>
 
 <style scoped>
@@ -49,6 +54,13 @@ import { NAV_ITEMS } from '@/router/nav'
 .app__brand:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+.app__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .app__main {

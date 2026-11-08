@@ -10,7 +10,7 @@
     role="button"
     :tabindex="disabled ? -1 : 0"
     data-test="shift-bar"
-    title="Right-click to remove this shift"
+    :title="t('shiftBar.removeHint')"
     :aria-disabled="disabled"
     :aria-label="ariaLabel"
     @pointerdown.stop.prevent="beginDrag('move', $event)"
@@ -54,6 +54,7 @@ import {
   snapToSlot,
 } from '@/shared/utils/shifts'
 import type { MinuteRange } from '@/shared/utils/shifts'
+import { useI18n } from '@/shared/i18n'
 import { dutyModifier } from '@/shared/utils/employee'
 import {
   minuteDeltaFromPixels,
@@ -89,6 +90,8 @@ interface DragState {
   pointerId: number
 }
 
+const { t } = useI18n()
+
 const bar = ref<HTMLElement | null>(null)
 const drag = ref<DragState | null>(null)
 const draftRange = ref<MinuteRange | null>(null)
@@ -103,9 +106,12 @@ const barStyle = computed(() => ({
   width: `${rangeToPercentWidth(displayedRange.value.startMinute, displayedRange.value.endMinute)}%`,
 }))
 
-const ariaLabel = computed(
-  () =>
-    `Shift for ${props.memberName}: ${formatExtendedMinutes(displayedRange.value.startMinute)} to ${formatExtendedMinutes(displayedRange.value.endMinute)}. Use arrow keys to move, Shift plus arrow keys to resize, Delete to remove.`,
+const ariaLabel = computed(() =>
+  t('shiftBar.aria', {
+    name: props.memberName,
+    start: formatExtendedMinutes(displayedRange.value.startMinute),
+    end: formatExtendedMinutes(displayedRange.value.endMinute),
+  }),
 )
 
 function beginDrag(mode: DragMode, event: PointerEvent): void {
@@ -231,8 +237,8 @@ function handleKeydown(event: KeyboardEvent): void {
 <style scoped>
 .shift-bar {
   position: absolute;
-  top: 0.35rem;
-  bottom: 0.35rem;
+  top: var(--grid-bar-inset);
+  bottom: var(--grid-bar-inset);
   box-sizing: border-box;
   display: flex;
   align-items: center;

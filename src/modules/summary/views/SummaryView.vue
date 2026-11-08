@@ -1,15 +1,12 @@
 <template>
   <section class="summary">
-    <PageHeader
-      title="Summary"
-      description="Review the weekly schedule and print it or save it as a PDF."
-    >
+    <PageHeader :title="t('summary.title')" :description="t('summary.description')">
       <template #actions>
         <button type="button" class="summary__button" data-test="print" @click="printSummary">
-          Print
+          {{ t('summary.print') }}
         </button>
         <button type="button" class="summary__button" data-test="save-pdf" disabled>
-          Save as PDF
+          {{ t('summary.savePdf') }}
         </button>
       </template>
     </PageHeader>
@@ -18,11 +15,11 @@
 
     <dl class="summary__metrics">
       <div class="summary__metric">
-        <dt class="summary__metric-label">Total shifts</dt>
+        <dt class="summary__metric-label">{{ t('summary.totalShifts') }}</dt>
         <dd class="summary__metric-value" data-test="total-shifts">{{ totalShifts }}</dd>
       </div>
       <div class="summary__metric">
-        <dt class="summary__metric-label">Assigned members</dt>
+        <dt class="summary__metric-label">{{ t('summary.assignedMembers') }}</dt>
         <dd class="summary__metric-value" data-test="assigned-members">
           {{ assignedMemberCount }}
         </dd>
@@ -35,9 +32,11 @@
 import { storeToRefs } from 'pinia'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import { useSummaryStore } from '@/modules/summary/stores/summary'
+import { useI18n } from '@/shared/i18n'
 
 const store = useSummaryStore()
 const { weekRangeLabel, totalShifts, assignedMemberCount } = storeToRefs(store)
+const { t } = useI18n()
 
 function printSummary(): void {
   window.print()

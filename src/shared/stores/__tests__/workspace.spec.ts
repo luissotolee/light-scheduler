@@ -1,8 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { DayOff, Shift, TeamMember } from '@/types'
 import { getWeekKey } from '@/shared/utils/calendar'
+import {
+  parsePersistedWorkspace,
+  serializeWorkspace,
+  WORKSPACE_SCHEMA_VERSION,
+  WORKSPACE_STORAGE_KEY,
+} from '@/shared/utils/persistence'
+import { readJson, writeJson } from '@/shared/utils/storage'
 
 const member: TeamMember = {
   id: 'member-1',
@@ -24,8 +32,16 @@ const shift: Shift = {
 }
 const dayOff: DayOff = { memberId: member.id, weekday: 'monday' }
 
+const persistedPayload = {
+  members: [member],
+  schedules: { '2026-11-02': [shift] },
+  dayOffs: { '2026-11-02': [dayOff] },
+  currentWeekKey: '2026-11-02',
+}
+
 describe('workspace store', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
   })
 
@@ -187,5 +203,78 @@ describe('workspace store', () => {
     expect(store.dayOffs).toEqual({})
     expect(store.currentWeekKey).toBe(getWeekKey(new Date()))
     expect(store.dataLoaded).toBe(false)
+  })
+
+  it('hydrates state from a persisted workspace', () => {
+    writeJson(WORKSPACE_STORAGE_KEY, serializeWorkspace(persistedPayload))
+
+    const store = useWorkspaceStore()
+
+    expect(store.members).toEqual([member])
+    expect(store.schedules).toEqual({ '2026-11-02': [shift] })
+    expect(store.dayOffs).toEqual({ '2026-11-02': [dayOff] })
+    expect(store.currentWeekKey).toBe('2026-11-02')
+    expect(store.dataLoaded).toBe(false)
+    expect(store.schemaVersion).toBe(WORKSPACE_SCHEMA_VERSION)
+  })
+
+  it('persists state changes to localStorage', async () => {
+    const store = useWorkspaceStore()
+
+    store.setMembers([member])
+    store.setShiftsForWeek('2026-11-02', [shift])
+    store.setDayOffsForWeek('2026-11-02', [dayOff])
+    store.setCurrentWeekKey('2026-11-02')
+    await nextTick()
+
+    expect(readJson(WORKSPACE_STORAGE_KEY, parsePersistedWorkspace)).toEqual({
+      version: WORKSPACE_SCHEMA_VERSION,
+      ...persistedPayload,
+    })
+  })
+
+  it('falls back to defaults when persisted JSON is malformed', () => {
+    localStorage.setItem(WORKSPACE_STORAGE_KEY, '{not json')
+
+    const store = useWorkspaceStore()
+
+    expect(store.members).toEqual([])
+    expect(store.schedules).toEqual({})
+    expect(store.dayOffs).toEqual({})
+    expect(store.currentWeekKey).toBe(getWeekKey(new Date()))
+    expect(store.dataLoaded).toBe(false)
+  })
+
+  it('falls back to defaults when the persisted schema version is unsupported', () => {
+    writeJson(WORKSPACE_STORAGE_KEY, {
+      ...serializeWorkspace(persistedPayload),
+      version: 2,
+    })
+
+    const store = useWorkspaceStore()
+
+    expect(store.members).toEqual([])
+    expect(store.schedules).toEqual({})
+    expect(store.dayOffs).toEqual({})
+    expect(store.currentWeekKey).toBe(getWeekKey(new Date()))
+  })
+
+  it('clears persisted state when reset', async () => {
+    const store = useWorkspaceStore()
+    store.setMembers([member])
+    await nextTick()
+    expect(localStorage.getItem(WORKSPACE_STORAGE_KEY)).not.toBeNull()
+
+    store.reset()
+
+    expect(localStorage.getItem(WORKSPACE_STORAGE_KEY)).toBeNull()
+
+    await nextTick()
+
+    expect(store.members).toEqual([])
+    expect(store.schedules).toEqual({})
+    expect(store.dayOffs).toEqual({})
+    expect(store.currentWeekKey).toBe(getWeekKey(new Date()))
+    expect(localStorage.getItem(WORKSPACE_STORAGE_KEY)).toBeNull()
   })
 })

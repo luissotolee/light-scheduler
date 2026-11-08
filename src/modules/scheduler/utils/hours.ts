@@ -27,13 +27,6 @@ export function compareMembersByDuty(
   )
 }
 
-export const WEEKLY_HOURS_GROUP_LABELS: Record<Duty, string> = {
-  head_manager: 'Head managers',
-  manager: 'Managers',
-  assistant: 'Assistants',
-  employee: 'Employees',
-}
-
 export interface WeeklyHoursRow {
   memberId: string
   name: string
@@ -45,7 +38,6 @@ export interface WeeklyHoursRow {
 
 export interface WeeklyHoursGroup {
   duty: Duty
-  label: string
   rows: WeeklyHoursRow[]
 }
 
@@ -105,7 +97,7 @@ export function buildWeeklyHoursGroups(
     const rows = rowsByDuty.get(duty)
     if (!rows || rows.length === 0) continue
     rows.sort((a, b) => compareNames(a.name, b.name) || a.memberId.localeCompare(b.memberId))
-    groups.push({ duty, label: WEEKLY_HOURS_GROUP_LABELS[duty], rows })
+    groups.push({ duty, rows })
   }
 
   return groups

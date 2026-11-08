@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
+import type { MessageKey } from '@/shared/i18n/messages/en'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { todayIsoDate } from '@/shared/utils/calendar'
 import { MAX_HOLIDAY_WEEKS, normalizeHolidays, validateEmployeeForm } from '@/shared/utils/employee'
@@ -8,7 +9,7 @@ import { createId } from '@/shared/utils/id'
 
 interface EmployeesStatus {
   loading: boolean
-  error: string | null
+  error: MessageKey | null
 }
 
 interface PendingAction {
@@ -33,7 +34,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     return useWorkspaceStore()
   }
 
-  function setError(error: string | null): void {
+  function setError(error: MessageKey | null): void {
     status.value = { loading: false, error }
   }
 
@@ -150,7 +151,7 @@ export const useEmployeesStore = defineStore('employees', () => {
 
     const normalized = normalizeHolidays(holidays)
     if (normalized.length > MAX_HOLIDAY_WEEKS) {
-      setError('At most 6 holiday weeks are allowed')
+      setError('errors.maxHolidays')
       return
     }
 

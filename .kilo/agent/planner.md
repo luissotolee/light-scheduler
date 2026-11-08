@@ -1,7 +1,7 @@
 ---
 description: Investigates the current code and produces a detailed, best-practice implementation plan. Route complex tasks here before any development.
 mode: subagent
-model: deepseek/deepseek-v4-pro
+model: deepseek/deepseek-flash
 color: "#3B82F6"
 ---
 
@@ -12,6 +12,8 @@ Before exploring, read `workspace.md` for the module map and where files belong.
 ## Load the matching skill
 
 Load the skill that matches the task area via the `skill` tool; each skill's `description` (in its frontmatter) is the trigger. Load at most one skill per task — the most specific match. If none matches, proceed without one.
+
+If the plan introduces or changes any label, message, error, `aria-label`, or other user-visible text, load the `i18n` skill and plan for updating **both** `src/shared/i18n/messages/en.ts` and `src/shared/i18n/messages/es.ts` in the same change.
 
 ## Your job
 
@@ -24,6 +26,7 @@ Given a task, produce a detailed implementation plan:
    - Key functions, components, or modules and their responsibilities
    - Edge cases and how to handle them
    - Tests to add or update
+   - Any user-facing text, listed with the `en.ts` and `es.ts` keys to add or change (both languages)
    - The verification commands to run
 
 ## Output

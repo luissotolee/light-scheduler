@@ -60,6 +60,8 @@ Rules:
 - Check overlap per member and weekday: two shifts overlap only when `memberId` and `weekday` match and their minute ranges intersect.
 - Half-open ranges: a shift ending at 12:00 does not overlap one starting at 12:00.
 
+Validation failures surface as `MessageKey` values in the scheduler store (`errors.shiftTimes`, `errors.shiftRange`, `errors.maxDaysOff`), translated at the view boundary. Add any new shift error key to **both** `en.ts` and `es.ts` (see the `i18n` skill).
+
 ```ts
 export function toShiftMinutes(
   start: string,
