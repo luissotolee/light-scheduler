@@ -11,6 +11,7 @@ import {
   PHONE_PREFIX_MIN_DIGITS,
   SPANISH_PHONE_DIGITS,
   WEEKLY_HOURS_ERROR,
+  dutyModifier,
   employeeToRow,
   employeesToRows,
   firstEmployeeFormError,
@@ -87,6 +88,15 @@ describe('employee constants and labels', () => {
       'startDate',
       'endDate',
     ])
+  })
+})
+
+describe('dutyModifier', () => {
+  it('maps duties to their CSS modifier', () => {
+    expect(dutyModifier('manager')).toBe('manager')
+    expect(dutyModifier('employee')).toBe('employee')
+    expect(dutyModifier('assistant')).toBe('assistant')
+    expect(dutyModifier('head_manager')).toBe('head-manager')
   })
 })
 

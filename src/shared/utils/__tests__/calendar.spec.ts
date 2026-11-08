@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  WEEKDAY_LABELS,
+  WEEKDAY_ORDER,
+  addDays,
   addWeeks,
+  formatFullDate,
   formatIsoDate,
+  formatOrdinal,
   formatWeekRange,
   getIsoWeek,
   getIsoWeekStart,
@@ -14,6 +19,8 @@ import {
   startOfWeek,
   toLocalIsoDate,
   todayIsoDate,
+  weekdayDayOfMonth,
+  weekdayIsoDate,
 } from '@/shared/utils/calendar'
 
 afterEach(() => {
@@ -77,6 +84,38 @@ describe('formatIsoDate', () => {
   })
 })
 
+describe('formatFullDate', () => {
+  it('formats a full weekday date', () => {
+    expect(formatFullDate('2026-11-02')).toBe('Monday, November 2nd, 2026')
+  })
+
+  it('applies the ordinal suffix from the day of month across a month', () => {
+    const cases = [
+      ['2026-11-01', 'Sunday, November 1st, 2026'],
+      ['2026-11-03', 'Tuesday, November 3rd, 2026'],
+      ['2026-11-11', 'Wednesday, November 11th, 2026'],
+      ['2026-11-12', 'Thursday, November 12th, 2026'],
+      ['2026-11-13', 'Friday, November 13th, 2026'],
+      ['2026-11-21', 'Saturday, November 21st, 2026'],
+      ['2026-11-22', 'Sunday, November 22nd, 2026'],
+      ['2026-11-23', 'Monday, November 23rd, 2026'],
+    ] as const
+
+    for (const [iso, expected] of cases) {
+      expect(formatFullDate(iso), iso).toBe(expected)
+    }
+  })
+
+  it('returns a placeholder for malformed input instead of throwing', () => {
+    expect(formatFullDate('not-a-date')).toBe('—')
+    expect(formatFullDate('')).toBe('—')
+  })
+
+  it('formats dates across a year boundary', () => {
+    expect(formatFullDate('2026-12-31')).toBe('Thursday, December 31st, 2026')
+  })
+})
+
 describe('startOfWeek', () => {
   it('returns Monday at local midnight for a mid-week date', () => {
     const result = startOfWeek(new Date(2026, 10, 4, 15, 30))
@@ -106,6 +145,104 @@ describe('getWeekKey', () => {
     vi.setSystemTime(new Date(2026, 10, 8, 12))
 
     expect(getWeekKey(new Date())).toBe('2026-11-02')
+  })
+})
+
+describe('addDays', () => {
+  it('moves across month boundaries without mutating the input', () => {
+    const date = new Date(2026, 10, 30)
+
+    expect(toLocalIsoDate(addDays(date, 2))).toBe('2026-12-02')
+    expect(toLocalIsoDate(addDays(date, -30))).toBe('2026-10-31')
+    expect(toLocalIsoDate(date)).toBe('2026-11-30')
+  })
+})
+
+describe('weekdayIsoDate', () => {
+  it('maps each weekday to its date in a Monday-based week', () => {
+    expect(weekdayIsoDate('2026-11-02', 'monday')).toBe('2026-11-02')
+    expect(weekdayIsoDate('2026-11-02', 'tuesday')).toBe('2026-11-03')
+    expect(weekdayIsoDate('2026-11-02', 'wednesday')).toBe('2026-11-04')
+    expect(weekdayIsoDate('2026-11-02', 'thursday')).toBe('2026-11-05')
+    expect(weekdayIsoDate('2026-11-02', 'friday')).toBe('2026-11-06')
+    expect(weekdayIsoDate('2026-11-02', 'saturday')).toBe('2026-11-07')
+    expect(weekdayIsoDate('2026-11-02', 'sunday')).toBe('2026-11-08')
+  })
+
+  it('crosses into the next month for a week at a month boundary', () => {
+    expect(weekdayIsoDate('2026-10-26', 'sunday')).toBe('2026-11-01')
+  })
+})
+
+describe('weekdayDayOfMonth', () => {
+  it('returns the day of month for every weekday in a week', () => {
+    expect(WEEKDAY_ORDER.map((weekday) => weekdayDayOfMonth('2026-11-02', weekday))).toEqual([
+      2, 3, 4, 5, 6, 7, 8,
+    ])
+  })
+
+  it('crosses into the next month for a week at a month boundary', () => {
+    expect(weekdayDayOfMonth('2026-10-26', 'sunday')).toBe(1)
+  })
+})
+
+describe('formatOrdinal', () => {
+  it('formats days with the correct English ordinal suffix', () => {
+    expect(formatOrdinal(1)).toBe('1st')
+    expect(formatOrdinal(2)).toBe('2nd')
+    expect(formatOrdinal(3)).toBe('3rd')
+    expect(formatOrdinal(4)).toBe('4th')
+    expect(formatOrdinal(6)).toBe('6th')
+    expect(formatOrdinal(21)).toBe('21st')
+    expect(formatOrdinal(22)).toBe('22nd')
+    expect(formatOrdinal(23)).toBe('23rd')
+    expect(formatOrdinal(31)).toBe('31st')
+  })
+
+  it('uses "th" for the teens', () => {
+    expect(formatOrdinal(11)).toBe('11th')
+    expect(formatOrdinal(12)).toBe('12th')
+    expect(formatOrdinal(13)).toBe('13th')
+  })
+
+  it('uses "th" for mid-range days', () => {
+    const days = [5, 7, 8, 9, 10, 14, 15, 16, 17, 18, 19, 20, 24, 25, 26, 27, 28, 29, 30]
+
+    for (const day of days) {
+      expect(formatOrdinal(day), `day ${day}`).toBe(`${day}th`)
+    }
+  })
+
+  it('uses "th" for hundreds variants of the teens', () => {
+    expect(formatOrdinal(111)).toBe('111th')
+    expect(formatOrdinal(112)).toBe('112th')
+    expect(formatOrdinal(113)).toBe('113th')
+  })
+})
+
+describe('weekday constants', () => {
+  it('orders weekdays from Monday to Sunday', () => {
+    expect(WEEKDAY_ORDER).toEqual([
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ])
+  })
+
+  it('labels every weekday', () => {
+    expect(WEEKDAY_LABELS).toEqual({
+      monday: 'Monday',
+      tuesday: 'Tuesday',
+      wednesday: 'Wednesday',
+      thursday: 'Thursday',
+      friday: 'Friday',
+      saturday: 'Saturday',
+      sunday: 'Sunday',
+    })
   })
 })
 

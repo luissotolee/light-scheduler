@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import type { Shift, TeamMember } from '@/types'
+import type { DayOff, Shift, TeamMember } from '@/types'
 import { getWeekKey } from '@/shared/utils/calendar'
 
 const member: TeamMember = {
@@ -22,6 +22,7 @@ const shift: Shift = {
   startMinute: 540,
   endMinute: 1020,
 }
+const dayOff: DayOff = { memberId: member.id, weekday: 'monday' }
 
 describe('workspace store', () => {
   beforeEach(() => {
@@ -39,6 +40,8 @@ describe('workspace store', () => {
     expect(store.memberCount).toBe(0)
     expect(store.activeMembers).toEqual([])
     expect(store.currentWeekShifts).toEqual([])
+    expect(store.dayOffs).toEqual({})
+    expect(store.currentWeekDayOffs).toEqual([])
     expect(store.hasAnyData).toBe(false)
   })
 
@@ -122,6 +125,45 @@ describe('workspace store', () => {
     expect(store.hasAnyData).toBe(true)
   })
 
+  it('stores day offs per week and exposes the current week', () => {
+    const store = useWorkspaceStore()
+
+    store.setDayOffsForWeek('2026-10-26', [dayOff])
+
+    expect(store.dayOffs['2026-10-26']).toEqual([dayOff])
+    expect(store.currentWeekDayOffs).toEqual([])
+
+    store.setCurrentWeekKey('2026-10-26')
+    expect(store.currentWeekDayOffs).toEqual([dayOff])
+    expect(store.hasAnyData).toBe(true)
+  })
+
+  it('drops the week key when a week has no day offs left', () => {
+    const store = useWorkspaceStore()
+    store.setDayOffsForWeek('2026-10-26', [dayOff])
+
+    store.setDayOffsForWeek('2026-10-26', [])
+
+    expect(store.dayOffs).toEqual({})
+    expect(store.hasAnyData).toBe(false)
+  })
+
+  it('removes the member day offs from every week and drops empty week keys', () => {
+    const store = useWorkspaceStore()
+    const otherMember: TeamMember = { ...member, id: 'member-2', name: 'Bo' }
+    const otherDayOff: DayOff = { memberId: otherMember.id, weekday: 'friday' }
+    const secondAdaDayOff: DayOff = { memberId: member.id, weekday: 'tuesday' }
+
+    store.setMembers([member, otherMember])
+    store.setDayOffsForWeek('2026-10-26', [dayOff, otherDayOff])
+    store.setDayOffsForWeek('2026-11-02', [secondAdaDayOff])
+
+    store.removeMember(member.id)
+
+    expect(store.members).toEqual([otherMember])
+    expect(store.dayOffs).toEqual({ '2026-10-26': [otherDayOff] })
+  })
+
   it('marks data as loaded', () => {
     const store = useWorkspaceStore()
 
@@ -134,6 +176,7 @@ describe('workspace store', () => {
     const store = useWorkspaceStore()
     store.setMembers([member])
     store.setShiftsForWeek('2026-10-26', [shift])
+    store.setDayOffsForWeek('2026-10-26', [dayOff])
     store.setCurrentWeekKey('2026-10-26')
     store.markLoaded()
 
@@ -141,6 +184,7 @@ describe('workspace store', () => {
 
     expect(store.members).toEqual([])
     expect(store.schedules).toEqual({})
+    expect(store.dayOffs).toEqual({})
     expect(store.currentWeekKey).toBe(getWeekKey(new Date()))
     expect(store.dataLoaded).toBe(false)
   })

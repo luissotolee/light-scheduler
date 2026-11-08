@@ -76,8 +76,18 @@ export type EmployeeFormValidation =
 export interface Shift {
   id: string
   memberId: string
+  /**
+   * The calendar day the shift starts on. Times are wall-clock local minutes.
+   */
   weekday: Weekday
+  /**
+   * Minutes since midnight when the shift starts.
+   */
   startMinute: number
+  /**
+   * Minutes since midnight when the shift ends. May exceed 1440 (up to 1500,
+   * i.e. 25:00) to represent a shift that ends on the next calendar day.
+   */
   endMinute: number
 }
 
@@ -86,6 +96,11 @@ export interface NewShift {
   weekday: Weekday
   start: string
   end: string
+}
+
+export interface DayOff {
+  memberId: string
+  weekday: Weekday
 }
 
 export interface WeekSchedule {

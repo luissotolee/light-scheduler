@@ -14,6 +14,9 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(PrimeVue, {
+  locale: {
+    firstDayOfWeek: 1,
+  },
   theme: {
     preset: Aura,
     options: {
