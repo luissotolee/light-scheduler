@@ -1,6 +1,26 @@
-import type { HolidayWeek, HolidayWeekOption, WeekKey } from '@/types'
+import type { HolidayWeek, HolidayWeekOption, WeekKey, Weekday } from '@/types'
 
-function addDays(date: Date, days: number): Date {
+export const WEEKDAY_ORDER: readonly Weekday[] = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+]
+
+export const WEEKDAY_LABELS: Record<Weekday, string> = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+}
+
+export function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)
   return result
@@ -50,6 +70,23 @@ export function formatIsoDate(isoDate: string): string {
   }).format(isoDateToDate(parsed))
 }
 
+export function formatFullDate(isoDate: string): string {
+  const parsed = parseIsoDate(isoDate)
+  if (!parsed) return '—'
+
+  const date = isoDateToDate(parsed)
+  const parts = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).formatToParts(date)
+
+  return parts
+    .map((part) => (part.type === 'day' ? formatOrdinal(date.getDate()) : part.value))
+    .join('')
+}
+
 export function startOfWeek(date: Date): Date {
   const start = new Date(date)
   const offset = (start.getDay() + 6) % 7
@@ -60,6 +97,26 @@ export function startOfWeek(date: Date): Date {
 
 export function getWeekKey(date: Date): WeekKey {
   return toLocalIsoDate(startOfWeek(date))
+}
+
+export function weekdayIsoDate(weekKey: WeekKey, weekday: Weekday): string {
+  const index = WEEKDAY_ORDER.indexOf(weekday)
+  return toLocalIsoDate(addDays(isoDateToDate(weekKey), index))
+}
+
+export function weekdayDayOfMonth(weekKey: WeekKey, weekday: Weekday): number {
+  return isoDateToDate(weekdayIsoDate(weekKey, weekday)).getDate()
+}
+
+export function formatOrdinal(day: number): string {
+  const remainder100 = day % 100
+  if (remainder100 >= 11 && remainder100 <= 13) return `${day}th`
+
+  const remainder10 = day % 10
+  if (remainder10 === 1) return `${day}st`
+  if (remainder10 === 2) return `${day}nd`
+  if (remainder10 === 3) return `${day}rd`
+  return `${day}th`
 }
 
 export function addWeeks(date: Date, weeks: number): Date {

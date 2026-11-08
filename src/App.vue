@@ -10,7 +10,7 @@
     </main>
 
     <footer class="app__footer">
-      Light Scheduler — a frontend-only weekly shift scheduler. Data stays in your browser.
+      Light Scheduler — a frontend-only weekly shift scheduler. We recommend saving your work locally by exporting CSV files.
     </footer>
   </div>
 </template>

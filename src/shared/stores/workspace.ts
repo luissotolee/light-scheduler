@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { Shift, TeamMember, WeekKey } from '@/types'
+import type { DayOff, Shift, TeamMember, WeekKey } from '@/types'
 import { getWeekKey } from '@/shared/utils/calendar'
 
 export const useWorkspaceStore = defineStore('workspace', () => {
   const members = ref<TeamMember[]>([])
   const schedules = ref<Record<WeekKey, Shift[]>>({})
+  const dayOffs = ref<Record<WeekKey, DayOff[]>>({})
   const currentWeekKey = ref<WeekKey>(getWeekKey(new Date()))
   const dataLoaded = ref(false)
   const schemaVersion = 1
@@ -13,8 +14,12 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const memberCount = computed(() => members.value.length)
   const activeMembers = computed(() => members.value.filter((member) => member.active))
   const currentWeekShifts = computed(() => schedules.value[currentWeekKey.value] ?? [])
+  const currentWeekDayOffs = computed(() => dayOffs.value[currentWeekKey.value] ?? [])
   const hasAnyData = computed(
-    () => members.value.length > 0 || Object.keys(schedules.value).length > 0,
+    () =>
+      members.value.length > 0 ||
+      Object.keys(schedules.value).length > 0 ||
+      Object.keys(dayOffs.value).length > 0,
   )
 
   function setMembers(loaded: TeamMember[]): void {
@@ -39,6 +44,13 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       if (remaining.length > 0) nextSchedules[weekKey] = remaining
     }
     schedules.value = nextSchedules
+
+    const nextDayOffs: Record<WeekKey, DayOff[]> = {}
+    for (const [weekKey, offs] of Object.entries(dayOffs.value)) {
+      const remaining = offs.filter((off) => off.memberId !== id)
+      if (remaining.length > 0) nextDayOffs[weekKey] = remaining
+    }
+    dayOffs.value = nextDayOffs
   }
 
   function findMember(id: string): TeamMember | undefined {
@@ -47,6 +59,16 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
   function setShiftsForWeek(weekKey: WeekKey, shifts: Shift[]): void {
     schedules.value = { ...schedules.value, [weekKey]: shifts }
+  }
+
+  function setDayOffsForWeek(weekKey: WeekKey, offs: DayOff[]): void {
+    if (offs.length === 0) {
+      const nextDayOffs = { ...dayOffs.value }
+      delete nextDayOffs[weekKey]
+      dayOffs.value = nextDayOffs
+      return
+    }
+    dayOffs.value = { ...dayOffs.value, [weekKey]: offs }
   }
 
   function setCurrentWeekKey(weekKey: WeekKey): void {
@@ -60,6 +82,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   function reset(): void {
     members.value = []
     schedules.value = {}
+    dayOffs.value = {}
     currentWeekKey.value = getWeekKey(new Date())
     dataLoaded.value = false
   }
@@ -67,18 +90,21 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   return {
     members,
     schedules,
+    dayOffs,
     currentWeekKey,
     dataLoaded,
     schemaVersion,
     memberCount,
     activeMembers,
     currentWeekShifts,
+    currentWeekDayOffs,
     hasAnyData,
     setMembers,
     upsertMember,
     removeMember,
     findMember,
     setShiftsForWeek,
+    setDayOffsForWeek,
     setCurrentWeekKey,
     markLoaded,
     reset,

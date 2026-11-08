@@ -8,6 +8,7 @@
   --color-accent: #38bdf8;
   --color-danger: #f87171;
   --color-inactive-bg: rgba(148, 163, 184, 0.08);
+  --color-shift-bar: rgba(56, 189, 248, 0.18);
   --color-duty-manager: #fbbf24;
   --color-duty-head-manager: #f472b6;
   --color-duty-assistant: #a78bfa;
@@ -18,7 +19,10 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --layout-max-width: 72rem;
+  --layout-max-width: 96rem;
+  --grid-name-width: 168px;
+  --grid-hours-width: 4rem;
+  --grid-header-height: 2.25rem;
   --header-height: 3.5rem;
   --nav-gap: 1rem;
   --space-page-x: clamp(1rem, 4vw, 2.5rem);

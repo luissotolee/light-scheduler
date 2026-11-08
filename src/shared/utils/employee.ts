@@ -27,6 +27,10 @@ export const DUTY_LABELS: Record<Duty, string> = {
   head_manager: 'Head manager',
 }
 
+export function dutyModifier(duty: Duty): string {
+  return duty.replace('_', '-')
+}
+
 export const CONTRACT_LABELS: Record<Contract, string> = {
   fulltime: 'Full-time',
   part_time: 'Part-time',

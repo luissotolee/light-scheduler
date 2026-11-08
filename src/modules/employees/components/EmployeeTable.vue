@@ -155,7 +155,13 @@ import Chip from 'primevue/chip'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import type { TeamMember } from '@/types'
-import { CONTRACT_LABELS, DUTY_LABELS, isContract, isDuty } from '@/shared/utils/employee'
+import {
+  CONTRACT_LABELS,
+  DUTY_LABELS,
+  dutyModifier,
+  isContract,
+  isDuty,
+} from '@/shared/utils/employee'
 
 defineProps<{
   members: TeamMember[]
@@ -180,10 +186,6 @@ function dutyLabel(value: unknown): string {
 
 function contractLabel(value: unknown): string {
   return isContract(value) ? CONTRACT_LABELS[value] : ''
-}
-
-function dutyModifier(value: unknown): string {
-  return isDuty(value) ? value.replace('_', '-') : ''
 }
 
 function contractModifier(value: unknown): string {

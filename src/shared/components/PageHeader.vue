@@ -1,8 +1,21 @@
 <template>
   <header class="page-header">
     <div class="page-header__text">
-      <h1 class="page-header__title">{{ title }}</h1>
-      <p v-if="description" class="page-header__description">{{ description }}</p>
+      <div class="page-header__title-row">
+        <h1 class="page-header__title">{{ title }}</h1>
+        <span
+          v-if="description && descriptionTooltip"
+          v-tooltip.top="description"
+          class="page-header__info"
+          role="img"
+          :aria-label="description"
+          tabindex="0"
+          data-test="page-header-info"
+        >
+          <i class="pi pi-info-circle" aria-hidden="true" />
+        </span>
+      </div>
+      <p v-if="description && !descriptionTooltip" class="page-header__description">{{ description }}</p>
     </div>
     <div v-if="$slots.actions" class="page-header__actions">
       <slot name="actions" />
@@ -14,6 +27,7 @@
 defineProps<{
   title: string
   description?: string
+  descriptionTooltip?: boolean
 }>()
 </script>
 
@@ -24,12 +38,38 @@ defineProps<{
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.page-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .page-header__title {
-  margin: 0 0 0.35rem;
+  margin: 0;
   font-size: 1.75rem;
+}
+
+.page-header__info {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: help;
+}
+
+.page-header__info:hover,
+.page-header__info:focus-visible {
+  color: var(--color-accent);
+}
+
+.page-header__info:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .page-header__description {
