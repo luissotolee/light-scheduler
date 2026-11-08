@@ -14,6 +14,8 @@ const members: TeamMember[] = [
     holidays: [],
     email: 'ada@example.com',
     phone: '+1 555 010 0000',
+    active: true,
+    startDate: '2025-01-15',
   },
   {
     id: 'member-2',
@@ -22,6 +24,9 @@ const members: TeamMember[] = [
     contract: 'weekends',
     weeklyHours: 16,
     holidays: [{ year: 2026, week: 10 }],
+    active: false,
+    startDate: '2020-01-01',
+    endDate: '2026-11-08',
   },
 ]
 
@@ -87,6 +92,24 @@ describe('EmployeeTable', () => {
     expect(wrapper.find('[data-test="remove-member-1"] .pi-trash').exists()).toBe(true)
   })
 
+  it('shows edit and holiday actions for active members', () => {
+    const wrapper = mountTable()
+
+    expect(wrapper.find('[data-test="edit-member-1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="holidays-member-1"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Edit Ada"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Holidays for Ada"]').exists()).toBe(true)
+  })
+
+  it('hides edit and holiday actions for inactive members', () => {
+    const wrapper = mountTable()
+
+    expect(wrapper.find('[data-test="edit-member-2"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="holidays-member-2"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="Edit Bo"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="Holidays for Bo"]').exists()).toBe(false)
+  })
+
   it('emits edit, holidays, and remove events with the member id', async () => {
     const wrapper = mountTable()
 
@@ -105,5 +128,42 @@ describe('EmployeeTable', () => {
     expect(wrapper.find('[aria-label="Edit Ada"]').exists()).toBe(true)
     expect(wrapper.find('[aria-label="Holidays for Ada"]').exists()).toBe(true)
     expect(wrapper.find('[aria-label="Remove Ada"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Deactivate Ada"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Reactivate Bo"]').exists()).toBe(true)
+  })
+
+  it('marks inactive rows and names', () => {
+    const wrapper = mountTable()
+
+    const rows = wrapper.findAll('tbody tr')
+    expect(rows[0].classes()).not.toContain('employee-table__row--inactive')
+    expect(rows[1].classes()).toContain('employee-table__row--inactive')
+    expect(wrapper.find('.employee-table__name--inactive').text()).toBe('Bo')
+    expect(wrapper.find('[aria-label="View details for Bo (inactive)"]').exists()).toBe(true)
+  })
+
+  it('emits details when an employee name is clicked', async () => {
+    const wrapper = mountTable()
+
+    await wrapper.find('[data-test="details-member-2"]').trigger('click')
+
+    expect(wrapper.emitted('details')).toEqual([['member-2']])
+  })
+
+  it('emits deactivate and reactivate events with the member id', async () => {
+    const wrapper = mountTable()
+
+    await wrapper.find('[data-test="deactivate-member-1"]').trigger('click')
+    await wrapper.find('[data-test="reactivate-member-2"]').trigger('click')
+
+    expect(wrapper.emitted('deactivate')).toEqual([['member-1']])
+    expect(wrapper.emitted('reactivate')).toEqual([['member-2']])
+  })
+
+  it('uses user status icons for the deactivate and reactivate actions', () => {
+    const wrapper = mountTable()
+
+    expect(wrapper.find('[data-test="deactivate-member-1"] .pi-user-minus').exists()).toBe(true)
+    expect(wrapper.find('[data-test="reactivate-member-2"] .pi-user-plus').exists()).toBe(true)
   })
 })

@@ -9,7 +9,7 @@ Read `workspace.md` first for the module map and where files belong.
 
 ## 1. Data model
 
-Add these future-proofed types to `src/types.ts`:
+These types already live in `src/types.ts`:
 
 ```ts
 export type Weekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
@@ -105,7 +105,7 @@ export function getWeekKey(date: Date): string {
 }
 ```
 
-The store exposes `currentWeekShifts` and `nextWeekShifts` getters computed from a `referenceDate` and the flat `shifts` list. Anticipate this shape now; do not build the calendar UI yet.
+The scheduler store exposes `currentWeekShifts` and week navigation, computed from the shared `workspace` store's `schedules` and `currentWeekKey`.
 
 ## 5. CSV integration
 
@@ -127,11 +127,3 @@ Pure helpers are the test surface; no DOM is needed:
 - `parseTimeToMinutes` valid values (`'00:00'`, `'09:30'`, `'23:59'`) and invalid values (`'24:00'`, `'9:00'`, `'09:60'`, `'noon'`).
 - Reject `start >= end`.
 - Week-key math with `vi.useFakeTimers()` + `vi.setSystemTime(...)`, including a Sunday reference date (still maps to the preceding Monday).
-
-## 7. Verification
-
-```bash
-npm run typecheck
-npm test
-npm run test:coverage
-```

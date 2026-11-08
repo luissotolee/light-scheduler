@@ -1,18 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
-import EmptyState from '@/shared/components/EmptyState.vue'
-import PageHeader from '@/shared/components/PageHeader.vue'
-import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
-import { formatWeekRange } from '@/shared/utils/calendar'
-import { formatMinutesToHhmm } from '@/shared/utils/shifts'
-
-const store = useSchedulerStore()
-const { currentWeekKey, currentWeekShifts, shiftCount } = storeToRefs(store)
-
-const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value))
-</script>
-
 <template>
   <section class="scheduler">
     <PageHeader
@@ -67,6 +52,21 @@ const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value))
     </ul>
   </section>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import EmptyState from '@/shared/components/EmptyState.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { formatWeekRange } from '@/shared/utils/calendar'
+import { formatMinutesToHhmm } from '@/shared/utils/shifts'
+
+const store = useSchedulerStore()
+const { currentWeekKey, currentWeekShifts, shiftCount } = storeToRefs(store)
+
+const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value))
+</script>
 
 <style scoped>
 .scheduler {

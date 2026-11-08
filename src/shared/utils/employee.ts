@@ -1,15 +1,16 @@
 import type {
   Contract,
   Duty,
+  EmployeeCsvRecord,
   EmployeeFormErrors,
   EmployeeFormInput,
   EmployeeFormValidation,
   HolidayWeek,
-  NewTeamMember,
   RowError,
   TeamMember,
   Validated,
 } from '@/types'
+import { parseIsoDate } from '@/shared/utils/calendar'
 
 export const MAX_HOLIDAY_WEEKS = 6
 
@@ -82,6 +83,13 @@ export function parseContract(value: unknown): Contract | null {
   return isContract(value) ? value : null
 }
 
+export function parseBoolean(value: unknown): boolean | null {
+  if (typeof value !== 'string') return null
+  if (value === '' || value === 'true') return true
+  if (value === 'false') return false
+  return null
+}
+
 export function parseWeeklyHours(value: unknown): number | null {
   const parsed =
     typeof value === 'number'
@@ -103,6 +111,7 @@ export function firstEmployeeFormError(errors: EmployeeFormErrors): string {
     'email',
     'phone',
     'holidays',
+    'startDate',
   ]
 
   for (const field of order) {
@@ -139,6 +148,10 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
     errors.holidays = 'At most 6 holiday weeks are allowed'
   }
 
+  const rawStartDate = input.startDate?.trim() ?? ''
+  const startDate = rawStartDate ? parseIsoDate(rawStartDate) : undefined
+  if (startDate === null) errors.startDate = 'Start date is invalid'
+
   if (
     duty === null ||
     contract === null ||
@@ -150,7 +163,16 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
 
   return {
     ok: true,
-    value: { name, duty, contract, weeklyHours, holidays, email, phone },
+    value: {
+      name,
+      duty,
+      contract,
+      weeklyHours,
+      holidays,
+      email,
+      phone,
+      ...(startDate ? { startDate } : {}),
+    },
   }
 }
 
@@ -196,11 +218,17 @@ export const EMPLOYEE_HEADERS: readonly string[] = [
   'holidays',
   'email',
   'phone',
+  'active',
+  'startDate',
+  'endDate',
 ]
 
 const REQUIRED_HEADERS = ['name', 'duty', 'contract', 'weeklyHours', 'holidays']
 
-export function validateEmployees(headers: string[], rows: string[][]): Validated<NewTeamMember> {
+export function validateEmployees(
+  headers: string[],
+  rows: string[][],
+): Validated<EmployeeCsvRecord> {
   const normalizedHeaders = headers.map((header) => header.trim().toLowerCase())
   const uniqueHeaders = new Set(normalizedHeaders)
   const allowedHeaders = EMPLOYEE_HEADERS.map((header) => header.toLowerCase())
@@ -217,7 +245,7 @@ export function validateEmployees(headers: string[], rows: string[][]): Validate
   const indexOf = (header: string): number => normalizedHeaders.indexOf(header.toLowerCase())
   const valueAt = (row: string[], header: string): string => row[indexOf(header)] ?? ''
 
-  const data: NewTeamMember[] = []
+  const data: EmployeeCsvRecord[] = []
   const errors: RowError[] = []
 
   rows.forEach((row, index) => {
@@ -271,6 +299,31 @@ export function validateEmployees(headers: string[], rows: string[][]): Validate
       rowErrors.push({ row: rowNumber, message: 'Phone is invalid' })
     }
 
+    const active = parseBoolean(valueAt(row, 'active').trim())
+    if (active === null) {
+      rowErrors.push({ row: rowNumber, message: 'Active is invalid' })
+    }
+
+    const rawStartDate = valueAt(row, 'startDate').trim()
+    const startDate = rawStartDate ? parseIsoDate(rawStartDate) : undefined
+    if (startDate === null) {
+      rowErrors.push({ row: rowNumber, message: 'Start date is invalid' })
+    }
+
+    const rawEndDate = valueAt(row, 'endDate').trim()
+    const endDate = rawEndDate ? parseIsoDate(rawEndDate) : undefined
+    if (endDate === null) {
+      rowErrors.push({ row: rowNumber, message: 'End date is invalid' })
+    }
+
+    if (active === false && !rawEndDate) {
+      rowErrors.push({ row: rowNumber, message: 'End date is required for inactive employees' })
+    }
+
+    if (active === true && rawEndDate) {
+      rowErrors.push({ row: rowNumber, message: 'End date is not allowed for active employees' })
+    }
+
     if (rowErrors.length > 0) {
       errors.push(...rowErrors)
       return
@@ -284,6 +337,9 @@ export function validateEmployees(headers: string[], rows: string[][]): Validate
       holidays,
       ...(email ? { email } : {}),
       ...(phone ? { phone } : {}),
+      ...(active === null ? {} : { active }),
+      ...(startDate ? { startDate } : {}),
+      ...(endDate ? { endDate } : {}),
     })
   })
 
@@ -299,6 +355,9 @@ export function employeeToRow(member: TeamMember): (string | number)[] {
     serializeHolidays(member.holidays),
     member.email ?? '',
     member.phone ?? '',
+    member.active ? 'true' : 'false',
+    member.startDate,
+    member.endDate ?? '',
   ]
 }
 

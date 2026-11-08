@@ -21,7 +21,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
 
   const currentWeekKey = computed(() => workspace().currentWeekKey)
   const currentWeekShifts = computed(() => workspace().currentWeekShifts)
-  const members = computed(() => workspace().members)
+  const members = computed(() => workspace().activeMembers)
   const shiftCount = computed(() => currentWeekShifts.value.length)
 
   function moveWeek(delta: number): void {
@@ -44,7 +44,12 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   }
 
   function findOverlap(
-    candidate: { memberId: string; weekday: Shift['weekday']; startMinute: number; endMinute: number },
+    candidate: {
+      memberId: string
+      weekday: Shift['weekday']
+      startMinute: number
+      endMinute: number
+    },
     ignoreId?: string,
   ): boolean {
     return currentWeekShifts.value.some(

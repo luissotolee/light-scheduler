@@ -7,6 +7,7 @@
   --color-muted: #94a3b8;
   --color-accent: #38bdf8;
   --color-danger: #f87171;
+  --color-inactive-bg: rgba(148, 163, 184, 0.08);
   --color-duty-manager: #fbbf24;
   --color-duty-head-manager: #f472b6;
   --color-duty-assistant: #a78bfa;

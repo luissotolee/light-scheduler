@@ -1,10 +1,3 @@
-<script setup lang="ts">
-defineProps<{
-  title: string
-  description?: string
-}>()
-</script>
-
 <template>
   <div class="empty-state">
     <h2 class="empty-state__title">{{ title }}</h2>
@@ -14,6 +7,13 @@ defineProps<{
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+defineProps<{
+  title: string
+  description?: string
+}>()
+</script>
 
 <style scoped>
 .empty-state {

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useCsvStore } from '@/modules/csv/stores/csv'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
+import { todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
 
 const ada: TeamMember = {
@@ -16,6 +17,8 @@ const ada: TeamMember = {
   ],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  active: true,
+  startDate: '2025-01-15',
 }
 const bo: TeamMember = {
   id: 'member-2',
@@ -24,6 +27,8 @@ const bo: TeamMember = {
   contract: 'part_time',
   weeklyHours: 20,
   holidays: [],
+  active: true,
+  startDate: '2026-02-01',
 }
 
 describe('csv store', () => {
@@ -93,9 +98,9 @@ describe('csv store', () => {
       new Uint8Array([0xef, 0xbb, 0xbf]),
     )
     expect(await blob.slice(3).text()).toBe(
-      'name,duty,contract,weeklyHours,holidays,email,phone\r\n' +
-        'Ada,manager,fulltime,40,2026-W10;2026-W11,ada@example.com,+1 555 010 0000\r\n' +
-        'Bo,employee,part_time,20,,,',
+      'name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate\r\n' +
+        'Ada,manager,fulltime,40,2026-W10;2026-W11,ada@example.com,+1 555 010 0000,true,2025-01-15,\r\n' +
+        'Bo,employee,part_time,20,,,,true,2026-02-01,',
     )
   })
 
@@ -151,10 +156,57 @@ describe('csv store', () => {
       name: 'Ada',
       email: 'ada@example.com',
       phone: '+1 555 010 0000',
+      active: true,
+      startDate: '2025-01-15',
     })
-    expect(workspace.members[1]).toMatchObject({ name: 'Bo' })
+    expect(workspace.members[1]).toMatchObject({
+      name: 'Bo',
+      active: true,
+      startDate: '2026-02-01',
+    })
     expect(workspace.members[1].email).toBeUndefined()
     expect(workspace.members[1].phone).toBeUndefined()
+  })
+
+  it('round-trips an inactive member with its end date', async () => {
+    const inactive: TeamMember = {
+      ...ada,
+      active: false,
+      startDate: '2020-01-01',
+      endDate: '2026-11-08',
+    }
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([inactive])
+    const store = useCsvStore()
+
+    store.exportMembers()
+    const text = await blobs[0].text()
+    store.importMembers(text)
+
+    expect(store.status).toEqual({ state: 'success', message: 'Imported 1 employee' })
+    expect(workspace.members[0]).toMatchObject({
+      name: 'Ada',
+      active: false,
+      startDate: '2020-01-01',
+      endDate: '2026-11-08',
+    })
+  })
+
+  it('defaults legacy imports to active with today as the start date', () => {
+    const workspace = useWorkspaceStore()
+    const store = useCsvStore()
+
+    store.importMembers(
+      'name,duty,contract,weeklyHours,holidays\r\nAda,manager,fulltime,40,2026-W10',
+    )
+
+    expect(store.status).toEqual({ state: 'success', message: 'Imported 1 employee' })
+    expect(workspace.members[0]).toMatchObject({
+      name: 'Ada',
+      active: true,
+      startDate: todayIsoDate(),
+    })
+    expect(workspace.members[0].endDate).toBeUndefined()
   })
 
   it('reports invalid email and phone values from CSV', () => {

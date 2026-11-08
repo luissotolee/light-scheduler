@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { TeamMember } from '@/types'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
+import { todayIsoDate } from '@/shared/utils/calendar'
 import { parseCsv, toCsv } from '@/shared/utils/csv'
 import { downloadTextFile, timestampedName } from '@/shared/utils/download'
 import { EMPLOYEE_HEADERS, employeesToRows, validateEmployees } from '@/shared/utils/employee'
@@ -54,16 +55,20 @@ export const useCsvStore = defineStore('csv', () => {
       return
     }
 
-    const members: TeamMember[] = validated.data.map((member) => {
-      const email = member.email?.trim()
-      const phone = member.phone?.trim()
+    const members: TeamMember[] = validated.data.map((record) => {
+      const email = record.email?.trim()
+      const phone = record.phone?.trim()
+      const active = record.active ?? true
       return {
         id: createId(),
-        name: member.name,
-        duty: member.duty,
-        contract: member.contract,
-        weeklyHours: member.weeklyHours,
-        holidays: member.holidays ?? [],
+        name: record.name,
+        duty: record.duty,
+        contract: record.contract,
+        weeklyHours: record.weeklyHours,
+        holidays: record.holidays ?? [],
+        active,
+        startDate: record.startDate ?? todayIsoDate(),
+        ...(active === false && record.endDate ? { endDate: record.endDate } : {}),
         ...(email ? { email } : {}),
         ...(phone ? { phone } : {}),
       }

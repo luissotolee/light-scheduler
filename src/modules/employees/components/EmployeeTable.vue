@@ -1,43 +1,29 @@
-<script setup lang="ts">
-import Button from 'primevue/button'
-import Chip from 'primevue/chip'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import type { TeamMember } from '@/types'
-import { CONTRACT_LABELS, DUTY_LABELS, isContract, isDuty } from '@/shared/utils/employee'
-
-defineProps<{
-  members: TeamMember[]
-}>()
-
-const emit = defineEmits<{
-  edit: [id: string]
-  holidays: [id: string]
-  remove: [id: string]
-}>()
-
-function dutyLabel(value: unknown): string {
-  return isDuty(value) ? DUTY_LABELS[value] : ''
-}
-
-function contractLabel(value: unknown): string {
-  return isContract(value) ? CONTRACT_LABELS[value] : ''
-}
-
-function dutyModifier(value: unknown): string {
-  return isDuty(value) ? value.replace('_', '-') : ''
-}
-
-function contractModifier(value: unknown): string {
-  return isContract(value) ? value.replace('_', '-') : ''
-}
-</script>
-
 <template>
-  <DataTable :value="members" data-test="employee-table" class="employee-table">
+  <DataTable
+    :value="members"
+    :row-class="rowClass"
+    data-test="employee-table"
+    class="employee-table"
+  >
     <Column field="name" header="Name">
       <template #body="{ data }">
-        <span class="employee-table__name">{{ data.name }}</span>
+        <button
+          type="button"
+          class="employee-table__name-button"
+          :data-test="`details-${data.id}`"
+          :aria-label="
+            data.active
+              ? `View details for ${data.name}`
+              : `View details for ${data.name} (inactive)`
+          "
+          @click="emit('details', data.id)"
+        >
+          <span
+            :class="['employee-table__name', { 'employee-table__name--inactive': !data.active }]"
+          >
+            {{ data.name }}
+          </span>
+        </button>
       </template>
     </Column>
 
@@ -97,6 +83,7 @@ function contractModifier(value: unknown): string {
       <template #body="{ data }">
         <div class="employee-table__actions">
           <Button
+            v-if="data.active"
             v-tooltip.top="'Edit'"
             type="button"
             icon="pi pi-pencil"
@@ -108,6 +95,7 @@ function contractModifier(value: unknown): string {
             @click="emit('edit', data.id)"
           />
           <Button
+            v-if="data.active"
             v-tooltip.top="'Holidays'"
             type="button"
             icon="pi pi-calendar"
@@ -117,6 +105,31 @@ function contractModifier(value: unknown): string {
             :aria-label="`Holidays for ${data.name}`"
             :data-test="`holidays-${data.id}`"
             @click="emit('holidays', data.id)"
+          />
+          <Button
+            v-if="data.active"
+            v-tooltip.top="'Deactivate'"
+            type="button"
+            icon="pi pi-user-minus"
+            size="small"
+            text
+            rounded
+            severity="warn"
+            :aria-label="`Deactivate ${data.name}`"
+            :data-test="`deactivate-${data.id}`"
+            @click="emit('deactivate', data.id)"
+          />
+          <Button
+            v-else
+            v-tooltip.top="'Reactivate'"
+            type="button"
+            icon="pi pi-user-plus"
+            size="small"
+            text
+            rounded
+            :aria-label="`Reactivate ${data.name}`"
+            :data-test="`reactivate-${data.id}`"
+            @click="emit('reactivate', data.id)"
           />
           <Button
             v-tooltip.top="'Remove'"
@@ -136,6 +149,48 @@ function contractModifier(value: unknown): string {
   </DataTable>
 </template>
 
+<script setup lang="ts">
+import Button from 'primevue/button'
+import Chip from 'primevue/chip'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import type { TeamMember } from '@/types'
+import { CONTRACT_LABELS, DUTY_LABELS, isContract, isDuty } from '@/shared/utils/employee'
+
+defineProps<{
+  members: TeamMember[]
+}>()
+
+const emit = defineEmits<{
+  edit: [id: string]
+  holidays: [id: string]
+  remove: [id: string]
+  details: [id: string]
+  deactivate: [id: string]
+  reactivate: [id: string]
+}>()
+
+function rowClass(data: TeamMember): string {
+  return data.active ? '' : 'employee-table__row--inactive'
+}
+
+function dutyLabel(value: unknown): string {
+  return isDuty(value) ? DUTY_LABELS[value] : ''
+}
+
+function contractLabel(value: unknown): string {
+  return isContract(value) ? CONTRACT_LABELS[value] : ''
+}
+
+function dutyModifier(value: unknown): string {
+  return isDuty(value) ? value.replace('_', '-') : ''
+}
+
+function contractModifier(value: unknown): string {
+  return isContract(value) ? value.replace('_', '-') : ''
+}
+</script>
+
 <style scoped>
 .employee-table {
   border: 1px solid var(--color-border);
@@ -143,8 +198,36 @@ function contractModifier(value: unknown): string {
   background: var(--color-surface);
 }
 
+.employee-table :deep(.employee-table__row--inactive) {
+  background: var(--color-inactive-bg);
+}
+
+.employee-table__name-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .employee-table__name {
   font-weight: 600;
+}
+
+.employee-table__name-button:hover .employee-table__name {
+  color: var(--color-accent);
+}
+
+.employee-table__name-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.employee-table__name--inactive {
+  color: var(--color-danger);
+  text-decoration: line-through;
 }
 
 .employee-table__hours {

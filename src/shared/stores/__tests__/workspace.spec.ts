@@ -12,6 +12,8 @@ const member: TeamMember = {
   weeklyHours: 40,
   holidays: [],
   email: 'ada@example.com',
+  active: true,
+  startDate: '2025-01-15',
 }
 const shift: Shift = {
   id: 'shift-1',
@@ -35,8 +37,23 @@ describe('workspace store', () => {
     expect(store.dataLoaded).toBe(false)
     expect(store.schemaVersion).toBe(1)
     expect(store.memberCount).toBe(0)
+    expect(store.activeMembers).toEqual([])
     expect(store.currentWeekShifts).toEqual([])
     expect(store.hasAnyData).toBe(false)
+  })
+
+  it('exposes only active members', () => {
+    const store = useWorkspaceStore()
+    const inactive: TeamMember = {
+      ...member,
+      id: 'member-2',
+      name: 'Bo',
+      active: false,
+      endDate: '2026-11-08',
+    }
+    store.setMembers([member, inactive])
+
+    expect(store.activeMembers).toEqual([member])
   })
 
   it('sets members and computes whether data exists', () => {

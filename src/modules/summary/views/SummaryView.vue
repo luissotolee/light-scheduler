@@ -1,16 +1,3 @@
-<script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import PageHeader from '@/shared/components/PageHeader.vue'
-import { useSummaryStore } from '@/modules/summary/stores/summary'
-
-const store = useSummaryStore()
-const { weekRangeLabel, totalShifts, assignedMemberCount } = storeToRefs(store)
-
-function printSummary(): void {
-  window.print()
-}
-</script>
-
 <template>
   <section class="summary">
     <PageHeader
@@ -43,6 +30,19 @@ function printSummary(): void {
     </dl>
   </section>
 </template>
+
+<script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useSummaryStore } from '@/modules/summary/stores/summary'
+
+const store = useSummaryStore()
+const { weekRangeLabel, totalShifts, assignedMemberCount } = storeToRefs(store)
+
+function printSummary(): void {
+  window.print()
+}
+</script>
 
 <style scoped>
 .summary {

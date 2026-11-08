@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
+import { todayIsoDate } from '@/shared/utils/calendar'
 import { WEEKLY_HOURS_ERROR } from '@/shared/utils/employee'
 
 const ada: TeamMember = {
@@ -14,6 +15,8 @@ const ada: TeamMember = {
   holidays: [{ year: 2026, week: 10 }],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  active: true,
+  startDate: '2025-01-15',
 }
 const bo: TeamMember = {
   id: 'member-2',
@@ -22,6 +25,8 @@ const bo: TeamMember = {
   contract: 'part_time',
   weeklyHours: 20,
   holidays: [],
+  active: true,
+  startDate: '2026-02-01',
 }
 
 const basePayload: NewTeamMember = {
@@ -30,6 +35,7 @@ const basePayload: NewTeamMember = {
   contract: 'fulltime',
   weeklyHours: 40,
   phone: '+1 555 010 0000',
+  startDate: '2026-01-02',
 }
 
 describe('employees store', () => {
@@ -47,11 +53,16 @@ describe('employees store', () => {
     expect(store.editingId).toBeNull()
     expect(store.holidayVisible).toBe(false)
     expect(store.holidayTargetId).toBeNull()
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+    expect(store.detailsVisible).toBe(false)
+    expect(store.detailsTargetId).toBeNull()
     expect(store.count).toBe(0)
     expect(store.filteredMembers).toEqual([])
     expect(store.selectedMember).toBeNull()
     expect(store.editingMember).toBeNull()
     expect(store.holidayTarget).toBeNull()
+    expect(store.detailsTarget).toBeNull()
   })
 
   it('adds a trimmed member with normalized holidays and no empty email', () => {
@@ -75,6 +86,9 @@ describe('employees store', () => {
     expect(added?.duty).toBe('employee')
     expect(added?.contract).toBe('fulltime')
     expect(added?.weeklyHours).toBe(40)
+    expect(added?.active).toBe(true)
+    expect(added?.startDate).toBe('2026-01-02')
+    expect(added?.endDate).toBeUndefined()
     expect(added?.holidays).toEqual([
       { year: 2026, week: 10 },
       { year: 2026, week: 12 },
@@ -187,6 +201,8 @@ describe('employees store', () => {
       weeklyHours: 40,
       holidays: [{ year: 2026, week: 10 }],
       phone: '+1 555 010 0000',
+      active: true,
+      startDate: '2025-01-15',
     })
     expect(store.status.error).toBeNull()
   })
@@ -454,6 +470,149 @@ describe('employees store', () => {
     expect(store.holidayVisible).toBe(false)
     expect(store.holidayTargetId).toBeNull()
     expect(store.holidayTarget).toBeNull()
+  })
+
+  it('defaults a missing start date to today', () => {
+    const store = useEmployeesStore()
+
+    const added = store.addMember({ ...basePayload, startDate: undefined })
+
+    expect(added?.startDate).toBe(todayIsoDate())
+  })
+
+  it('rejects an invalid start date', () => {
+    const store = useEmployeesStore()
+
+    expect(store.addMember({ ...basePayload, startDate: '2026-13-01' })).toBeNull()
+    expect(store.status.error).toBe('Start date is invalid')
+    expect(store.count).toBe(0)
+  })
+
+  it('preserves status and start date when an update omits them', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.updateMember(ada.id, { name: 'Ada Lovelace' })
+
+    expect(store.filteredMembers[0]).toMatchObject({
+      name: 'Ada Lovelace',
+      active: true,
+      startDate: '2025-01-15',
+    })
+    expect(store.filteredMembers[0].endDate).toBeUndefined()
+  })
+
+  it('deactivates an active member and ignores unknown or inactive ids', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.deactivateMember('missing')
+    expect(workspace.members[0]).toEqual(ada)
+
+    store.deactivateMember(ada.id)
+    expect(workspace.members[0]).toMatchObject({
+      id: ada.id,
+      active: false,
+      endDate: todayIsoDate(),
+    })
+
+    const afterFirst = workspace.members[0]
+    store.deactivateMember(ada.id)
+    expect(workspace.members[0]).toEqual(afterFirst)
+  })
+
+  it('reactivates a member and drops the end date', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([{ ...ada, active: false, endDate: '2026-11-01' }])
+
+    store.reactivateMember('missing')
+    expect(workspace.members[0].active).toBe(false)
+
+    store.reactivateMember(ada.id)
+    expect(workspace.members[0]).toMatchObject({ active: true, startDate: ada.startDate })
+    expect(workspace.members[0].endDate).toBeUndefined()
+
+    const afterFirst = workspace.members[0]
+    store.reactivateMember(ada.id)
+    expect(workspace.members[0]).toEqual(afterFirst)
+  })
+
+  it('gates removal behind a confirmation', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+
+    store.requestRemove(bo.id)
+    expect(store.confirmVisible).toBe(true)
+    expect(store.pendingAction).toEqual({ kind: 'remove', id: bo.id })
+    expect(workspace.members).toHaveLength(2)
+
+    store.cancelAction()
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+    expect(workspace.members).toHaveLength(2)
+  })
+
+  it('confirms removal and clears the pending action', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+
+    store.requestRemove(bo.id)
+    store.confirmAction()
+
+    expect(workspace.members).toEqual([ada])
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+  })
+
+  it('confirms deactivation without removing the member', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.requestDeactivate(ada.id)
+    expect(store.pendingAction).toEqual({ kind: 'deactivate', id: ada.id })
+
+    store.confirmAction()
+
+    expect(workspace.members).toHaveLength(1)
+    expect(workspace.members[0]).toMatchObject({ active: false, endDate: todayIsoDate() })
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+  })
+
+  it('opens and closes the details dialog for a target member', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.openDetails(ada.id)
+
+    expect(store.detailsVisible).toBe(true)
+    expect(store.detailsTargetId).toBe(ada.id)
+    expect(store.detailsTarget).toEqual(ada)
+
+    store.closeDetails()
+
+    expect(store.detailsVisible).toBe(false)
+    expect(store.detailsTargetId).toBeNull()
+    expect(store.detailsTarget).toBeNull()
+  })
+
+  it('clears details when the target member is removed', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    store.openDetails(bo.id)
+
+    store.removeMember(bo.id)
+
+    expect(store.detailsVisible).toBe(false)
+    expect(store.detailsTargetId).toBeNull()
   })
 
   it('loads members from an external source', () => {

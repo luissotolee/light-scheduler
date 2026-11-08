@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DOMWrapper, enableAutoUnmount, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
+import DatePicker from 'primevue/datepicker'
 import InputNumber from 'primevue/inputnumber'
 import RadioButton from 'primevue/radiobutton'
 import Select from 'primevue/select'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
+import { isoDateToDate, todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
 
 enableAutoUnmount(afterEach)
@@ -19,6 +21,8 @@ const ada: TeamMember = {
   holidays: [{ year: 2026, week: 10 }],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  active: true,
+  startDate: '2025-01-15',
 }
 
 function dialogBody(): DOMWrapper<HTMLElement> {
@@ -66,6 +70,7 @@ describe('EmployeeFormDialog', () => {
           holidays: [],
           phone: '+1 555 010 0000',
           email: '',
+          startDate: todayIsoDate(),
         },
       ],
     ])
@@ -89,6 +94,7 @@ describe('EmployeeFormDialog', () => {
           holidays: [],
           phone: '',
           email: '',
+          startDate: todayIsoDate(),
         },
       ],
     ])
@@ -122,6 +128,7 @@ describe('EmployeeFormDialog', () => {
           holidays: ada.holidays,
           phone: '+1 555 010 0000',
           email: 'new@example.com',
+          startDate: ada.startDate,
         },
       ],
     ])
@@ -145,6 +152,7 @@ describe('EmployeeFormDialog', () => {
           holidays: ada.holidays,
           phone: '',
           email: '',
+          startDate: ada.startDate,
         },
       ],
     ])
@@ -304,6 +312,47 @@ describe('EmployeeFormDialog', () => {
     await dialogBody().find('[data-test="cancel"]').trigger('click')
 
     expect(wrapper.emitted('update:visible')).toEqual([[false]])
+  })
+
+  it('seeds the start date picker from the edited member', async () => {
+    const wrapper = await mountDialog(true, ada)
+
+    const picker = wrapper.findComponent(DatePicker)
+    expect(picker.exists()).toBe(true)
+    expect(picker.props('dateFormat')).toBe('yy-mm-dd')
+    expect(dialogBody().find('#employee-start-date').exists()).toBe(true)
+
+    const model = picker.props('modelValue') as Date
+    expect(model.getFullYear()).toBe(2025)
+    expect(model.getMonth()).toBe(0)
+    expect(model.getDate()).toBe(15)
+  })
+
+  it('submits the ISO start date selected in the date picker', async () => {
+    const wrapper = await mountDialog()
+
+    await dialogBody().find('#employee-name').setValue('Ada')
+    await wrapper.findComponent(InputNumber).vm.$emit('update:modelValue', 40)
+    await wrapper
+      .findComponent(DatePicker)
+      .vm.$emit('update:modelValue', isoDateToDate('2026-12-01'))
+    await nextTick()
+    await dialogBody().find('form').trigger('submit')
+
+    expect(wrapper.emitted('submit')).toEqual([
+      [
+        {
+          name: 'Ada',
+          duty: 'employee',
+          contract: 'fulltime',
+          weeklyHours: 40,
+          holidays: [],
+          phone: '',
+          email: '',
+          startDate: '2026-12-01',
+        },
+      ],
+    ])
   })
 
   it('resets the form from the member when opened', async () => {

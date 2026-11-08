@@ -26,6 +26,8 @@ describe('scheduler store', () => {
       contract: 'fulltime',
       weeklyHours: 40,
       holidays: [],
+      active: true,
+      startDate: '2025-01-15',
     }
     workspace.setMembers([member])
 
@@ -35,6 +37,35 @@ describe('scheduler store', () => {
     expect(store.shiftCount).toBe(0)
     expect(store.draft).toBeNull()
     expect(store.error).toBeNull()
+  })
+
+  it('excludes inactive members from scheduling', () => {
+    const store = useSchedulerStore()
+    const workspace = useWorkspaceStore()
+    const active: TeamMember = {
+      id: 'member-1',
+      name: 'Ada',
+      duty: 'employee',
+      contract: 'fulltime',
+      weeklyHours: 40,
+      holidays: [],
+      active: true,
+      startDate: '2025-01-15',
+    }
+    const inactive: TeamMember = {
+      id: 'member-2',
+      name: 'Bo',
+      duty: 'employee',
+      contract: 'part_time',
+      weeklyHours: 20,
+      holidays: [],
+      active: false,
+      startDate: '2020-01-01',
+      endDate: '2026-11-08',
+    }
+    workspace.setMembers([active, inactive])
+
+    expect(store.members).toEqual([active])
   })
 
   it('sets the shared week key', () => {

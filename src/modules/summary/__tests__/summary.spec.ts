@@ -55,6 +55,8 @@ describe('summary store', () => {
         contract: 'fulltime',
         weeklyHours: 40,
         holidays: [],
+        active: true,
+        startDate: '2025-01-15',
       },
       {
         id: 'member-2',
@@ -63,6 +65,8 @@ describe('summary store', () => {
         contract: 'part_time',
         weeklyHours: 20,
         holidays: [],
+        active: true,
+        startDate: '2026-02-01',
       },
     ])
     workspace.setShiftsForWeek('2026-11-02', shifts)
@@ -83,6 +87,8 @@ describe('summary store', () => {
         contract: 'fulltime',
         weeklyHours: 40,
         holidays: [],
+        active: true,
+        startDate: '2025-01-15',
       },
     ])
 

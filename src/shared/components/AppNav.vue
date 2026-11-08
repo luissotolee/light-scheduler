@@ -1,3 +1,11 @@
+<template>
+  <nav class="app-nav" aria-label="Primary">
+    <RouterLink v-for="item in items" :key="item.name" class="app-nav__link" :to="item.path">
+      {{ item.label }}
+    </RouterLink>
+  </nav>
+</template>
+
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import type { NavItem } from '@/router/nav'
@@ -6,14 +14,6 @@ defineProps<{
   items: NavItem[]
 }>()
 </script>
-
-<template>
-  <nav class="app-nav" aria-label="Primary">
-    <RouterLink v-for="item in items" :key="item.name" class="app-nav__link" :to="item.path">
-      {{ item.label }}
-    </RouterLink>
-  </nav>
-</template>
 
 <style scoped>
 .app-nav {

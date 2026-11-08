@@ -1,6 +1,6 @@
 ---
 name: pinia-store
-description: Create and extend Pinia stores using the Composition API setup-store style with typed state, getters, and actions. Use when adding or modifying state management in src/shared/stores/ or src/modules/<module>/stores/ (team members, schedule, settings), wiring a view to a store with storeToRefs, or testing stores.
+description: Create and extend Pinia stores using the Composition API setup-store style with typed state, getters, and actions. Use when adding or modifying state management in src/shared/stores/ or src/modules/<module>/stores/ (workspace, employees, scheduler), wiring a view to a store with storeToRefs, or testing stores.
 ---
 
 # Pinia Store
@@ -14,13 +14,13 @@ Every store in `src/shared/stores/` or `src/modules/<module>/stores/` uses a com
 ```ts
 import { defineStore } from 'pinia'
 
-export const useMembersStore = defineStore('members', () => {
+export const useWorkspaceStore = defineStore('workspace', () => {
   // ref state, computed getters, plain function actions
-  return { members, count, addMember, removeMember, updateMember, loadMembers }
+  return { members, schedules, setMembers, upsertMember, removeMember }
 })
 ```
 
-Never use the Options API form (`state`, `getters`, `actions` as object keys). The store id string matches the filename: `src/modules/scheduler/stores/scheduler.ts` → `defineStore('scheduler', ...)`, `src/modules/members/stores/members.ts` → `defineStore('members', ...)`. Cross-module stores live in `src/shared/stores/`.
+Never use the Options API form (`state`, `getters`, `actions` as object keys). The store id string matches the filename: `src/shared/stores/workspace.ts` → `defineStore('workspace', ...)`, `src/modules/scheduler/stores/scheduler.ts` → `defineStore('scheduler', ...)`, `src/modules/employees/stores/employees.ts` → `defineStore('employees', ...)`. Cross-module stores live in `src/shared/stores/`.
 
 ## 2. Structure and typing
 
@@ -32,62 +32,45 @@ Never use the Options API form (`state`, `getters`, `actions` as object keys). T
 ```ts
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { NewTeamMember, TeamMember } from '@/types'
-import { createId } from '@/shared/utils/id'
+import type { TeamMember } from '@/types'
 
-export const useMembersStore = defineStore('members', () => {
+export const useWorkspaceStore = defineStore('workspace', () => {
   const members = ref<TeamMember[]>([])
 
-  const count = computed(() => members.value.length)
+  const memberCount = computed(() => members.value.length)
 
-  function addMember(payload: NewTeamMember): TeamMember | null {
-    const name = payload.name.trim()
-    if (!name) return null
-
-    const email = payload.email?.trim()
-    const member: TeamMember = {
-      id: createId(),
-      name,
-      ...(email ? { email } : {}),
+  function upsertMember(member: TeamMember): void {
+    const index = members.value.findIndex((item) => item.id === member.id)
+    if (index === -1) {
+      members.value = [...members.value, member]
+      return
     }
-    members.value.push(member)
-    return member
+    members.value = members.value.map((item) => (item.id === member.id ? member : item))
   }
 
   function removeMember(id: string): void {
     members.value = members.value.filter((member) => member.id !== id)
   }
 
-  function updateMember(id: string, patch: Partial<TeamMember>): void {
-    const member = members.value.find((item) => item.id === id)
-    if (!member) return
-
-    if (patch.name !== undefined) {
-      const name = patch.name.trim()
-      if (!name) return
-      patch = { ...patch, name }
-    }
-    Object.assign(member, patch)
-  }
-
-  function loadMembers(loaded: TeamMember[]): void {
+  function setMembers(loaded: TeamMember[]): void {
     members.value = loaded
   }
 
-  return { members, count, addMember, removeMember, updateMember, loadMembers }
+  return { members, memberCount, upsertMember, removeMember, setMembers }
 })
 ```
 
-## 3. Conventions from `src/modules/scheduler/stores/scheduler.ts`
+## 3. Conventions from the existing stores
 
-Match the existing scheduler store:
+Match `src/shared/stores/workspace.ts`, `src/modules/scheduler/stores/scheduler.ts`, and `src/modules/employees/stores/employees.ts`:
 
-- Failable creators return `T | null` (`addTask(payload): Task | null`, `addMember(payload): TeamMember | null`).
-- Input normalization (`.trim()`) lives in the store, not in components or tests.
-- Type-only imports use `import type { NewTask, Priority, Task } from '@/types'`; value imports are separate, e.g. `import { createId } from '@/shared/utils/id'`.
-- Immutability: replace arrays for removals (`filter`) and bulk changes (`map`); in-place mutation is only for a single-item update such as `toggleTask` or `updateMember`.
-- Derived values are `computed`, never duplicated state. Do not store `count` as a `ref` when it can be derived.
+- Failable creators return `T | null` (`addShift(payload): Shift | null`, `addMember(payload): TeamMember | null`).
+- Input normalization and validation (`.trim()`, guards, form validation) live in the store, not in components or tests.
+- Type-only imports use `import type { NewShift, Shift } from '@/types'`; value imports are separate, e.g. `import { createId } from '@/shared/utils/id'`.
+- Immutability: replace arrays for removals (`filter`) and bulk changes (`map`); in-place mutation is only for a single-item update.
+- Derived values are `computed`, never duplicated state. Do not store a count as a `ref` when it can be derived.
 - Actions that target an unknown id do nothing; do not throw for missing records.
+- The shared `workspace` store is the single source of truth for `members` and `schedules`; module stores read/write it through `useWorkspaceStore()` rather than duplicating state.
 
 ## 4. Wiring views
 
@@ -95,18 +78,18 @@ Views use `storeToRefs` for state and getters, and call actions directly:
 
 ```ts
 import { storeToRefs } from 'pinia'
-import { useMembersStore } from '@/modules/members/stores/members'
-import type { NewTeamMember } from '@/types'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import type { NewShift } from '@/types'
 
-const store = useMembersStore()
-const { members, count } = storeToRefs(store)
+const store = useSchedulerStore()
+const { currentWeekShifts, shiftCount } = storeToRefs(store)
 
-function handleAdd(payload: NewTeamMember): void {
-  store.addMember(payload)
+function handleAdd(payload: NewShift): void {
+  store.addShift(payload)
 }
 ```
 
-Never destructure actions (`const { addMember } = store`) — it loses reactivity and `this`/store context. Never destructure state without `storeToRefs`.
+Never destructure actions (`const { addShift } = store`) — it loses reactivity and store context. Never destructure state without `storeToRefs`.
 
 Components stay presentational: pass state down as props and emit events up; only views call the store.
 
@@ -117,31 +100,23 @@ Reset Pinia before each test so every test gets a fresh store:
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useMembersStore } from '@/modules/members/stores/members'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 
-describe('members store', () => {
+describe('scheduler store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  it('adds a trimmed member', () => {
-    const store = useMembersStore()
+  it('adds a shift using canonical minutes', () => {
+    const store = useSchedulerStore()
 
-    const member = store.addMember({ name: '  Ada  ' })
+    const shift = store.addShift({ memberId: 'm1', weekday: 'monday', start: '09:00', end: '17:00' })
 
-    expect(member?.name).toBe('Ada')
-    expect(store.members).toHaveLength(1)
-    expect(store.count).toBe(1)
+    expect(shift?.startMinute).toBe(540)
+    expect(store.currentWeekShifts).toHaveLength(1)
+    expect(store.shiftCount).toBe(1)
   })
 })
 ```
 
-Assert state, getters, and action side effects. Include negative paths: blank input returns `null`, unknown ids do not change state, and failed creators do not mutate the list.
-
-## 6. Verification
-
-```bash
-npm run typecheck
-npm test
-npm run lint
-```
+Assert state, getters, and action side effects. Include negative paths: invalid input returns `null`, unknown ids do not change state, and failed creators do not mutate the list.

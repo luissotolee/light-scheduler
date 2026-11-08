@@ -1,14 +1,3 @@
-<script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import EmptyState from '@/shared/components/EmptyState.vue'
-import PageHeader from '@/shared/components/PageHeader.vue'
-import { useHistoryStore } from '@/modules/history/stores/history'
-import { formatWeekRange } from '@/shared/utils/calendar'
-
-const store = useHistoryStore()
-const { availableWeeks, selectedWeekKey, selectedWeekShifts } = storeToRefs(store)
-</script>
-
 <template>
   <section class="history">
     <PageHeader
@@ -42,6 +31,17 @@ const { availableWeeks, selectedWeekKey, selectedWeekShifts } = storeToRefs(stor
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import EmptyState from '@/shared/components/EmptyState.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useHistoryStore } from '@/modules/history/stores/history'
+import { formatWeekRange } from '@/shared/utils/calendar'
+
+const store = useHistoryStore()
+const { availableWeeks, selectedWeekKey, selectedWeekShifts } = storeToRefs(store)
+</script>
 
 <style scoped>
 .history {

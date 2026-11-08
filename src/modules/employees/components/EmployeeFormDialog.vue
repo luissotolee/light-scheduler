@@ -1,101 +1,3 @@
-<script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import RadioButton from 'primevue/radiobutton'
-import Select from 'primevue/select'
-import type { Contract, Duty, EmployeeFormErrors, NewTeamMember, TeamMember } from '@/types'
-import {
-  CONTRACTS,
-  CONTRACT_LABELS,
-  DUTIES,
-  DUTY_LABELS,
-  validateEmployeeForm,
-} from '@/shared/utils/employee'
-
-const props = defineProps<{
-  visible: boolean
-  member: TeamMember | null
-}>()
-
-const emit = defineEmits<{
-  'update:visible': [visible: boolean]
-  submit: [payload: NewTeamMember]
-}>()
-
-type FormState = {
-  name: string
-  duty: Duty
-  contract: Contract
-  weeklyHours: number | null
-  email: string
-  phone: string
-}
-
-const form = reactive<FormState>({
-  name: '',
-  duty: 'employee',
-  contract: 'fulltime',
-  weeklyHours: null,
-  email: '',
-  phone: '',
-})
-
-const dutyOptions = computed(() => DUTIES.map((value) => ({ label: DUTY_LABELS[value], value })))
-
-const validation = computed(() =>
-  validateEmployeeForm({ ...form, holidays: props.member?.holidays ?? [] }),
-)
-
-const submitted = ref(false)
-
-const errors = computed<EmployeeFormErrors>(() =>
-  validation.value.ok ? {} : validation.value.errors,
-)
-
-const visibleErrors = computed<EmployeeFormErrors>(() => (submitted.value ? errors.value : {}))
-
-const nameError = computed(() => visibleErrors.value.name ?? '')
-const dutyError = computed(() => visibleErrors.value.duty ?? '')
-const phoneError = computed(() => visibleErrors.value.phone ?? '')
-const emailError = computed(() => visibleErrors.value.email ?? '')
-const hoursError = computed(() => visibleErrors.value.weeklyHours ?? '')
-const contractError = computed(() => visibleErrors.value.contract ?? '')
-
-const title = computed(() => (props.member ? 'Edit employee' : 'Add employee'))
-
-function resetForm(): void {
-  submitted.value = false
-  form.name = props.member?.name ?? ''
-  form.duty = props.member?.duty ?? 'employee'
-  form.contract = props.member?.contract ?? 'fulltime'
-  form.weeklyHours = props.member?.weeklyHours ?? null
-  form.email = props.member?.email ?? ''
-  form.phone = props.member?.phone ?? ''
-}
-
-watch(
-  [() => props.visible, () => props.member],
-  ([visible]) => {
-    if (visible) resetForm()
-  },
-  { immediate: true },
-)
-
-function handleHours(value: number | null | undefined): void {
-  form.weeklyHours = typeof value === 'number' ? value : null
-}
-
-function handleSubmit(): void {
-  submitted.value = true
-  if (validation.value.ok) {
-    emit('submit', validation.value.value)
-  }
-}
-</script>
-
 <template>
   <Dialog
     :visible="visible"
@@ -104,12 +6,7 @@ function handleSubmit(): void {
     class="employee-form-dialog"
     @update:visible="emit('update:visible', $event)"
   >
-    <form
-      class="employee-form"
-      data-test="employee-form"
-      novalidate
-      @submit.prevent="handleSubmit"
-    >
+    <form class="employee-form" data-test="employee-form" novalidate @submit.prevent="handleSubmit">
       <div class="employee-form__field">
         <label class="employee-form__label" for="employee-name">Name *</label>
         <InputText
@@ -222,6 +119,27 @@ function handleSubmit(): void {
         </small>
       </div>
 
+      <div class="employee-form__field">
+        <label class="employee-form__label" for="employee-start-date">Start date</label>
+        <DatePicker
+          v-model="form.startDate"
+          input-id="employee-start-date"
+          date-format="yy-mm-dd"
+          show-icon
+          class="employee-form__date"
+          :aria-invalid="startDateError ? 'true' : undefined"
+          :aria-describedby="startDateError ? 'employee-start-date-error' : undefined"
+        />
+        <small
+          v-if="startDateError"
+          id="employee-start-date-error"
+          class="employee-form__error"
+          data-test="start-date-error"
+        >
+          {{ startDateError }}
+        </small>
+      </div>
+
       <fieldset class="employee-form__field employee-form__field--full">
         <legend class="employee-form__label">Contract *</legend>
         <div
@@ -267,6 +185,114 @@ function handleSubmit(): void {
   </Dialog>
 </template>
 
+<script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue'
+import Button from 'primevue/button'
+import DatePicker from 'primevue/datepicker'
+import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import RadioButton from 'primevue/radiobutton'
+import Select from 'primevue/select'
+import type { Contract, Duty, EmployeeFormErrors, NewTeamMember, TeamMember } from '@/types'
+import { isoDateToDate, toLocalIsoDate } from '@/shared/utils/calendar'
+import {
+  CONTRACTS,
+  CONTRACT_LABELS,
+  DUTIES,
+  DUTY_LABELS,
+  validateEmployeeForm,
+} from '@/shared/utils/employee'
+
+const props = defineProps<{
+  visible: boolean
+  member: TeamMember | null
+}>()
+
+const emit = defineEmits<{
+  'update:visible': [visible: boolean]
+  submit: [payload: NewTeamMember]
+}>()
+
+type FormState = {
+  name: string
+  duty: Duty
+  contract: Contract
+  weeklyHours: number | null
+  email: string
+  phone: string
+  startDate: Date | null
+}
+
+const form = reactive<FormState>({
+  name: '',
+  duty: 'employee',
+  contract: 'fulltime',
+  weeklyHours: null,
+  email: '',
+  phone: '',
+  startDate: new Date(),
+})
+
+const dutyOptions = computed(() => DUTIES.map((value) => ({ label: DUTY_LABELS[value], value })))
+
+const validation = computed(() =>
+  validateEmployeeForm({
+    ...form,
+    holidays: props.member?.holidays ?? [],
+    startDate: form.startDate ? toLocalIsoDate(form.startDate) : undefined,
+  }),
+)
+
+const submitted = ref(false)
+
+const errors = computed<EmployeeFormErrors>(() =>
+  validation.value.ok ? {} : validation.value.errors,
+)
+
+const visibleErrors = computed<EmployeeFormErrors>(() => (submitted.value ? errors.value : {}))
+
+const nameError = computed(() => visibleErrors.value.name ?? '')
+const dutyError = computed(() => visibleErrors.value.duty ?? '')
+const phoneError = computed(() => visibleErrors.value.phone ?? '')
+const emailError = computed(() => visibleErrors.value.email ?? '')
+const hoursError = computed(() => visibleErrors.value.weeklyHours ?? '')
+const contractError = computed(() => visibleErrors.value.contract ?? '')
+const startDateError = computed(() => visibleErrors.value.startDate ?? '')
+
+const title = computed(() => (props.member ? 'Edit employee' : 'Add employee'))
+
+function resetForm(): void {
+  submitted.value = false
+  form.name = props.member?.name ?? ''
+  form.duty = props.member?.duty ?? 'employee'
+  form.contract = props.member?.contract ?? 'fulltime'
+  form.weeklyHours = props.member?.weeklyHours ?? null
+  form.email = props.member?.email ?? ''
+  form.phone = props.member?.phone ?? ''
+  form.startDate = props.member?.startDate ? isoDateToDate(props.member.startDate) : new Date()
+}
+
+watch(
+  [() => props.visible, () => props.member],
+  ([visible]) => {
+    if (visible) resetForm()
+  },
+  { immediate: true },
+)
+
+function handleHours(value: number | null | undefined): void {
+  form.weeklyHours = typeof value === 'number' ? value : null
+}
+
+function handleSubmit(): void {
+  submitted.value = true
+  if (validation.value.ok) {
+    emit('submit', validation.value.value)
+  }
+}
+</script>
+
 <style scoped>
 .employee-form {
   display: grid;
@@ -293,6 +319,10 @@ function handleSubmit(): void {
 .employee-form__error {
   color: var(--color-danger);
   font-size: 0.8rem;
+}
+
+.employee-form__date {
+  width: 100%;
 }
 
 .employee-form__radio-group {

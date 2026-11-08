@@ -1,3 +1,66 @@
+<template>
+  <Dialog
+    :visible="visible"
+    modal
+    :header="title"
+    class="holiday-dialog"
+    @update:visible="emit('update:visible', $event)"
+  >
+    <div class="holiday-dialog__body">
+      <div class="holiday-dialog__year">
+        <button
+          type="button"
+          class="holiday-dialog__year-button"
+          data-test="previous-year"
+          @click="changeYear(-1)"
+        >
+          Previous year
+        </button>
+        <span class="holiday-dialog__year-label" data-test="current-year">{{ year }}</span>
+        <button
+          type="button"
+          class="holiday-dialog__year-button"
+          data-test="next-year"
+          @click="changeYear(1)"
+        >
+          Next year
+        </button>
+      </div>
+
+      <p class="holiday-dialog__counter" data-test="counter">
+        {{ count }} of {{ MAX_HOLIDAY_WEEKS }} selected
+      </p>
+
+      <div class="holiday-dialog__grid" role="group" aria-label="ISO weeks">
+        <button
+          v-for="option in weeks"
+          :key="option.week"
+          type="button"
+          class="holiday-dialog__week"
+          :class="{ 'holiday-dialog__week--selected': isSelected(option) }"
+          :aria-pressed="isSelected(option)"
+          :disabled="isDisabled(option)"
+          :data-test="`week-${option.week}`"
+          @click="toggle(option)"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+
+      <div class="holiday-dialog__actions">
+        <Button
+          type="button"
+          label="Cancel"
+          severity="secondary"
+          data-test="cancel-holidays"
+          @click="emit('update:visible', false)"
+        />
+        <Button type="button" label="Save" data-test="save-holidays" @click="save" />
+      </div>
+    </div>
+  </Dialog>
+</template>
+
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
@@ -73,69 +136,6 @@ function save(): void {
   emit('update:visible', false)
 }
 </script>
-
-<template>
-  <Dialog
-    :visible="visible"
-    modal
-    :header="title"
-    class="holiday-dialog"
-    @update:visible="emit('update:visible', $event)"
-  >
-    <div class="holiday-dialog__body">
-      <div class="holiday-dialog__year">
-        <button
-          type="button"
-          class="holiday-dialog__year-button"
-          data-test="previous-year"
-          @click="changeYear(-1)"
-        >
-          Previous year
-        </button>
-        <span class="holiday-dialog__year-label" data-test="current-year">{{ year }}</span>
-        <button
-          type="button"
-          class="holiday-dialog__year-button"
-          data-test="next-year"
-          @click="changeYear(1)"
-        >
-          Next year
-        </button>
-      </div>
-
-      <p class="holiday-dialog__counter" data-test="counter">
-        {{ count }} of {{ MAX_HOLIDAY_WEEKS }} selected
-      </p>
-
-      <div class="holiday-dialog__grid" role="group" aria-label="ISO weeks">
-        <button
-          v-for="option in weeks"
-          :key="option.week"
-          type="button"
-          class="holiday-dialog__week"
-          :class="{ 'holiday-dialog__week--selected': isSelected(option) }"
-          :aria-pressed="isSelected(option)"
-          :disabled="isDisabled(option)"
-          :data-test="`week-${option.week}`"
-          @click="toggle(option)"
-        >
-          {{ option.label }}
-        </button>
-      </div>
-
-      <div class="holiday-dialog__actions">
-        <Button
-          type="button"
-          label="Cancel"
-          severity="secondary"
-          data-test="cancel-holidays"
-          @click="emit('update:visible', false)"
-        />
-        <Button type="button" label="Save" data-test="save-holidays" @click="save" />
-      </div>
-    </div>
-  </Dialog>
-</template>
 
 <style scoped>
 .holiday-dialog__body {

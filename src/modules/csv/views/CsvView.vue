@@ -1,41 +1,3 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import PageHeader from '@/shared/components/PageHeader.vue'
-import { useCsvStore } from '@/modules/csv/stores/csv'
-
-const MAX_CSV_BYTES = 5 * 1024 * 1024
-
-const store = useCsvStore()
-const { status, canExportMembers, canExportSchedule } = storeToRefs(store)
-const fileInput = ref<HTMLInputElement | null>(null)
-
-function openEmployeePicker(): void {
-  fileInput.value?.click()
-}
-
-async function handleEmployeeFile(event: Event): Promise<void> {
-  const target = event.target
-  if (!(target instanceof HTMLInputElement)) return
-
-  const file = target.files?.[0]
-  target.value = ''
-  if (!file) return
-
-  if (file.size > MAX_CSV_BYTES) {
-    store.setError('CSV file is too large (max 5 MB)')
-    return
-  }
-
-  try {
-    const text = await file.text()
-    store.importMembers(text)
-  } catch {
-    store.setError('Unable to read the selected file')
-  }
-}
-</script>
-
 <template>
   <section class="csv">
     <PageHeader
@@ -110,6 +72,44 @@ async function handleEmployeeFile(event: Event): Promise<void> {
     </p>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useCsvStore } from '@/modules/csv/stores/csv'
+
+const MAX_CSV_BYTES = 5 * 1024 * 1024
+
+const store = useCsvStore()
+const { status, canExportMembers, canExportSchedule } = storeToRefs(store)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+function openEmployeePicker(): void {
+  fileInput.value?.click()
+}
+
+async function handleEmployeeFile(event: Event): Promise<void> {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement)) return
+
+  const file = target.files?.[0]
+  target.value = ''
+  if (!file) return
+
+  if (file.size > MAX_CSV_BYTES) {
+    store.setError('CSV file is too large (max 5 MB)')
+    return
+  }
+
+  try {
+    const text = await file.text()
+    store.importMembers(text)
+  } catch {
+    store.setError('Unable to read the selected file')
+  }
+}
+</script>
 
 <style scoped>
 .csv {

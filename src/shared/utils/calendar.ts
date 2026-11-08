@@ -6,7 +6,7 @@ function addDays(date: Date, days: number): Date {
   return result
 }
 
-function parseLocalIsoDate(isoDate: string): Date {
+export function isoDateToDate(isoDate: string): Date {
   const [year, month, day] = isoDate.split('-').map(Number)
   return new Date(year, month - 1, day)
 }
@@ -16,6 +16,35 @@ export function toLocalIsoDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+export function todayIsoDate(): string {
+  return toLocalIsoDate(new Date())
+}
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
+export function parseIsoDate(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+
+  const trimmed = value.trim()
+  if (!ISO_DATE_RE.test(trimmed)) return null
+
+  const [year, month, day] = trimmed.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null
+  }
+
+  return trimmed
+}
+
+export function formatIsoDate(isoDate: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(isoDateToDate(isoDate))
 }
 
 export function startOfWeek(date: Date): Date {
@@ -35,14 +64,14 @@ export function addWeeks(date: Date, weeks: number): Date {
 }
 
 function formatWeekRangeShort(weekKey: WeekKey): string {
-  const start = parseLocalIsoDate(weekKey)
+  const start = isoDateToDate(weekKey)
   const end = addDays(start, 6)
   const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
   return `${formatter.format(start)} – ${formatter.format(end)}`
 }
 
 export function formatWeekRange(weekKey: WeekKey): string {
-  const start = parseLocalIsoDate(weekKey)
+  const start = isoDateToDate(weekKey)
   const end = addDays(start, 6)
   return `${formatWeekRangeShort(weekKey)}, ${end.getFullYear()}`
 }

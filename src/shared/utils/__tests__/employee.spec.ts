@@ -20,6 +20,7 @@ import {
   isValidEmail,
   isValidPhone,
   normalizeHolidays,
+  parseBoolean,
   parseContract,
   parseDuty,
   parseHolidays,
@@ -29,7 +30,18 @@ import {
   validateEmployees,
 } from '@/shared/utils/employee'
 
-const headers = ['name', 'duty', 'contract', 'weeklyHours', 'holidays', 'email', 'phone']
+const headers = [
+  'name',
+  'duty',
+  'contract',
+  'weeklyHours',
+  'holidays',
+  'email',
+  'phone',
+  'active',
+  'startDate',
+  'endDate',
+]
 
 const member: TeamMember = {
   id: 'member-1',
@@ -43,6 +55,8 @@ const member: TeamMember = {
   ],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  active: true,
+  startDate: '2025-01-15',
 }
 
 describe('employee constants and labels', () => {
@@ -69,7 +83,26 @@ describe('employee constants and labels', () => {
       'holidays',
       'email',
       'phone',
+      'active',
+      'startDate',
+      'endDate',
     ])
+  })
+})
+
+describe('parseBoolean', () => {
+  it('reads blank and true as true and false as false', () => {
+    expect(parseBoolean('')).toBe(true)
+    expect(parseBoolean('true')).toBe(true)
+    expect(parseBoolean('false')).toBe(false)
+  })
+
+  it('rejects non-strings and unknown tokens', () => {
+    expect(parseBoolean('yes')).toBeNull()
+    expect(parseBoolean('TRUE')).toBeNull()
+    expect(parseBoolean(null)).toBeNull()
+    expect(parseBoolean(undefined)).toBeNull()
+    expect(parseBoolean(0)).toBeNull()
   })
 })
 
@@ -296,6 +329,7 @@ describe('validateEmployeeForm', () => {
         email: 'not-an-email',
         phone: '123',
         holidays,
+        startDate: 'not-a-date',
       }),
     ).toEqual({
       ok: false,
@@ -307,6 +341,7 @@ describe('validateEmployeeForm', () => {
         email: 'Email is invalid',
         phone: 'Phone is invalid',
         holidays: 'At most 6 holiday weeks are allowed',
+        startDate: 'Start date is invalid',
       },
       message: 'Name is required',
     })
@@ -314,6 +349,28 @@ describe('validateEmployeeForm', () => {
     expect(firstEmployeeFormError({ phone: 'Phone is invalid', email: 'Email is invalid' })).toBe(
       'Email is invalid',
     )
+  })
+
+  it('includes a valid start date and omits a blank one', () => {
+    const withStartDate = validateEmployeeForm({ ...validInput, startDate: ' 2026-11-08 ' })
+    expect(withStartDate.ok).toBe(true)
+    if (withStartDate.ok) {
+      expect(withStartDate.value.startDate).toBe('2026-11-08')
+    }
+
+    const withoutStartDate = validateEmployeeForm({ ...validInput, startDate: '   ' })
+    expect(withoutStartDate.ok).toBe(true)
+    if (withoutStartDate.ok) {
+      expect(withoutStartDate.value.startDate).toBeUndefined()
+    }
+  })
+
+  it('rejects an invalid start date', () => {
+    expect(validateEmployeeForm({ ...validInput, startDate: '2026-13-01' })).toEqual({
+      ok: false,
+      errors: { startDate: 'Start date is invalid' },
+      message: 'Start date is invalid',
+    })
   })
 
   it('falls back to a generic message when there are no errors', () => {
@@ -412,6 +469,7 @@ describe('validateEmployees', () => {
           ],
           email: 'ada@example.com',
           phone: '+1 555 010 0000',
+          active: true,
         },
         {
           name: 'Bo',
@@ -419,6 +477,7 @@ describe('validateEmployees', () => {
           contract: 'part_time',
           weeklyHours: 20,
           holidays: [],
+          active: true,
         },
       ],
     })
@@ -439,6 +498,7 @@ describe('validateEmployees', () => {
           contract: 'weekends',
           weeklyHours: 37.5,
           holidays: [{ year: 2026, week: 2 }],
+          active: true,
         },
       ],
     })
@@ -525,8 +585,95 @@ describe('validateEmployees', () => {
           weeklyHours: 40,
           holidays: [],
           email: 'ada@example.com',
+          active: true,
         },
       ],
+    })
+  })
+
+  it('parses active, start date, and end date columns', () => {
+    const result = validateEmployees(headers, [
+      ['Ada', 'manager', 'fulltime', '40', '', '', '', 'false', '2020-01-01', '2026-11-08'],
+      ['Bo', 'employee', 'part_time', '20', '', '', '', 'true', '2024-05-01', ''],
+    ])
+
+    expect(result).toEqual({
+      ok: true,
+      data: [
+        {
+          name: 'Ada',
+          duty: 'manager',
+          contract: 'fulltime',
+          weeklyHours: 40,
+          holidays: [],
+          active: false,
+          startDate: '2020-01-01',
+          endDate: '2026-11-08',
+        },
+        {
+          name: 'Bo',
+          duty: 'employee',
+          contract: 'part_time',
+          weeklyHours: 20,
+          holidays: [],
+          active: true,
+          startDate: '2024-05-01',
+        },
+      ],
+    })
+  })
+
+  it('defaults a missing active column to true', () => {
+    const result = validateEmployees(
+      ['name', 'duty', 'contract', 'weeklyHours', 'holidays'],
+      [['Ada', 'manager', 'fulltime', '40', '']],
+    )
+
+    expect(result).toEqual({
+      ok: true,
+      data: [
+        {
+          name: 'Ada',
+          duty: 'manager',
+          contract: 'fulltime',
+          weeklyHours: 40,
+          holidays: [],
+          active: true,
+        },
+      ],
+    })
+  })
+
+  it('rejects invalid active and date values', () => {
+    const result = validateEmployees(headers, [
+      ['Ada', 'manager', 'fulltime', '40', '', '', '', 'yes', '2026-13-01', 'soon'],
+    ])
+
+    expect(result).toEqual({
+      ok: false,
+      errors: [
+        { row: 2, message: 'Active is invalid' },
+        { row: 2, message: 'Start date is invalid' },
+        { row: 2, message: 'End date is invalid' },
+      ],
+    })
+  })
+
+  it('reconciles active status with the end date', () => {
+    const inactiveWithoutEnd = validateEmployees(headers, [
+      ['Ada', 'manager', 'fulltime', '40', '', '', '', 'false', '', ''],
+    ])
+    expect(inactiveWithoutEnd).toEqual({
+      ok: false,
+      errors: [{ row: 2, message: 'End date is required for inactive employees' }],
+    })
+
+    const activeWithEnd = validateEmployees(headers, [
+      ['Bo', 'employee', 'part_time', '20', '', '', '', 'true', '', '2026-11-08'],
+    ])
+    expect(activeWithEnd).toEqual({
+      ok: false,
+      errors: [{ row: 2, message: 'End date is not allowed for active employees' }],
     })
   })
 
@@ -554,10 +701,13 @@ describe('row mapping', () => {
       '2026-W12;2026-W10',
       'ada@example.com',
       '+1 555 010 0000',
+      'true',
+      '2025-01-15',
+      '',
     ])
   })
 
-  it('maps a member without an email or phone to empty cells', () => {
+  it('maps a member without an email, phone, or end date to empty cells', () => {
     expect(
       employeeToRow({
         id: 'member-2',
@@ -566,8 +716,26 @@ describe('row mapping', () => {
         contract: 'fulltime',
         weeklyHours: 40,
         holidays: [],
+        active: true,
+        startDate: '2026-11-08',
       }),
-    ).toEqual(['Bo', 'employee', 'fulltime', 40, '', '', ''])
+    ).toEqual(['Bo', 'employee', 'fulltime', 40, '', '', '', 'true', '2026-11-08', ''])
+  })
+
+  it('serializes inactive members with their end date', () => {
+    expect(
+      employeeToRow({
+        id: 'member-3',
+        name: 'Cy',
+        duty: 'assistant',
+        contract: 'weekends',
+        weeklyHours: 12,
+        holidays: [],
+        active: false,
+        startDate: '2020-01-01',
+        endDate: '2026-11-08',
+      }),
+    ).toEqual(['Cy', 'assistant', 'weekends', 12, '', '', '', 'false', '2020-01-01', '2026-11-08'])
   })
 
   it('maps a list of members', () => {

@@ -1,6 +1,6 @@
 ---
 name: typescript-domain-modeling
-description: Model shared domain types and keep the strict TypeScript codebase type-safe. Use when adding or changing domain types (TeamMember, Task, Shift, Calendar) in src/types.ts, designing discriminated unions, or introducing new data shapes.
+description: Model shared domain types and keep the strict TypeScript codebase type-safe. Use when adding or changing domain types (TeamMember, Shift, WeekSchedule) in src/types.ts, designing discriminated unions, or introducing new data shapes.
 ---
 
 # TypeScript Domain Modeling
@@ -11,24 +11,26 @@ Read `workspace.md` first for the module map and where files belong.
 
 All shared domain shapes live in `src/types.ts`. Do not declare inline interfaces for shared shapes in stores, components, or utilities. Types used by only one module may live in `src/modules/<module>/types.ts`.
 
-- Use `interface` for entities (`Task`, `TeamMember`, `Shift`).
-- Use `type` for unions and aliases (`Priority`, `Weekday`, `Result<T>`).
-- Keep input types separate from persisted entities: `NewTask` vs `Task`, `NewTeamMember` vs `TeamMember`, `NewShift` vs `Shift`.
+- Use `interface` for entities (`TeamMember`, `Shift`, `WeekSchedule`).
+- Use `type` for unions and aliases (`Duty`, `Contract`, `Weekday`, `WeekKey`, `Result<T>`).
+- Keep input types separate from persisted entities: `NewTeamMember` vs `TeamMember`, `NewShift` vs `Shift`.
 
 ```ts
-export type Priority = 'low' | 'medium' | 'high'
+export type Weekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
 
-export interface Task {
+export interface Shift {
   id: string
-  title: string
-  priority: Priority
-  done: boolean
-  createdAt: number
+  memberId: string
+  weekday: Weekday
+  startMinute: number
+  endMinute: number
 }
 
-export interface NewTask {
-  title: string
-  priority: Priority
+export interface NewShift {
+  memberId: string
+  weekday: Weekday
+  start: string // 'HH:mm' input
+  end: string   // 'HH:mm' input
 }
 ```
 
@@ -37,7 +39,7 @@ export interface NewTask {
 `verbatimModuleSyntax` is enabled. Type-only imports must use `import type`; value imports stay separate:
 
 ```ts
-import type { NewTask, Task } from '@/types'
+import type { NewShift, Shift } from '@/types'
 import { createId } from '@/shared/utils/id'
 ```
 
@@ -57,35 +59,37 @@ These are already enforced in `tsconfig.json`:
 Never use `any`. Use `unknown` plus narrowing/type guards, and avoid `as` casts when a guard works:
 
 ```ts
-function isPriority(value: unknown): value is Priority {
-  return value === 'low' || value === 'medium' || value === 'high'
+import type { Duty } from '@/types'
+
+function isDuty(value: unknown): value is Duty {
+  return value === 'manager' || value === 'employee' || value === 'assistant' || value === 'head_manager'
 }
 
-function parsePriority(value: unknown): Priority | null {
-  return isPriority(value) ? value : null
+function parseDuty(value: unknown): Duty | null {
+  return isDuty(value) ? value : null
 }
 ```
 
-Return `null` for invalid user input at boundaries; do not throw for expected validation failures.
+Return `null` for invalid user input at boundaries; do not throw for expected validation failures. The existing guards live in `src/shared/utils/employee.ts` (`isDuty`, `isContract`, `parseDuty`, `parseContract`).
 
 ## 4. Discriminated unions
 
-Model parse/validation outcomes as discriminated unions:
+Model parse/validation outcomes as discriminated unions. These already live in `src/types.ts`:
 
 ```ts
-export type Result<T> =
-  | { ok: true; value: T }
-  | { ok: false; error: string }
+export type Result<T> = { ok: true; value: T } | { ok: false; error: string }
+
+export type Validated<T> = { ok: true; data: T[] } | { ok: false; errors: RowError[] }
 ```
 
 Narrow with the boolean discriminant:
 
 ```ts
-const result = parseSomething(input)
+const result = validateEmployeeForm(input)
 if (result.ok) {
   use(result.value)
 } else {
-  showError(result.error)
+  showError(result.message)
 }
 ```
 
@@ -97,16 +101,30 @@ Do not add a redundant `success` boolean or use exceptions for control flow.
 export interface TeamMember {
   id: string
   name: string
+  duty: Duty
+  contract: Contract
+  weeklyHours: number
+  holidays: HolidayWeek[]
   email?: string
+  phone?: string
+  active: boolean
+  startDate: string
+  endDate?: string
 }
 
 export interface NewTeamMember {
   name: string
+  duty: Duty
+  contract: Contract
+  weeklyHours: number
+  holidays?: HolidayWeek[]
   email?: string
+  phone?: string
+  startDate?: string
 }
 ```
 
-Persisted members always have `id`; creators accept `NewTeamMember` and add the id in the store. Optional fields are omitted rather than set to `undefined` when possible.
+Persisted members always have `id` and `active`; creators accept `NewTeamMember` and the store adds `id` + `active`. Optional fields are omitted rather than set to `undefined` when possible.
 
 ## 6. Dates and times
 
@@ -114,11 +132,3 @@ Persisted members always have `id`; creators accept `NewTeamMember` and add the 
 - Format for display in the component layer (`new Intl.DateTimeFormat(...)` or a small helper).
 - Shift hour ranges use minutes since midnight as the canonical representation; see `.kilo/skills/scheduling-calendar/SKILL.md`. `'HH:mm'` is input/display only.
 - Do not persist `Date` objects in domain entities; they do not serialize cleanly.
-
-## 7. Verification
-
-`npm run typecheck` is the gate. Run it after every type change:
-
-```bash
-npm run typecheck
-```

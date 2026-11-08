@@ -2,12 +2,18 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
+import { todayIsoDate } from '@/shared/utils/calendar'
 import { MAX_HOLIDAY_WEEKS, normalizeHolidays, validateEmployeeForm } from '@/shared/utils/employee'
 import { createId } from '@/shared/utils/id'
 
 interface EmployeesStatus {
   loading: boolean
   error: string | null
+}
+
+interface PendingAction {
+  kind: 'remove' | 'deactivate'
+  id: string
 }
 
 export const useEmployeesStore = defineStore('employees', () => {
@@ -18,6 +24,10 @@ export const useEmployeesStore = defineStore('employees', () => {
   const editingId = ref<string | null>(null)
   const holidayVisible = ref(false)
   const holidayTargetId = ref<string | null>(null)
+  const confirmVisible = ref(false)
+  const pendingAction = ref<PendingAction | null>(null)
+  const detailsVisible = ref(false)
+  const detailsTargetId = ref<string | null>(null)
 
   function workspace() {
     return useWorkspaceStore()
@@ -50,6 +60,11 @@ export const useEmployeesStore = defineStore('employees', () => {
     return workspace().members.find((member) => member.id === holidayTargetId.value) ?? null
   })
 
+  const detailsTarget = computed(() => {
+    if (!detailsTargetId.value) return null
+    return workspace().members.find((member) => member.id === detailsTargetId.value) ?? null
+  })
+
   function addMember(payload: NewTeamMember): TeamMember | null {
     const result = validateEmployeeForm({
       name: payload.name,
@@ -59,6 +74,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       email: payload.email ?? '',
       phone: payload.phone ?? '',
       holidays: payload.holidays ?? [],
+      startDate: payload.startDate,
     })
 
     if (!result.ok) {
@@ -74,6 +90,8 @@ export const useEmployeesStore = defineStore('employees', () => {
       contract: value.contract,
       weeklyHours: value.weeklyHours,
       holidays: value.holidays ?? [],
+      active: true,
+      startDate: value.startDate ?? todayIsoDate(),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
     }
@@ -94,6 +112,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       holidays: patch.holidays ?? member.holidays,
       email: patch.email ?? member.email ?? '',
       phone: patch.phone ?? member.phone ?? '',
+      startDate: patch.startDate ?? member.startDate,
     })
 
     if (!result.ok) {
@@ -109,6 +128,9 @@ export const useEmployeesStore = defineStore('employees', () => {
       contract: value.contract,
       weeklyHours: value.weeklyHours,
       holidays: value.holidays ?? [],
+      active: member.active,
+      startDate: value.startDate ?? member.startDate,
+      ...(member.endDate ? { endDate: member.endDate } : {}),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
     })
@@ -129,11 +151,69 @@ export const useEmployeesStore = defineStore('employees', () => {
     setError(null)
   }
 
+  function deactivateMember(id: string): void {
+    const member = workspace().findMember(id)
+    if (!member || !member.active) return
+
+    workspace().upsertMember({ ...member, active: false, endDate: todayIsoDate() })
+  }
+
+  function reactivateMember(id: string): void {
+    const member = workspace().findMember(id)
+    if (!member || member.active) return
+
+    workspace().upsertMember({
+      id: member.id,
+      name: member.name,
+      duty: member.duty,
+      contract: member.contract,
+      weeklyHours: member.weeklyHours,
+      holidays: member.holidays,
+      active: true,
+      startDate: member.startDate,
+      ...(member.email ? { email: member.email } : {}),
+      ...(member.phone ? { phone: member.phone } : {}),
+    })
+  }
+
+  function requestRemove(id: string): void {
+    pendingAction.value = { kind: 'remove', id }
+    confirmVisible.value = true
+  }
+
+  function requestDeactivate(id: string): void {
+    pendingAction.value = { kind: 'deactivate', id }
+    confirmVisible.value = true
+  }
+
+  function confirmAction(): void {
+    const action = pendingAction.value
+    if (action?.kind === 'remove') removeMember(action.id)
+    if (action?.kind === 'deactivate') deactivateMember(action.id)
+    cancelAction()
+  }
+
+  function cancelAction(): void {
+    confirmVisible.value = false
+    pendingAction.value = null
+  }
+
+  function openDetails(id: string): void {
+    detailsTargetId.value = id
+    detailsVisible.value = true
+  }
+
+  function closeDetails(): void {
+    detailsVisible.value = false
+    detailsTargetId.value = null
+  }
+
   function removeMember(id: string): void {
     workspace().removeMember(id)
     if (selectedId.value === id) selectedId.value = null
     if (editingId.value === id) closeForm()
     if (holidayTargetId.value === id) closeHolidays()
+    if (detailsTargetId.value === id) closeDetails()
   }
 
   function select(id: string | null): void {
@@ -192,14 +272,27 @@ export const useEmployeesStore = defineStore('employees', () => {
     editingId,
     holidayVisible,
     holidayTargetId,
+    confirmVisible,
+    pendingAction,
+    detailsVisible,
+    detailsTargetId,
     count,
     filteredMembers,
     selectedMember,
     editingMember,
     holidayTarget,
+    detailsTarget,
     addMember,
     updateMember,
     setHolidays,
+    deactivateMember,
+    reactivateMember,
+    requestRemove,
+    requestDeactivate,
+    confirmAction,
+    cancelAction,
+    openDetails,
+    closeDetails,
     removeMember,
     select,
     setSearch,

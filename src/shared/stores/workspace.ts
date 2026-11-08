@@ -11,6 +11,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const schemaVersion = 1
 
   const memberCount = computed(() => members.value.length)
+  const activeMembers = computed(() => members.value.filter((member) => member.active))
   const currentWeekShifts = computed(() => schedules.value[currentWeekKey.value] ?? [])
   const hasAnyData = computed(
     () => members.value.length > 0 || Object.keys(schedules.value).length > 0,
@@ -63,6 +64,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     dataLoaded,
     schemaVersion,
     memberCount,
+    activeMembers,
     currentWeekShifts,
     hasAnyData,
     setMembers,

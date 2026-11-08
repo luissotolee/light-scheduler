@@ -70,6 +70,8 @@ describe('CsvView', () => {
         weeklyHours: 40,
         holidays: [],
         email: 'ada@example.com',
+        active: true,
+        startDate: '2025-01-15',
       },
     ])
     workspace.setShiftsForWeek('2026-11-02', [

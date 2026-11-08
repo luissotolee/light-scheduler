@@ -1,3 +1,26 @@
+<template>
+  <section class="home">
+    <PageHeader
+      title="Light Scheduler"
+      description="A light, modern weekly shift scheduler for teams. It is frontend-only: all data stays in your browser and round-trips through CSV files so you can pick up where you left off."
+    />
+
+    <p class="home__intro">
+      Plan daily shifts across a week for many employees, review the result, and keep a history of
+      past schedules without a backend.
+    </p>
+
+    <ul class="home__features">
+      <li v-for="feature in features" :key="feature.path" class="home__feature">
+        <RouterLink class="home__feature-link" :to="feature.path">{{ feature.title }}</RouterLink>
+        <p class="home__feature-description">{{ feature.description }}</p>
+      </li>
+    </ul>
+
+    <RouterLink class="home__cta" to="/scheduler">Start scheduling</RouterLink>
+  </section>
+</template>
+
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import PageHeader from '@/shared/components/PageHeader.vue'
@@ -30,29 +53,6 @@ const features = [
   },
 ]
 </script>
-
-<template>
-  <section class="home">
-    <PageHeader
-      title="Light Scheduler"
-      description="A light, modern weekly shift scheduler for teams. It is frontend-only: all data stays in your browser and round-trips through CSV files so you can pick up where you left off."
-    />
-
-    <p class="home__intro">
-      Plan daily shifts across a week for many employees, review the result, and keep a history of
-      past schedules without a backend.
-    </p>
-
-    <ul class="home__features">
-      <li v-for="feature in features" :key="feature.path" class="home__feature">
-        <RouterLink class="home__feature-link" :to="feature.path">{{ feature.title }}</RouterLink>
-        <p class="home__feature-description">{{ feature.description }}</p>
-      </li>
-    </ul>
-
-    <RouterLink class="home__cta" to="/scheduler">Start scheduling</RouterLink>
-  </section>
-</template>
 
 <style scoped>
 .home {

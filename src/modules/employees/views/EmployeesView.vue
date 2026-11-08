@@ -1,46 +1,3 @@
-<script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
-import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
-import EmptyState from '@/shared/components/EmptyState.vue'
-import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
-import PageHeader from '@/shared/components/PageHeader.vue'
-import { useEmployeesStore } from '@/modules/employees/stores/employees'
-import type { HolidayWeek, NewTeamMember } from '@/types'
-
-const store = useEmployeesStore()
-const {
-  search,
-  count,
-  filteredMembers,
-  formVisible,
-  editingMember,
-  holidayVisible,
-  holidayTarget,
-} = storeToRefs(store)
-
-function handleSearch(event: Event): void {
-  const target = event.target
-  if (target instanceof HTMLInputElement) store.setSearch(target.value)
-}
-
-function handleFormVisibility(visible: boolean): void {
-  if (!visible) store.closeForm()
-}
-
-function handleHolidayVisibility(visible: boolean): void {
-  if (!visible) store.closeHolidays()
-}
-
-function handleSubmit(payload: NewTeamMember): void {
-  store.submitForm(payload)
-}
-
-function handleSaveHolidays(holidays: HolidayWeek[]): void {
-  if (holidayTarget.value) store.setHolidays(holidayTarget.value.id, holidays)
-}
-</script>
-
 <template>
   <section class="employees">
     <PageHeader
@@ -87,7 +44,10 @@ function handleSaveHolidays(holidays: HolidayWeek[]): void {
       :members="filteredMembers"
       @edit="store.openEdit"
       @holidays="store.openHolidays"
-      @remove="store.removeMember"
+      @remove="store.requestRemove"
+      @deactivate="store.requestDeactivate"
+      @reactivate="store.reactivateMember"
+      @details="store.openDetails"
     />
 
     <EmployeeFormDialog
@@ -104,8 +64,107 @@ function handleSaveHolidays(holidays: HolidayWeek[]): void {
       @update:visible="handleHolidayVisibility"
       @save="handleSaveHolidays"
     />
+
+    <ConfirmActionDialog
+      :visible="confirmVisible"
+      :header="confirmHeader"
+      :message="confirmMessage"
+      :confirm-label="confirmLabel"
+      :severity="confirmSeverity"
+      @update:visible="handleConfirmVisibility"
+      @confirm="store.confirmAction"
+    />
+
+    <EmployeeDetailsDialog
+      :visible="detailsVisible"
+      :member="detailsTarget"
+      @update:visible="handleDetailsVisibility"
+    />
   </section>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import ConfirmActionDialog from '@/modules/employees/components/ConfirmActionDialog.vue'
+import EmployeeDetailsDialog from '@/modules/employees/components/EmployeeDetailsDialog.vue'
+import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
+import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
+import EmptyState from '@/shared/components/EmptyState.vue'
+import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useEmployeesStore } from '@/modules/employees/stores/employees'
+import type { HolidayWeek, NewTeamMember } from '@/types'
+
+const store = useEmployeesStore()
+const {
+  search,
+  count,
+  filteredMembers,
+  formVisible,
+  editingMember,
+  holidayVisible,
+  holidayTarget,
+  confirmVisible,
+  pendingAction,
+  detailsVisible,
+  detailsTarget,
+} = storeToRefs(store)
+
+const pendingMember = computed(() => {
+  const action = pendingAction.value
+  if (!action) return null
+  return filteredMembers.value.find((member) => member.id === action.id) ?? null
+})
+
+const confirmHeader = computed(() =>
+  pendingAction.value?.kind === 'remove' ? 'Remove employee' : 'Deactivate employee',
+)
+
+const confirmMessage = computed(() => {
+  const name = pendingMember.value?.name ?? 'this employee'
+  return pendingAction.value?.kind === 'remove'
+    ? `Remove ${name}? This cannot be undone.`
+    : `Deactivate ${name}? Their end date will be set to today and they will be excluded from schedules.`
+})
+
+const confirmLabel = computed(() =>
+  pendingAction.value?.kind === 'remove' ? 'Remove' : 'Deactivate',
+)
+
+const confirmSeverity = computed(() =>
+  pendingAction.value?.kind === 'remove' ? ('danger' as const) : ('warn' as const),
+)
+
+function handleSearch(event: Event): void {
+  const target = event.target
+  if (target instanceof HTMLInputElement) store.setSearch(target.value)
+}
+
+function handleFormVisibility(visible: boolean): void {
+  if (!visible) store.closeForm()
+}
+
+function handleHolidayVisibility(visible: boolean): void {
+  if (!visible) store.closeHolidays()
+}
+
+function handleConfirmVisibility(visible: boolean): void {
+  if (!visible) store.cancelAction()
+}
+
+function handleDetailsVisibility(visible: boolean): void {
+  if (!visible) store.closeDetails()
+}
+
+function handleSubmit(payload: NewTeamMember): void {
+  store.submitForm(payload)
+}
+
+function handleSaveHolidays(holidays: HolidayWeek[]): void {
+  if (holidayTarget.value) store.setHolidays(holidayTarget.value.id, holidays)
+}
+</script>
 
 <style scoped>
 .employees {

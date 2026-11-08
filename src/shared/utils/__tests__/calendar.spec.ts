@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   addWeeks,
+  formatIsoDate,
   formatWeekRange,
   getIsoWeek,
   getIsoWeekStart,
@@ -8,8 +9,11 @@ import {
   getIsoWeeksInYear,
   getWeekKey,
   holidayToWeekKey,
+  isoDateToDate,
+  parseIsoDate,
   startOfWeek,
   toLocalIsoDate,
+  todayIsoDate,
 } from '@/shared/utils/calendar'
 
 afterEach(() => {
@@ -23,6 +27,48 @@ describe('toLocalIsoDate', () => {
 
   it('uses local calendar fields rather than UTC', () => {
     expect(toLocalIsoDate(new Date(2026, 10, 2, 0, 30))).toBe('2026-11-02')
+  })
+})
+
+describe('todayIsoDate', () => {
+  it('returns the current local date', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 10, 8, 12))
+
+    expect(todayIsoDate()).toBe('2026-11-08')
+  })
+})
+
+describe('parseIsoDate', () => {
+  it('accepts valid ISO dates and trims surrounding whitespace', () => {
+    expect(parseIsoDate('2026-11-08')).toBe('2026-11-08')
+    expect(parseIsoDate(' 2026-01-01 ')).toBe('2026-01-01')
+  })
+
+  it('rejects malformed, impossible, and non-string values', () => {
+    expect(parseIsoDate('2026-13-01')).toBeNull()
+    expect(parseIsoDate('2026-02-30')).toBeNull()
+    expect(parseIsoDate('2026-1-1')).toBeNull()
+    expect(parseIsoDate('08/11/2026')).toBeNull()
+    expect(parseIsoDate('')).toBeNull()
+    expect(parseIsoDate(null)).toBeNull()
+    expect(parseIsoDate(new Date(2026, 10, 8))).toBeNull()
+  })
+})
+
+describe('isoDateToDate', () => {
+  it('builds a local date from an ISO date', () => {
+    const date = isoDateToDate('2026-11-08')
+
+    expect(date.getFullYear()).toBe(2026)
+    expect(date.getMonth()).toBe(10)
+    expect(date.getDate()).toBe(8)
+  })
+})
+
+describe('formatIsoDate', () => {
+  it('formats an ISO date for display', () => {
+    expect(formatIsoDate('2026-11-08')).toBe('Nov 8, 2026')
   })
 })
 

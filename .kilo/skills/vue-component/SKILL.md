@@ -9,6 +9,8 @@ Read `workspace.md` first for the module map and where files belong.
 
 ## 1. SFC boilerplate
 
+Block order in every SFC: `<template>` first, then `<script setup lang="ts">`, then `<style scoped>`.
+
 Every component and view uses `<script setup lang="ts">`. There is no Options API and no `export default`:
 
 ```vue
@@ -47,18 +49,19 @@ Use the typed macro syntax:
 
 ```ts
 const props = defineProps<{
-  tasks: Task[]
+  members: TeamMember[]
 }>()
 
 const emit = defineEmits<{
-  submit: [task: NewTask]
-  toggle: [id: string]
+  edit: [id: string]
+  remove: [id: string]
+  details: [id: string]
 }>()
 ```
 
 - Emit tuple payloads, not loose rest arguments.
-- Event names are present tense (`submit`, `toggle`, `remove`, `select`), matching `TaskForm.vue` and `TaskItem.vue`.
-- Keep payloads minimal: pass an id when the parent already owns the entity; pass a full input object only for creation (`NewTask`, `NewTeamMember`).
+- Event names are present tense (`edit`, `remove`, `details`, `deactivate`, `reactivate`, `submit`), matching `EmployeeTable.vue` and `EmployeeFormDialog.vue`.
+- Keep payloads minimal: pass an id when the parent already owns the entity; pass a full input object only for creation (`NewTeamMember`, `NewShift`).
 - Props are read-only; never mutate them. Derive display values with `computed`.
 
 ## 3. Component vs view
@@ -68,7 +71,7 @@ const emit = defineEmits<{
 | Responsibility | Presentational: props in, events out | Owns store/router state and composes components |
 | Pinia | Never | `useXxxStore()` + `storeToRefs` |
 | Router | Never | Route target |
-| Example | `TaskForm.vue`, `TaskList.vue` | `HomeView.vue` |
+| Example | `EmployeeTable.vue`, `EmployeeFormDialog.vue`, `PageHeader.vue`, `EmptyState.vue` | `EmployeesView.vue`, `SchedulerView.vue` |
 
 Views wire the store:
 
@@ -77,37 +80,37 @@ import { storeToRefs } from 'pinia'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 
 const store = useSchedulerStore()
-const { tasks, completed } = storeToRefs(store)
+const { currentWeekShifts, shiftCount } = storeToRefs(store)
 ```
 
 Only views are registered in `src/router/index.ts`, which uses `createWebHashHistory`. New routes are lazily loaded:
 
 ```ts
-{ path: '/members', name: 'members', component: () => import('@/modules/members/views/MembersView.vue') }
+{ path: '/employees', name: 'employees', component: () => import('@/modules/employees/views/EmployeesView.vue') }
 ```
 
 ## 4. Styling
 
 - Use `<style scoped>`.
-- Use BEM-ish names: `.task-form`, `.task-form__input`, `.task-list__item--done`.
+- Use BEM-ish names: `.employee-table`, `.employee-table__actions`, `.employee-table__name--inactive`.
 - Use design tokens only from `src/assets/main.css` `:root`: `--color-*`, `--radius-*`, plus `--color-accent`, `--color-muted`, `--color-text`, `--color-surface`, `--color-border`.
 - Add reusable tokens to `:root`; never hardcode colors except one-off `rgba(...)` accent chips.
 - Use `:deep()` only to reach PrimeVue internal elements.
 
 ```vue
 <style scoped>
-.member-card {
+.employee-table {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
-  color: var(--color-text);
 }
 
-.member-card__email {
-  color: var(--color-muted);
+.employee-table__name--inactive {
+  color: var(--color-danger);
+  text-decoration: line-through;
 }
 
-.member-card__actions button:focus-visible {
+.employee-table__actions button:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
@@ -134,7 +137,7 @@ Only views are registered in `src/router/index.ts`, which uses `createWebHashHis
 
 - Import components from their package paths, e.g. `import Button from 'primevue/button'`.
 - Register global plugins (`PrimeVue`, `ToastService`) in `src/main.ts`.
-- In tests, provide the same plugins through `global.plugins`.
+- In tests, provide the same plugins through `global.plugins` and directives through `global.directives` (e.g. the `tooltip` directive on `EmployeeTable`).
 - Stub `window.matchMedia` in tests because PrimeVue may access it under jsdom:
 
 ```ts
@@ -150,26 +153,15 @@ vi.stubGlobal('matchMedia', () => ({
 Mount with explicit props and assert user-visible output:
 
 ```ts
-const wrapper = mount(TaskItem, {
-  props: { task: { id: '1', title: 'Write tests', priority: 'high', done: false, createdAt: 0 } },
+const wrapper = mount(EmptyState, {
+  props: { title: 'No shifts', description: 'Add a shift to get started.' },
 })
 
-expect(wrapper.text()).toContain('Write tests')
-expect(wrapper.find('button[aria-label]').exists()).toBe(true)
-
-await wrapper.find('input[type="checkbox"]').trigger('change')
-expect(wrapper.emitted('toggle')).toEqual([['1']])
+expect(wrapper.text()).toContain('No shifts')
+expect(wrapper.text()).toContain('Add a shift to get started.')
 ```
 
 - Assert rendered text/attributes and `wrapper.emitted()`; never assert component internal state.
+- For components that emit (e.g. `EmployeeTable`), trigger the control and assert the emitted payload: `await wrapper.find('[data-test="remove-member-1"]').trigger('click')` → `expect(wrapper.emitted('remove')).toEqual([['member-1']])`.
 - Use `Partial<T>` factory helpers to keep fixtures short and readable.
 - Use `mount(Component, { props })`; use `shallowMount` only when a child is irrelevant to the assertion.
-
-## 8. Verification
-
-```bash
-npm run typecheck
-npm test
-npm run lint
-npm run format:check
-```
