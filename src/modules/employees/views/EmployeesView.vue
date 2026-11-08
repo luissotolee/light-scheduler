@@ -29,6 +29,15 @@
       <span class="employees__count">Employees: {{ count }}</span>
     </div>
 
+    <p
+      v-if="status.error && !formVisible"
+      class="employees__error"
+      role="alert"
+      data-test="employees-error"
+    >
+      {{ status.error }}
+    </p>
+
     <EmptyState
       v-if="filteredMembers.length === 0"
       :title="count === 0 ? 'No employees yet' : 'No matching employees'"
@@ -84,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import ConfirmActionDialog from '@/modules/employees/components/ConfirmActionDialog.vue'
 import EmployeeDetailsDialog from '@/modules/employees/components/EmployeeDetailsDialog.vue'
@@ -100,6 +109,7 @@ const store = useEmployeesStore()
 const {
   search,
   count,
+  status,
   filteredMembers,
   formVisible,
   editingMember,
@@ -107,15 +117,10 @@ const {
   holidayTarget,
   confirmVisible,
   pendingAction,
+  pendingMember,
   detailsVisible,
   detailsTarget,
 } = storeToRefs(store)
-
-const pendingMember = computed(() => {
-  const action = pendingAction.value
-  if (!action) return null
-  return filteredMembers.value.find((member) => member.id === action.id) ?? null
-})
 
 const confirmHeader = computed(() =>
   pendingAction.value?.kind === 'remove' ? 'Remove employee' : 'Deactivate employee',
@@ -164,6 +169,10 @@ function handleSubmit(payload: NewTeamMember): void {
 function handleSaveHolidays(holidays: HolidayWeek[]): void {
   if (holidayTarget.value) store.setHolidays(holidayTarget.value.id, holidays)
 }
+
+onUnmounted(() => {
+  store.resetUi()
+})
 </script>
 
 <style scoped>
@@ -207,6 +216,15 @@ function handleSaveHolidays(holidays: HolidayWeek[]): void {
 
 .employees__count {
   color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.employees__error {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
   font-size: 0.9rem;
 }
 

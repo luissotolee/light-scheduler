@@ -343,6 +343,22 @@ describe('employees store', () => {
     expect(store.status.error).toBeNull()
   })
 
+  it('reports whether an update succeeded', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    expect(store.updateMember(ada.id, { name: 'Ada Lovelace' })).toBe(true)
+    expect(store.filteredMembers[0].name).toBe('Ada Lovelace')
+
+    expect(store.updateMember(ada.id, { name: '   ' })).toBe(false)
+    expect(store.status.error).toBe('Name is required')
+
+    store.openCreate()
+    expect(store.updateMember('missing', { name: 'Nobody' })).toBe(false)
+    expect(store.status.error).toBeNull()
+  })
+
   it('sets normalized holidays and enforces the limit', () => {
     const store = useEmployeesStore()
     const workspace = useWorkspaceStore()
@@ -396,7 +412,9 @@ describe('employees store', () => {
     expect(store.editingMember).toEqual(ada)
 
     store.openEdit('missing')
-    expect(store.editingMember).toBeNull()
+    expect(store.formVisible).toBe(true)
+    expect(store.editingId).toBe(ada.id)
+    expect(store.editingMember).toEqual(ada)
 
     store.closeForm()
     expect(store.formVisible).toBe(false)
@@ -412,6 +430,18 @@ describe('employees store', () => {
     expect(store.count).toBe(1)
     expect(store.formVisible).toBe(false)
     expect(store.status.error).toBeNull()
+  })
+
+  it('clears the search after a successful create', () => {
+    const store = useEmployeesStore()
+    store.setSearch('zzz')
+    store.openCreate()
+
+    store.submitForm(basePayload)
+
+    expect(store.search).toBe('')
+    expect(store.filteredMembers).toHaveLength(1)
+    expect(store.filteredMembers[0].name).toBe('Ada')
   })
 
   it('keeps the form open when a create submission fails', () => {
@@ -523,6 +553,17 @@ describe('employees store', () => {
     expect(workspace.members[0]).toEqual(afterFirst)
   })
 
+  it('never sets an end date before the start date when deactivating', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    const future: TeamMember = { ...bo, startDate: '2999-01-01' }
+    workspace.setMembers([future])
+
+    store.deactivateMember(future.id)
+
+    expect(workspace.members[0]).toMatchObject({ active: false, endDate: '2999-01-01' })
+  })
+
   it('reactivates a member and drops the end date', () => {
     const store = useEmployeesStore()
     const workspace = useWorkspaceStore()
@@ -554,6 +595,42 @@ describe('employees store', () => {
     expect(store.confirmVisible).toBe(false)
     expect(store.pendingAction).toBeNull()
     expect(workspace.members).toHaveLength(2)
+  })
+
+  it('ignores confirm requests for unknown ids', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.requestRemove('missing')
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+
+    store.requestDeactivate('missing')
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+  })
+
+  it('resolves the pending member from the full member list', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+
+    store.requestRemove(bo.id)
+
+    expect(store.pendingMember).toEqual(bo)
+  })
+
+  it('clears a pending confirm when the target member is removed directly', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    store.requestRemove(bo.id)
+
+    store.removeMember(bo.id)
+
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
   })
 
   it('confirms removal and clears the pending action', () => {
@@ -622,6 +699,32 @@ describe('employees store', () => {
 
     expect(store.count).toBe(2)
     expect(store.filteredMembers).toEqual([ada, bo])
+  })
+
+  it('resets ephemeral UI state when loading members', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    store.setSearch('ada')
+    store.select(ada.id)
+    store.openEdit(ada.id)
+    store.openHolidays(ada.id)
+    store.openDetails(ada.id)
+    store.requestRemove(ada.id)
+
+    store.loadMembers([ada, bo])
+
+    expect(store.search).toBe('')
+    expect(store.selectedId).toBeNull()
+    expect(store.formVisible).toBe(false)
+    expect(store.editingId).toBeNull()
+    expect(store.holidayVisible).toBe(false)
+    expect(store.holidayTargetId).toBeNull()
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+    expect(store.detailsVisible).toBe(false)
+    expect(store.detailsTargetId).toBeNull()
+    expect(store.status.error).toBeNull()
   })
 
   it('removes a member and clears a matching selection and dialogs', () => {

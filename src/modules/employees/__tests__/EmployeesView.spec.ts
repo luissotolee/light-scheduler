@@ -9,6 +9,7 @@ import EmployeeDetailsDialog from '@/modules/employees/components/EmployeeDetail
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
 import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
 import EmployeesView from '@/modules/employees/views/EmployeesView.vue'
+import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
@@ -222,6 +223,102 @@ describe('EmployeesView', () => {
 
     expect(workspace.members[0]).toMatchObject({ active: true })
     expect(workspace.members[0].endDate).toBeUndefined()
+  })
+
+  it('surfaces a store error banner while the form is closed', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const store = useEmployeesStore()
+    const wrapper = mountView()
+
+    store.setHolidays(
+      ada.id,
+      Array.from({ length: 7 }, (_, index) => ({ year: 2026, week: index + 1 })),
+    )
+    await nextTick()
+
+    const banner = wrapper.find('[data-test="employees-error"]')
+    expect(banner.exists()).toBe(true)
+    expect(banner.text()).toBe('At most 6 holiday weeks are allowed')
+  })
+
+  it('keeps the confirm message when the target is filtered out of the list', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    const wrapper = mountView()
+
+    await wrapper.find('[aria-label="Remove Bo"]').trigger('click')
+    const dialog = wrapper.findComponent(ConfirmActionDialog)
+    expect(dialog.props('message')).toContain('Remove Bo?')
+
+    await wrapper.find('input[type="search"]').setValue('Ada')
+
+    expect(wrapper.findAll('.employee-table__name')).toHaveLength(1)
+    expect(dialog.props('message')).toContain('Remove Bo?')
+  })
+
+  it('resets open dialog state when the view unmounts', async () => {
+    const store = useEmployeesStore()
+    const wrapper = mountView()
+
+    await wrapper.find('[data-test="add-employee"]').trigger('click')
+    expect(store.formVisible).toBe(true)
+
+    wrapper.unmount()
+
+    expect(store.formVisible).toBe(false)
+    expect(store.editingId).toBeNull()
+  })
+
+  it('resets the form dialog state when it closes', async () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const wrapper = mountView()
+
+    await wrapper.find('[aria-label="Edit Ada"]').trigger('click')
+    const dialog = wrapper.findComponent(EmployeeFormDialog)
+    expect(store.formVisible).toBe(true)
+
+    dialog.vm.$emit('update:visible', false)
+    await nextTick()
+
+    expect(store.formVisible).toBe(false)
+    expect(store.editingId).toBeNull()
+  })
+
+  it('resets the holiday dialog state when it closes', async () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const wrapper = mountView()
+
+    await wrapper.find('[aria-label="Holidays for Ada"]').trigger('click')
+    const dialog = wrapper.findComponent(HolidayWeeksDialog)
+    expect(store.holidayVisible).toBe(true)
+
+    dialog.vm.$emit('update:visible', false)
+    await nextTick()
+
+    expect(store.holidayVisible).toBe(false)
+    expect(store.holidayTargetId).toBeNull()
+  })
+
+  it('resets the confirm dialog state when it closes', async () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    const wrapper = mountView()
+
+    await wrapper.find('[aria-label="Remove Bo"]').trigger('click')
+    const dialog = wrapper.findComponent(ConfirmActionDialog)
+    expect(store.confirmVisible).toBe(true)
+
+    dialog.vm.$emit('update:visible', false)
+    await nextTick()
+
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
   })
 
   it('opens the employee details dialog from the name', async () => {

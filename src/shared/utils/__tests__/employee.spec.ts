@@ -406,6 +406,11 @@ describe('holiday serialization', () => {
     expect(parseHolidays(42)).toBeNull()
   })
 
+  it('validates the week number against the ISO weeks in its year', () => {
+    expect(parseHolidays('2027-W53')).toBeNull()
+    expect(parseHolidays('2026-W53')).toEqual([{ year: 2026, week: 53 }])
+  })
+
   it('rejects malformed tokens', () => {
     expect(parseHolidays('2026-W01')).toBeNull()
     expect(parseHolidays('2026-W0')).toBeNull()
@@ -552,6 +557,28 @@ describe('validateEmployees', () => {
     expect(result).toEqual({
       ok: false,
       errors: [{ row: 2, message: 'At most 6 holiday weeks are allowed' }],
+    })
+  })
+
+  it('rejects a holiday week that does not exist in its ISO year', () => {
+    const result = validateEmployees(headers, [
+      ['Ada', 'manager', 'fulltime', '40', '2027-W53', ''],
+    ])
+
+    expect(result).toEqual({
+      ok: false,
+      errors: [{ row: 2, message: 'Holidays are invalid' }],
+    })
+  })
+
+  it('rejects an end date before the start date', () => {
+    const result = validateEmployees(headers, [
+      ['Ada', 'manager', 'fulltime', '40', '', '', '', 'false', '2026-12-01', '2026-11-01'],
+    ])
+
+    expect(result).toEqual({
+      ok: false,
+      errors: [{ row: 2, message: 'End date cannot be before start date' }],
     })
   })
 

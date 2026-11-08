@@ -200,6 +200,36 @@ describe('EmployeeFormDialog', () => {
         .findAllComponents(RadioButton)
         .every((radio) => radio.attributes('required') !== undefined),
     ).toBe(true)
+
+    await wrapper.findAllComponents(Select)[0].vm.$emit('update:modelValue', 'chef')
+    await wrapper.findAllComponents(RadioButton)[0].vm.$emit('update:modelValue', 'contractor')
+    await nextTick()
+    await dialogBody().find('form').trigger('submit')
+    await nextTick()
+
+    expect(wrapper.findComponent(Select).attributes('aria-invalid')).toBe('true')
+    expect(wrapper.findComponent(Select).attributes('aria-describedby')).toBe(
+      'employee-duty-error',
+    )
+
+    const radiogroup = dialogBody().find('[role="radiogroup"]')
+    expect(radiogroup.attributes('aria-invalid')).toBe('true')
+    expect(radiogroup.attributes('aria-describedby')).toBe('employee-contract-error')
+  })
+
+  it('shows a holidays error and does not submit when the member has too many holiday weeks', async () => {
+    const member: TeamMember = {
+      ...ada,
+      holidays: Array.from({ length: 7 }, (_, index) => ({ year: 2026, week: index + 1 })),
+    }
+    const wrapper = await mountDialog(true, member)
+
+    await dialogBody().find('form').trigger('submit')
+
+    expect(dialogBody().find('[data-test="holidays-error"]').text()).toBe(
+      'At most 6 holiday weeks are allowed',
+    )
+    expect(wrapper.emitted('submit')).toBeUndefined()
   })
 
   it('shows no validation errors and an enabled save button when opened', async () => {

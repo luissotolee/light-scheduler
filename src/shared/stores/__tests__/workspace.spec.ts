@@ -85,6 +85,22 @@ describe('workspace store', () => {
     expect(store.members).toEqual([])
   })
 
+  it('removes the member shifts from every week and drops empty week keys', () => {
+    const store = useWorkspaceStore()
+    const otherMember: TeamMember = { ...member, id: 'member-2', name: 'Bo' }
+    const otherShift: Shift = { ...shift, id: 'shift-2', memberId: otherMember.id }
+    const secondAdaShift: Shift = { ...shift, id: 'shift-3', weekday: 'tuesday' }
+
+    store.setMembers([member, otherMember])
+    store.setShiftsForWeek('2026-10-26', [shift, otherShift])
+    store.setShiftsForWeek('2026-11-02', [secondAdaShift])
+
+    store.removeMember(member.id)
+
+    expect(store.members).toEqual([otherMember])
+    expect(store.schedules).toEqual({ '2026-10-26': [otherShift] })
+  })
+
   it('finds members by id', () => {
     const store = useWorkspaceStore()
     store.setMembers([member])

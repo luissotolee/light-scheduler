@@ -70,6 +70,11 @@ describe('formatIsoDate', () => {
   it('formats an ISO date for display', () => {
     expect(formatIsoDate('2026-11-08')).toBe('Nov 8, 2026')
   })
+
+  it('returns a placeholder for malformed input instead of throwing', () => {
+    expect(formatIsoDate('not-a-date')).toBe('—')
+    expect(formatIsoDate('')).toBe('—')
+  })
 })
 
 describe('startOfWeek', () => {

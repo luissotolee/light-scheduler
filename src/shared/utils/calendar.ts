@@ -40,11 +40,14 @@ export function parseIsoDate(value: unknown): string | null {
 }
 
 export function formatIsoDate(isoDate: string): string {
+  const parsed = parseIsoDate(isoDate)
+  if (!parsed) return '—'
+
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  }).format(isoDateToDate(isoDate))
+  }).format(isoDateToDate(parsed))
 }
 
 export function startOfWeek(date: Date): Date {

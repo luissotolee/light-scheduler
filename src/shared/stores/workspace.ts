@@ -32,6 +32,13 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
   function removeMember(id: string): void {
     members.value = members.value.filter((member) => member.id !== id)
+
+    const nextSchedules: Record<WeekKey, Shift[]> = {}
+    for (const [weekKey, shifts] of Object.entries(schedules.value)) {
+      const remaining = shifts.filter((shift) => shift.memberId !== id)
+      if (remaining.length > 0) nextSchedules[weekKey] = remaining
+    }
+    schedules.value = nextSchedules
   }
 
   function findMember(id: string): TeamMember | undefined {

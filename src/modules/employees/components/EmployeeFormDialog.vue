@@ -40,6 +40,7 @@
           required
           aria-required="true"
           :aria-invalid="dutyError ? 'true' : undefined"
+          :aria-describedby="dutyError ? 'employee-duty-error' : undefined"
         />
         <small
           v-if="dutyError"
@@ -147,6 +148,8 @@
           role="radiogroup"
           aria-label="Contract"
           aria-required="true"
+          :aria-invalid="contractError ? 'true' : undefined"
+          :aria-describedby="contractError ? 'employee-contract-error' : undefined"
         >
           <div v-for="value in CONTRACTS" :key="value" class="employee-form__radio">
             <RadioButton
@@ -170,6 +173,15 @@
           {{ contractError }}
         </small>
       </fieldset>
+
+      <small
+        v-if="holidaysError"
+        class="employee-form__error employee-form__field--full"
+        data-test="holidays-error"
+        role="alert"
+      >
+        {{ holidaysError }}
+      </small>
 
       <div class="employee-form__actions employee-form__field--full">
         <Button
@@ -259,6 +271,7 @@ const emailError = computed(() => visibleErrors.value.email ?? '')
 const hoursError = computed(() => visibleErrors.value.weeklyHours ?? '')
 const contractError = computed(() => visibleErrors.value.contract ?? '')
 const startDateError = computed(() => visibleErrors.value.startDate ?? '')
+const holidaysError = computed(() => visibleErrors.value.holidays ?? '')
 
 const title = computed(() => (props.member ? 'Edit employee' : 'Add employee'))
 

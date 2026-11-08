@@ -10,7 +10,7 @@ import type {
   TeamMember,
   Validated,
 } from '@/types'
-import { parseIsoDate } from '@/shared/utils/calendar'
+import { getIsoWeeksInYear, parseIsoDate } from '@/shared/utils/calendar'
 
 export const MAX_HOLIDAY_WEEKS = 6
 
@@ -195,7 +195,11 @@ export function parseHolidays(value: unknown): HolidayWeek[] | null {
     const match = HOLIDAY_TOKEN_RE.exec(token.trim())
     if (!match) return null
 
-    holidays.push({ year: Number(match[1]), week: Number(match[2]) })
+    const year = Number(match[1])
+    const week = Number(match[2])
+    if (week > getIsoWeeksInYear(year)) return null
+
+    holidays.push({ year, week })
   }
 
   return holidays
@@ -314,6 +318,10 @@ export function validateEmployees(
     const endDate = rawEndDate ? parseIsoDate(rawEndDate) : undefined
     if (endDate === null) {
       rowErrors.push({ row: rowNumber, message: 'End date is invalid' })
+    }
+
+    if (startDate && endDate && endDate < startDate) {
+      rowErrors.push({ row: rowNumber, message: 'End date cannot be before start date' })
     }
 
     if (active === false && !rawEndDate) {
