@@ -1,9 +1,3 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import AppNav from '@/components/AppNav.vue'
-import { NAV_ITEMS } from '@/router/nav'
-</script>
-
 <template>
   <div class="app">
     <header class="app__header">
@@ -20,6 +14,12 @@ import { NAV_ITEMS } from '@/router/nav'
     </footer>
   </div>
 </template>
+
+<script setup lang="ts">
+import { RouterLink, RouterView } from 'vue-router'
+import AppNav from '@/shared/components/AppNav.vue'
+import { NAV_ITEMS } from '@/router/nav'
+</script>
 
 <style scoped>
 .app {

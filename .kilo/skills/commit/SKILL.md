@@ -48,7 +48,7 @@ Prefer `fix` over `bug` when the change addresses a defect; use the most specifi
 ## Step 3 — Write the summary
 
 - Start with the lowercase type in parentheses: `(feat)`
-- Follow with a space and a short imperative summary: `(feat) add task scheduler store`
+- Follow with a space and a short imperative summary: `(feat) add weekly shift scheduler`
 - Describe the "what", not the "why"; keep it under ~72 characters total
 - No trailing period, no scope beyond the type, no body unless the user asks
 

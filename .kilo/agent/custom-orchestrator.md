@@ -18,6 +18,11 @@ Route using the `task` tool:
 
 - `subagent_type: planner` — investigate the codebase and return a detailed implementation plan.
 - `subagent_type: developer` — implement a plan or simple task end-to-end, editing files, running tests, and running commands until complete.
+- `subagent_type: code-reviewer` — audit generated code for correctness, security, conventions, and code quality; returns a findings report for the developer to fix.
+
+## Code review step
+
+After the `developer` finishes implementing (or when asked to review), launch `code-reviewer` to audit the changed files. Pass it the list of files to review and the branch/diff context. The reviewer reports findings; route them back to `developer` for fixes, then re-review until no blockers remain.
 
 ## Workflow
 

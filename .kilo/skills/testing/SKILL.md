@@ -5,16 +5,18 @@ description: Write Vitest unit tests for stores, components, and views with fres
 
 # Testing
 
+Read `workspace.md` first for the module map and where files belong.
+
 ## 1. Placement and naming
 
 Co-locate specs next to the source in `__tests__/`:
 
-- `src/stores/__tests__/*.spec.ts`
-- `src/components/__tests__/*.spec.ts`
-- `src/views/__tests__/*.spec.ts`
-- `src/utils/__tests__/*.spec.ts`
+- `src/modules/<module>/__tests__/*.spec.ts`
+- `src/shared/components/__tests__/*.spec.ts`
+- `src/shared/stores/__tests__/*.spec.ts`
+- `src/shared/utils/__tests__/*.spec.ts`
 
-The Vitest glob is `src/**/*.spec.ts`. The root `src/__tests__/App.spec.ts` tests `App.vue`.
+The Vitest glob is `src/**/*.spec.ts`. The root `src/__tests__/App.spec.ts` and `routes.spec.ts` cover `App.vue` and routing.
 
 ## 2. Imports
 
@@ -23,8 +25,9 @@ Import Vitest APIs explicitly and app modules through `@/`:
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { useSchedulerStore } from '@/stores/scheduler'
-import TaskForm from '@/components/TaskForm.vue'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { useWorkspaceStore } from '@/shared/stores/workspace'
+import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
 ```
 
 ## 3. Store tests
@@ -34,18 +37,32 @@ Reset Pinia before each test:
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useSchedulerStore } from '@/stores/scheduler'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import type { NewShift } from '@/types'
+
+const baseShift: NewShift = { memberId: 'member-1', weekday: 'monday', start: '09:00', end: '12:00' }
 
 describe('scheduler store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  it('rejects blank titles', () => {
+  it('adds a shift using canonical minutes', () => {
     const store = useSchedulerStore()
 
-    expect(store.addTask({ title: '   ', priority: 'low' })).toBeNull()
-    expect(store.tasks).toHaveLength(0)
+    const shift = store.addShift(baseShift)
+
+    expect(shift?.startMinute).toBe(540)
+    expect(shift?.endMinute).toBe(720)
+    expect(store.shiftCount).toBe(1)
+  })
+
+  it('rejects invalid times', () => {
+    const store = useSchedulerStore()
+
+    expect(store.addShift({ ...baseShift, start: '9:00' })).toBeNull()
+    expect(store.addShift({ ...baseShift, start: '12:00', end: '09:00' })).toBeNull()
+    expect(store.shiftCount).toBe(0)
   })
 })
 ```
@@ -59,56 +76,52 @@ Mount with props and assert rendered output plus emitted events:
 ```ts
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import TaskForm from '@/components/TaskForm.vue'
+import EmptyState from '@/shared/components/EmptyState.vue'
 
-describe('TaskForm', () => {
-  it('emits a trimmed task on submit', async () => {
-    const wrapper = mount(TaskForm)
+describe('EmptyState', () => {
+  it('renders title and description', () => {
+    const wrapper = mount(EmptyState, {
+      props: { title: 'No shifts', description: 'Add a shift to get started.' },
+    })
 
-    await wrapper.find('input').setValue('  plan sprint  ')
-    await wrapper.find('form').trigger('submit')
-
-    expect(wrapper.emitted('submit')).toEqual([[{ title: 'plan sprint', priority: 'medium' }]])
+    expect(wrapper.text()).toContain('No shifts')
+    expect(wrapper.text()).toContain('Add a shift to get started.')
   })
 })
 ```
 
 - Trigger interactions with `await wrapper.find('...').trigger('...')`.
 - Assert `wrapper.text()`, attributes/classes, and `wrapper.emitted()`; never assert internal component state.
+- For components with PrimeVue deps (e.g. `EmployeeTable`), provide plugins and directives in `global` and stub `matchMedia` — see its spec for the exact setup.
 - Use `Partial<T>` factory helpers to keep fixtures short.
-- Re-emit tests: call `item.vm.$emit('toggle', id)` on a child wrapper, then assert the parent emitted the event.
+- Re-emit tests: call `item.vm.$emit('remove', id)` on a child wrapper, then assert the parent emitted the event.
 
 ## 5. View tests
 
-Views mount with a Pinia instance, then mutate the store and wait for reactivity:
+Views mount with the same Pinia instance that seeds the store, then assert the rendered output:
 
 ```ts
-import { beforeEach, describe, expect, it } from 'vitest'
-import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { nextTick } from 'vue'
-import HomeView from '@/views/HomeView.vue'
-import { useSchedulerStore } from '@/stores/scheduler'
+import { mount } from '@vue/test-utils'
+import SchedulerView from '@/modules/scheduler/views/SchedulerView.vue'
+import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 
-describe('HomeView', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-  })
-
-  it('renders store tasks', async () => {
+describe('SchedulerView', () => {
+  it('renders shifts from the store', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
     const store = useSchedulerStore()
-    store.addTask({ title: 'ship it', priority: 'high' })
+    store.addShift({ memberId: 'member-1', weekday: 'monday', start: '09:00', end: '12:00' })
 
-    const wrapper = mount(HomeView, { global: { plugins: [createPinia()] } })
-    store.addTask({ title: 'second', priority: 'low' })
-    await nextTick()
+    const wrapper = mount(SchedulerView, { global: { plugins: [pinia] } })
 
-    expect(wrapper.text()).toContain('second')
+    expect(wrapper.text()).toContain('monday')
+    expect(wrapper.text()).toContain('09:00')
   })
 })
 ```
 
-Use `global: { plugins: [pinia] }` so child components resolve the active store. Mutate the store and `await nextTick()` to verify wiring.
+Use `global: { plugins: [pinia] }` with the same `pinia` instance so child components resolve the active store. Mutate the store and re-assert to verify wiring.
 
 ## 6. jsdom stubs
 
@@ -126,8 +139,6 @@ vi.stubGlobal('URL', {
   createObjectURL: vi.fn(() => 'blob:test'),
   revokeObjectURL: vi.fn(),
 })
-
-vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('00000000-0000-4000-8000-000000000000')
 
 vi.useFakeTimers()
 vi.setSystemTime(new Date('2026-11-05T20:57:00Z'))
@@ -153,11 +164,3 @@ Configured in `vite.config.ts`:
 - branches >= 75
 
 Excluded from coverage: `src/main.ts`, `*.d.ts`, `src/router/**`. Keep `npm run test:coverage` green; add focused tests rather than lowering thresholds.
-
-## 8. Verification
-
-```bash
-npm test
-npm run test:watch
-npm run test:coverage
-```

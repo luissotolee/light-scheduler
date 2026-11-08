@@ -5,18 +5,20 @@ description: Read and write plain CSV files in the browser. Use when implementin
 
 # CSV Import / Export
 
+Read `workspace.md` first for the module map and where files belong.
+
 ## 1. Purpose and module layout
 
 Keep the concerns separate:
 
-- `src/utils/csv.ts` — pure parsing and serialization. No DOM, no file input, no downloads.
-- `src/utils/download.ts` — the only browser side effect: Blob, object URL, temporary anchor.
+- `src/shared/utils/csv.ts` — pure parsing and serialization. No DOM, no file input, no downloads.
+- `src/shared/utils/download.ts` — the only browser side effect: Blob, object URL, temporary anchor.
 
 Import through the alias, never relative paths across folders:
 
 ```ts
-import { parseCsv, toCsv } from '@/utils/csv'
-import { downloadTextFile, timestampedName } from '@/utils/download'
+import { parseCsv, toCsv } from '@/shared/utils/csv'
+import { downloadTextFile, timestampedName } from '@/shared/utils/download'
 ```
 
 Both files are included by `vite.config.ts` coverage and must have unit tests.
@@ -116,34 +118,19 @@ Document and test these edge cases:
 
 ## 3. Domain validation (separate concern)
 
-Structural parsing is not domain validation. Map `string[][]` to typed domain objects with row-numbered errors:
+Structural parsing is not domain validation. Map `string[][]` to typed domain objects with row-numbered errors. The shared `RowError` and `Validated<T>` types live in `src/types.ts`; the employee validator lives in `src/shared/utils/employee.ts`:
 
 ```ts
-import type { NewTeamMember } from '@/types'
+import type { EmployeeCsvRecord, Validated } from '@/types'
 
-export type RowError = { row: number; message: string }
-export type Validated<T> =
-  | { ok: true; data: T[] }
-  | { ok: false; errors: RowError[] }
-
-export function validateMembers(rows: string[][]): Validated<NewTeamMember> {
-  const data: NewTeamMember[] = []
-  const errors: RowError[] = []
-
-  rows.forEach((row, index) => {
-    const rowNumber = index + 2 // header is row 1
-    const name = (row[0] ?? '').trim()
-
-    if (!name) {
-      errors.push({ row: rowNumber, message: 'Name is required' })
-      return
-    }
-
-    const email = (row[1] ?? '').trim()
-    data.push(email ? { name, email } : { name })
-  })
-
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, data }
+export function validateEmployees(
+  headers: string[],
+  rows: string[][],
+): Validated<EmployeeCsvRecord> {
+  // Reject unexpected headers, then validate each row against
+  // name/duty/contract/weeklyHours/holidays/email/phone/active/startDate/endDate,
+  // pushing a `{ row, message }` error per failed cell.
+  // Full implementation: src/shared/utils/employee.ts.
 }
 ```
 
@@ -167,7 +154,7 @@ Join records with `\r\n` (RFC 4180). Quote only when necessary.
 
 ## 5. Download: `downloadTextFile`
 
-Keep the side effect in `src/utils/download.ts`:
+Keep the side effect in `src/shared/utils/download.ts`:
 
 ```ts
 export function downloadTextFile(filename: string, text: string, mime = 'text/csv;charset=utf-8'): void {
@@ -258,15 +245,4 @@ const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(
 downloadTextFile('team-members.csv', 'name\nAda\n')
 expect(click).toHaveBeenCalledOnce()
 expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test')
-```
-
-## 9. Verification
-
-Run after changing CSV code:
-
-```bash
-npm run typecheck
-npm test
-npm run test:coverage
-npm run lint
 ```
