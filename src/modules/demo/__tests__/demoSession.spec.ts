@@ -3,7 +3,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
-import { useHistoryStore } from '@/modules/history/stores/history'
 import { useCsvStore } from '@/modules/csv/stores/csv'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { useLocaleStore } from '@/shared/stores/locale'
@@ -61,9 +60,6 @@ describe('demoSession', () => {
     const schedulerStore = useSchedulerStore()
     schedulerStore.selectWeekday('friday')
 
-    const historyStore = useHistoryStore()
-    historyStore.selectWeek('2026-11-02')
-
     const csvStore = useCsvStore()
     csvStore.setError('csv.importFailed')
 
@@ -75,7 +71,6 @@ describe('demoSession', () => {
     expect(employeesStore.formVisible).toBe(false)
     expect(schedulerStore.selectedWeekday).toBe('monday')
     expect(schedulerStore.error).toBeNull()
-    expect(historyStore.selectedWeekKey).toBeNull()
     expect(csvStore.status.state).toBe('idle')
   })
 

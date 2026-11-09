@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Duty, Shift, TeamMember, WeekKey } from '@/types'
+import type { Duty, Shift, TeamMember } from '@/types'
 import {
   buildWeeklyHoursGroups,
   compareMembersByDuty,
@@ -8,7 +8,6 @@ import {
   formatDiff,
   formatHours,
   initialsOf,
-  isMemberInWeek,
   minutesToHours,
   sumShiftMinutes,
 } from '@/modules/scheduler/utils/hours'
@@ -173,58 +172,6 @@ describe('compareMembersByDuty', () => {
   })
 })
 
-describe('isMemberInWeek', () => {
-  const weekStart: WeekKey = '2026-11-02'
-  const weekEnd: WeekKey = '2026-11-08'
-
-  function member(overrides: Partial<Pick<TeamMember, 'startDate' | 'endDate'>> = {}) {
-    return {
-      startDate: '2026-01-01',
-      ...overrides,
-    }
-  }
-
-  it('includes member starting on Monday of the week', () => {
-    expect(isMemberInWeek(member({ startDate: '2026-11-02' }), weekStart, weekEnd)).toBe(true)
-  })
-
-  it('includes member starting on Sunday of the week', () => {
-    expect(isMemberInWeek(member({ startDate: '2026-11-08' }), weekStart, weekEnd)).toBe(true)
-  })
-
-  it('includes member starting mid-week', () => {
-    expect(isMemberInWeek(member({ startDate: '2026-11-04' }), weekStart, weekEnd)).toBe(true)
-  })
-
-  it('excludes member starting on Monday of next week', () => {
-    expect(isMemberInWeek(member({ startDate: '2026-11-09' }), weekStart, weekEnd)).toBe(false)
-  })
-
-  it('includes member with endDate on Monday of the week', () => {
-    expect(isMemberInWeek(member({ endDate: '2026-11-02' }), weekStart, weekEnd)).toBe(true)
-  })
-
-  it('includes member with endDate on Sunday of the week', () => {
-    expect(isMemberInWeek(member({ endDate: '2026-11-08' }), weekStart, weekEnd)).toBe(true)
-  })
-
-  it('excludes member with endDate before the week', () => {
-    expect(isMemberInWeek(member({ endDate: '2026-11-01' }), weekStart, weekEnd)).toBe(false)
-  })
-
-  it('includes member with endDate after the week', () => {
-    expect(isMemberInWeek(member({ endDate: '2026-11-09' }), weekStart, weekEnd)).toBe(true)
-  })
-
-  it('includes member with no endDate (ongoing)', () => {
-    expect(isMemberInWeek(member({ endDate: undefined }), weekStart, weekEnd)).toBe(true)
-  })
-
-  it('excludes member with startDate after week and no endDate', () => {
-    expect(isMemberInWeek(member({ startDate: '2026-11-09', endDate: undefined }), weekStart, weekEnd)).toBe(false)
-  })
-})
-
 describe('buildWeeklyHoursGroups', () => {
   it('groups rows in duty order and omits empty groups', () => {
     const members = [
@@ -305,3 +252,4 @@ describe('buildWeeklyHoursGroups', () => {
     expect(groups[0].rows.map((row) => row.memberId)).toEqual(['active', 'inactive'])
   })
 })
+

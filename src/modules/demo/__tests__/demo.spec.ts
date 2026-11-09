@@ -16,6 +16,8 @@ describe('demo store', () => {
     expect(store.errorKey).toBeNull()
     expect(store.cursor.visible).toBe(false)
     expect(store.ring.visible).toBe(false)
+    expect(store.click.visible).toBe(false)
+    expect(store.narrationAnchor).toBeNull()
     expect(store.showRestoredFlag).toBe(false)
   })
 
@@ -69,8 +71,11 @@ describe('demo store', () => {
     }
     store.setScenario(scenario)
     store.start('test')
+    const rect = { x: 0, y: 0, width: 100, height: 100, top: 0, left: 0, right: 100, bottom: 100, toJSON: () => {} } as DOMRect
     store.setCursor(100, 100, true)
-    store.setRing({ x: 0, y: 0, width: 100, height: 100, top: 0, left: 0, right: 100, bottom: 100, toJSON: () => {} } as DOMRect, true)
+    store.setRing(rect, true)
+    store.showClick(100, 100)
+    store.setNarrationAnchor(rect)
     store.reportError('demo.error.target')
 
     store.stop()
@@ -82,6 +87,8 @@ describe('demo store', () => {
     expect(store.totalSteps).toBe(0)
     expect(store.cursor.visible).toBe(false)
     expect(store.ring.visible).toBe(false)
+    expect(store.click.visible).toBe(false)
+    expect(store.narrationAnchor).toBeNull()
     expect(store.errorKey).toBeNull()
   })
 
@@ -103,6 +110,27 @@ describe('demo store', () => {
 
     store.setCursor(0, 0, false)
     expect(store.cursor).toEqual({ x: 0, y: 0, visible: false })
+  })
+
+  it('tracks click areas and narration anchors', () => {
+    const store = useDemoStore()
+    const rect = { x: 0, y: 0, width: 100, height: 50, top: 0, left: 0, right: 100, bottom: 50, toJSON: () => {} } as DOMRect
+
+    store.showClick(120, 80)
+    expect(store.click).toEqual({ x: 120, y: 80, id: 1, visible: true })
+
+    store.showClick(130, 90)
+    expect(store.click).toEqual({ x: 130, y: 90, id: 2, visible: true })
+
+    store.hideClick()
+    expect(store.click.visible).toBe(false)
+    expect(store.click.x).toBe(130)
+
+    store.setNarrationAnchor(rect)
+    expect(store.narrationAnchor).toStrictEqual(rect)
+
+    store.setNarrationAnchor(null)
+    expect(store.narrationAnchor).toBeNull()
   })
 
   it('sets ring', () => {

@@ -8,7 +8,32 @@
   --color-accent: #38bdf8;
   --color-danger: #f87171;
   --color-inactive-bg: rgba(148, 163, 184, 0.08);
+  --color-vacation-bg: rgba(251, 191, 36, 0.16);
+  --color-vacation-text: #fbbf24;
   --color-shift-bar: rgba(56, 189, 248, 0.18);
+  --color-sheet-bg: #f8fafc;
+  --color-sheet-surface: #ffffff;
+  --color-sheet-header-bg: #d7e3f1;
+  --color-sheet-employee-bg: #edf3f9;
+  --color-sheet-border: #b8c7d9;
+  --color-sheet-text: #1e293b;
+  --color-sheet-muted: #5b6b80;
+  --color-sheet-off-bg: #e2e8f0;
+  --color-sheet-off-text: #475569;
+  --color-sheet-vacation-bg: #fdf0c8;
+  --color-sheet-vacation-text: #8a5a00;
+  --color-summary-bg: #101a2c;
+  --color-summary-header-bg: #17395c;
+  --color-summary-header-text: #d8ecff;
+  --color-summary-employee-header-bg: #2a2f5c;
+  --color-summary-employee-bg: #1a2140;
+  --color-summary-border: #334a70;
+  --color-summary-text: #e2e8f0;
+  --color-summary-muted: #7dd3fc;
+  --color-summary-off-bg: rgba(148, 163, 184, 0.22);
+  --color-summary-off-text: #b6c2d4;
+  --color-summary-vacation-bg: rgba(251, 191, 36, 0.18);
+  --color-summary-vacation-text: #fcd34d;
   --color-duty-manager: #fbbf24;
   --color-duty-head-manager: #f472b6;
   --color-duty-assistant: #a78bfa;
@@ -63,4 +88,37 @@ button,
 input,
 select {
   font-family: inherit;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 8mm;
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    background-attachment: scroll !important;
+  }
+
+  .app__header,
+  .app__footer,
+  .demo-banner,
+  .demo-overlay,
+  .demo-mode-button,
+  .p-toast {
+    display: none !important;
+  }
+
+  .app__main {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 }

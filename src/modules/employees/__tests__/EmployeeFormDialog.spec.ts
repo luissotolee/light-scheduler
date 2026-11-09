@@ -8,6 +8,7 @@ import InputNumber from 'primevue/inputnumber'
 import RadioButton from 'primevue/radiobutton'
 import Select from 'primevue/select'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
+import { fillInput } from '@/modules/demo/utils/dom'
 import { isoDateToDate, todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
 
@@ -403,5 +404,39 @@ describe('EmployeeFormDialog', () => {
         .findAllComponents(RadioButton)
         .every((radio) => radio.props('modelValue') === 'fulltime'),
     ).toBe(true)
+  })
+
+  it('accepts values through the demo data-test targets', async () => {
+    const wrapper = await mountDialog()
+
+    expect(dialogBody().find('[data-test="employee-duty-select"]').exists()).toBe(true)
+    expect(dialogBody().find('[data-test="employee-contract-group"]').exists()).toBe(true)
+    expect(dialogBody().find('[data-test="employee-start-date"]').exists()).toBe(true)
+
+    fillInput(
+      dialogBody().find('[data-test="employee-name-input"]').element as HTMLElement,
+      'Nora Ejemplo',
+    )
+    fillInput(
+      dialogBody().find('[data-test="employee-phone-input"]').element as HTMLElement,
+      '+34 600 123 456',
+    )
+    fillInput(
+      dialogBody().find('[data-test="employee-email-input"]').element as HTMLElement,
+      'nora.ejemplo@example.com',
+    )
+    fillInput(
+      dialogBody().find('[data-test="employee-hours-input"]').element as HTMLElement,
+      '32',
+    )
+    await nextTick()
+    await dialogBody().find('form').trigger('submit')
+
+    expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
+      name: 'Nora Ejemplo',
+      phone: '+34 600 123 456',
+      email: 'nora.ejemplo@example.com',
+      weeklyHours: 32,
+    })
   })
 })

@@ -1,45 +1,110 @@
 <template>
   <section class="summary">
-    <PageHeader :title="t('summary.title')" :description="t('summary.description')">
-      <template #actions>
-        <button type="button" class="summary__button" data-test="print" @click="printSummary">
-          {{ t('summary.print') }}
-        </button>
-        <button type="button" class="summary__button" data-test="save-pdf" disabled>
-          {{ t('summary.savePdf') }}
-        </button>
-      </template>
-    </PageHeader>
+    <div class="summary__screen-only">
+      <PageHeader
+        :title="t('summary.title')"
+        :description="t('summary.description')"
+        description-tooltip
+      >
+        <template #actions>
+          <Button
+            type="button"
+            icon="pi pi-print"
+            severity="secondary"
+            outlined
+            :label="t('summary.print')"
+            data-test="print-summary"
+            @click="printSummary"
+          />
+          <Button
+            type="button"
+            icon="pi pi-file-pdf"
+            :label="t('summary.savePdf')"
+            data-test="save-summary-pdf"
+            @click="savePdf"
+          />
+        </template>
+      </PageHeader>
 
-    <p class="summary__week">{{ weekRangeLabel }}</p>
+      <div class="summary__toolbar" role="group" :aria-label="t('summary.title')">
+        <Button
+          type="button"
+          icon="pi pi-chevron-left"
+          text
+          rounded
+          :aria-label="t('summary.previousWeek')"
+          data-test="summary-previous-week"
+          @click="store.goToPreviousWeek"
+        />
+        <p class="summary__week" aria-live="polite" data-test="summary-week-label">
+          {{ weekRangeLabel }}
+        </p>
+        <Button
+          type="button"
+          icon="pi pi-chevron-right"
+          text
+          rounded
+          :aria-label="t('summary.nextWeek')"
+          data-test="summary-next-week"
+          @click="store.goToNextWeek"
+        />
+        <Button
+          type="button"
+          :label="t('summary.thisWeek')"
+          text
+          size="small"
+          data-test="summary-this-week"
+          @click="store.goToCurrentWeek"
+        />
+      </div>
+    </div>
 
-    <dl class="summary__metrics">
-      <div class="summary__metric">
-        <dt class="summary__metric-label">{{ t('summary.totalShifts') }}</dt>
-        <dd class="summary__metric-value" data-test="total-shifts">{{ totalShifts }}</dd>
-      </div>
-      <div class="summary__metric">
-        <dt class="summary__metric-label">{{ t('summary.assignedMembers') }}</dt>
-        <dd class="summary__metric-value" data-test="assigned-members">
-          {{ assignedMemberCount }}
-        </dd>
-      </div>
-    </dl>
+    <div class="summary__sheet" :style="{ '--summary-print-zoom': String(printZoom) }">
+      <header class="summary__sheet-header">
+        <h2 class="summary__sheet-title">{{ t('summary.title') }}</h2>
+        <p class="summary__sheet-range">{{ weekRangeLabel }}</p>
+      </header>
+
+      <SummaryTable
+        v-if="rows.length > 0"
+        :rows="rows"
+        :days="dayHeaders"
+        :week-range-label="weekRangeLabel"
+      />
+      <EmptyState
+        v-else
+        :title="t('summary.emptyTitle')"
+        :description="t('summary.emptyDescription')"
+      />
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import Button from 'primevue/button'
+import EmptyState from '@/shared/components/EmptyState.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
+import SummaryTable from '@/modules/summary/components/SummaryTable.vue'
 import { useSummaryStore } from '@/modules/summary/stores/summary'
+import { saveSummaryPdf } from '@/modules/summary/utils/pdf'
 import { useI18n } from '@/shared/i18n'
 
 const store = useSummaryStore()
-const { weekRangeLabel, totalShifts, assignedMemberCount } = storeToRefs(store)
-const { t } = useI18n()
+const { rows, dayHeaders, weekRangeLabel, printZoom } = storeToRefs(store)
+const { t, locale } = useI18n()
 
 function printSummary(): void {
   window.print()
+}
+
+function savePdf(): void {
+  saveSummaryPdf({
+    rows: rows.value,
+    days: dayHeaders.value,
+    weekRangeLabel: weekRangeLabel.value,
+    locale: locale.value,
+  })
 }
 </script>
 
@@ -50,58 +115,66 @@ function printSummary(): void {
   gap: 1rem;
 }
 
+.summary__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 .summary__week {
   margin: 0;
-  color: var(--color-muted);
+  min-width: 14rem;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
-.summary__metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 1rem;
-  margin: 0;
-}
-
-.summary__metric {
-  padding: 1.25rem;
+.summary__sheet {
+  padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
 }
 
-.summary__metric-label {
-  color: var(--color-muted);
-  font-size: 0.85rem;
+.summary__sheet-header {
+  display: none;
 }
 
-.summary__metric-value {
-  margin: 0.35rem 0 0;
-  font-size: 2rem;
-  font-weight: 700;
-}
+@media print {
+  .summary__screen-only {
+    display: none !important;
+  }
 
-.summary__button {
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text);
-  font: inherit;
-  cursor: pointer;
-}
+  .summary {
+    display: block;
+  }
 
-.summary__button:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
+  .summary__sheet {
+    width: calc(100% / var(--summary-print-zoom, 1));
+    zoom: var(--summary-print-zoom, 1);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 
-.summary__button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
+  .summary__sheet-header {
+    display: block;
+    margin-bottom: 2mm;
+    text-align: center;
+  }
 
-.summary__button:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  .summary__sheet-title {
+    margin: 0;
+    font-size: 12pt;
+  }
+
+  .summary__sheet-range {
+    margin: 0;
+    font-size: 9pt;
+  }
 }
 </style>

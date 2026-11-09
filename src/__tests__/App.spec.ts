@@ -13,10 +13,6 @@ import { NAV_ITEMS } from '@/router/nav'
 vi.mock('@/modules/demo/player/engine', () => ({
   startEngine: vi.fn().mockResolvedValue(undefined),
   stopEngine: vi.fn().mockResolvedValue(undefined),
-  pauseEngine: vi.fn().mockResolvedValue(undefined),
-  resumeEngine: vi.fn().mockResolvedValue(undefined),
-  nextStep: vi.fn().mockResolvedValue(undefined),
-  previousStep: vi.fn().mockResolvedValue(undefined),
 }))
 
 const routes = NAV_ITEMS.map((item) => ({
@@ -106,11 +102,19 @@ describe('App', () => {
     const wrapper = await mountApp('/')
     const demoStore = useDemoStore()
     demoStore.status = 'running'
+    demoStore.stepIndex = 0
+    demoStore.totalSteps = 2
+    demoStore.currentStep = { id: '1', action: 'spotlight', target: { testId: 'test' }, narrationKey: 'demo.scenario.scheduler.intro' }
 
     await nextTick()
 
     expect(wrapper.find('[data-test="demo-banner"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="demo-banner"]').text()).toContain(en['demo.banner'])
+    expect(wrapper.find('[data-test="demo-progress"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="demo-previous"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="demo-pause"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="demo-next"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="demo-exit"]').exists()).toBe(true)
   })
 
   it('does not start demo engine on refresh when idle', async () => {

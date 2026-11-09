@@ -1,9 +1,9 @@
 ---
 description: Implements a task or approved plan end-to-end, editing files, running tests, and running commands until everything is done. Route here after planning or for simple tasks.
-mode: subagent
+mode: all
 model: kilo/cohere/north-mini-code:free
 variant: thinking
-steps: 30
+steps: 100
 color: "#10B981"
 permission:
   "github_*": allow

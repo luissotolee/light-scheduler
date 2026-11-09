@@ -1,9 +1,4 @@
-export function downloadTextFile(
-  filename: string,
-  text: string,
-  mime = 'text/csv;charset=utf-8',
-): void {
-  const blob = new Blob([text], { type: mime })
+export function downloadBlob(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
@@ -12,6 +7,14 @@ export function downloadTextFile(
   anchor.click()
   anchor.remove()
   URL.revokeObjectURL(url)
+}
+
+export function downloadTextFile(
+  filename: string,
+  text: string,
+  mime = 'text/csv;charset=utf-8',
+): void {
+  downloadBlob(filename, new Blob([text], { type: mime }))
 }
 
 export function timestampedName(base: string, ext: string): string {

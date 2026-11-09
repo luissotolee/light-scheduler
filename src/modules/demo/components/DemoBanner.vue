@@ -2,55 +2,99 @@
   <div
     v-if="demoStore.status !== 'idle'"
     class="demo-banner"
-    role="status"
-    aria-live="polite"
     data-test="demo-banner"
   >
-    <span class="demo-banner__badge">{{ t('demo.badge') }}</span>
-    <span class="demo-banner__message">{{ t('demo.banner') }}</span>
-    <button
-      type="button"
-      class="demo-banner__exit"
-      :aria-label="t('demo.exitAria')"
-      @click="handleExit"
+    <div class="demo-banner__heading">
+      <span class="demo-banner__badge">{{ t('demo.badge') }}</span>
+      <p class="demo-banner__message">{{ t('demo.banner') }}</p>
+      <span
+        v-if="showStepInfo"
+        class="demo-banner__progress"
+        data-test="demo-progress"
+      >
+        {{ progressLabel }}
+      </span>
+    </div>
+
+    <p
+      v-if="errorMessage"
+      class="demo-banner__error"
+      role="alert"
+      data-test="demo-error"
     >
-      {{ t('demo.exit') }}
-    </button>
+      {{ errorMessage }}
+    </p>
+
+    <div class="demo-banner__footer">
+      <button
+        type="button"
+        class="demo-banner__exit"
+        data-test="demo-exit"
+        @click="stopDemo"
+      >
+        <i class="pi pi-sign-out" aria-hidden="true" />
+        <span>{{ t('demo.exit') }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from '@/shared/i18n'
+import type { MessageKey } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { stopDemo } from '@/modules/demo/utils/demoSession'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
 
-async function handleExit(): Promise<void> {
-  await stopDemo()
-}
+const isActive = computed(
+  () => demoStore.status === 'running' || demoStore.status === 'paused',
+)
+const showStepInfo = computed(
+  () => isActive.value && demoStore.currentStep !== null && demoStore.totalSteps > 0,
+)
+
+const progressLabel = computed(() =>
+  t('demo.progress', {
+    current: demoStore.stepIndex + 1,
+    total: demoStore.totalSteps,
+  }),
+)
+
+const errorMessage = computed(() =>
+  demoStore.status === 'error' && demoStore.errorKey
+    ? t(demoStore.errorKey as MessageKey)
+    : '',
+)
 </script>
 
 <style scoped>
 .demo-banner {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
   background: var(--color-surface-alt);
   color: var(--color-text);
 }
 
+.demo-banner__heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 .demo-banner__badge {
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   border-radius: var(--radius-sm);
   background: var(--color-accent);
-  color: var(--color-on-accent);
-  font-size: 0.75rem;
+  color: var(--color-bg);
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -58,23 +102,51 @@ async function handleExit(): Promise<void> {
 
 .demo-banner__message {
   flex: 1;
-  min-width: 12rem;
+  min-width: 14rem;
+  margin: 0;
   font-size: 0.9rem;
 }
 
+.demo-banner__progress {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.demo-banner__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.demo-banner__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .demo-banner__exit {
-  padding: 0.35rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  padding: 0.3rem 0.65rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text);
   font: inherit;
+  font-size: 0.8rem;
   cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
 }
 
-.demo-banner__exit:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+.demo-banner__exit:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
 }
 
 .demo-banner__exit:focus-visible {
@@ -82,14 +154,13 @@ async function handleExit(): Promise<void> {
   outline-offset: 2px;
 }
 
-@media (max-width: 480px) {
-  .demo-banner {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 600px) {
+  .demo-banner__message {
+    min-width: 100%;
   }
 
   .demo-banner__exit {
-    width: 100%;
+    margin-left: 0;
   }
 }
 </style>

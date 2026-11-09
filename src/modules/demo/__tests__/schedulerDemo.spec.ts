@@ -4,6 +4,22 @@ import { demoScenarios, getDemoScenario, listDemoScenarios } from '@/modules/dem
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 
+const knownTargets = [
+  'previous-week',
+  'next-week',
+  'weekday-tab-tuesday',
+  'shift-grid',
+  'shift-track',
+  'shift-bar',
+  'resize-end',
+  'shift-row-name-toggle',
+  'day-off-count',
+  'weekly-hours',
+  'restart-week',
+  'confirm-message',
+  'confirm-accept',
+]
+
 describe('schedulerDemo scenario', () => {
   it('has correct id', () => {
     expect(schedulerDemoScenario.id).toBe('scheduler-demo')
@@ -34,6 +50,11 @@ describe('schedulerDemo scenario', () => {
     })
   })
 
+  it('has unique step ids', () => {
+    const ids = schedulerDemoScenario.steps.map((step) => step.id)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
   it('narration keys exist in both en and es catalogs', () => {
     schedulerDemoScenario.steps.forEach((step) => {
       expect(en[step.narrationKey as keyof typeof en]).toBeDefined()
@@ -42,19 +63,6 @@ describe('schedulerDemo scenario', () => {
   })
 
   it('uses known data-test targets', () => {
-    const knownTargets = [
-      'previous-week',
-      'next-week',
-      'weekday-tabs',
-      'shift-grid',
-      'employee-search',
-      'add-employee',
-      'total-shifts',
-      'history-list',
-      'export-employees',
-      'upload-employees',
-    ]
-
     schedulerDemoScenario.steps.forEach((step) => {
       if ('target' in step && step.target?.testId) {
         expect(knownTargets).toContain(step.target.testId)
@@ -63,7 +71,7 @@ describe('schedulerDemo scenario', () => {
   })
 
   it('uses known routes', () => {
-    const knownRoutes = ['/scheduler', '/employees', '/summary', '/history', '/csv']
+    const knownRoutes = ['/scheduler', '/employees', '/summary']
     schedulerDemoScenario.steps.forEach((step) => {
       if (step.action === 'navigate') {
         expect(knownRoutes).toContain(step.route)
@@ -73,14 +81,20 @@ describe('schedulerDemo scenario', () => {
 })
 
 describe('demoScenarios registry', () => {
-  it('registers scheduler-demo', () => {
+  it('registers all demo scenarios', () => {
+    expect(demoScenarios['employees-demo']).toBeDefined()
     expect(demoScenarios['scheduler-demo']).toBeDefined()
+    expect(demoScenarios['summary-demo']).toBeDefined()
     expect(getDemoScenario('scheduler-demo')).toBe(schedulerDemoScenario)
   })
 
   it('listDemoScenarios returns all scenarios', () => {
     const list = listDemoScenarios()
-    expect(list).toHaveLength(1)
-    expect(list[0].id).toBe('scheduler-demo')
+    expect(list).toHaveLength(3)
+    expect(list.map((scenario) => scenario.id)).toEqual([
+      'employees-demo',
+      'scheduler-demo',
+      'summary-demo',
+    ])
   })
 })

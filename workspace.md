@@ -17,7 +17,6 @@ Lightweight feature-module / vertical-slice layout:
 - `scheduler/` — weekly shift view + shift actions (`scheduler` store: `addShift`, `removeShift`, `updateShift`, week navigation).
 - `employees/` — employee CRUD + holiday dialogs (`employees` store + `EmployeeTable`/`EmployeeFormDialog`/`EmployeeDetailsDialog`/`HolidayWeeksDialog`). The domain entity is `TeamMember` (see `src/types.ts`).
 - `summary/` — read-only weekly summary (`summary` store).
-- `history/` — past-week browser (`history` store).
 - `csv/` — employee/schedule import/export wiring (`csv` store).
 - `demo/` — in-app real-time guided demo (mock data, localStorage snapshot/restore, step scenarios, visual cursor/ring/ripple, narration overlay). Vertical slice: `scenarios/`, `fixtures/`, `utils/`, `player/`, `stores/`, `components/`. See `.kilo/skills/guided-demo/SKILL.md`.
 - `shared/` — `workspace` store (source of truth for `members` + `schedules`); utils `calendar`/`shifts`/`employee`/`csv`/`download`/`id`; components `AppNav`/`PageHeader`/`EmptyState`/`ConfirmActionDialog`/`LanguageSwitcher`/`LocaleFlag`; `fixtures/employees.ts` (mock data reused by demo).

@@ -4,14 +4,13 @@ Light Scheduler is a light, modern weekly shift scheduler for creating daily shi
 
 ## Features
 
-The product scope covers four pages plus CSV import/export:
+The product scope covers three pages plus CSV import/export:
 
 | Page      | Purpose                                                                     | Status  |
 | --------- | --------------------------------------------------------------------------- | ------- |
 | Scheduler | Create and manage daily shifts at a weekly cadence for employees.           | Planned |
 | Employees | Manage employee records used when building schedules.                       | Planned |
 | Summary   | Review the weekly schedule and print it or save it as PDF.                  | Planned |
-| History   | Browse past weekly schedules.                                               | Planned |
 | CSV I/O   | Upload and download employee and weekly schedule files, as described below. | Planned |
 
 CSV import and export uses two separate file types: employees and weekly schedules. Each can be uploaded and downloaded independently, so a working file can be exported, edited elsewhere, and re-imported to resume where work was left off. Imports accept both UTF-8 and Windows-1252 encodings for compatibility with common spreadsheet tools.
@@ -20,7 +19,7 @@ There is no backend. CSV parsing, serialization, downloads, and all other applic
 
 ## Current status
 
-Light Scheduler is at the base-structure stage. The app includes the application shell, a top navigation bar, a Home landing page, and lazily loaded skeletons for Scheduler, Employees, Summary, History, and CSV I/O. A shared workspace store holds employees, weekly shifts, and the current week, while a page store per page holds page-local UI state. The pure calendar, shift, CSV, and download utilities are implemented and tested. Shift editing, employee create/edit forms, schedule review tables, and CSV import parsing are planned and not yet implemented.
+Light Scheduler is at the base-structure stage. The app includes the application shell, a top navigation bar, a Home landing page, and lazily loaded skeletons for Scheduler, Employees, Summary, and CSV I/O. A shared workspace store holds employees, weekly shifts, and the current week, while a page store per page holds page-local UI state. The pure calendar, shift, CSV, and download utilities are implemented and tested. Shift editing, employee create/edit forms, schedule review tables, and CSV import parsing are planned and not yet implemented.
 
 ## Stack
 
@@ -82,7 +81,6 @@ src/
     employees.ts          Employees page state and member actions
     scheduler.ts          Scheduler page week navigation and shift actions
     summary.ts            read-only weekly summary getters
-    history.ts            weekly archive browser state
     csv.ts                employee and schedule export wiring
     __tests__/
   utils/
@@ -97,14 +95,13 @@ src/
     SchedulerView.vue     weekly shift skeleton
     EmployeesView.vue     employee search/list skeleton
     SummaryView.vue       weekly summary and print skeleton
-    HistoryView.vue       weekly history skeleton
     CsvView.vue           export skeleton with import placeholders
     __tests__/
   modules/
     demo/                 in-app real-time guided demo (see .kilo/skills/guided-demo/SKILL.md)
       types.ts                    DemoScenario, DemoStep, DemoAction, DemoTarget
       fixtures/demoWorkspace.ts   buildDemoWorkspace(now?) → PersistedWorkspace
-      scenarios/                  step scenarios (v1: scheduler→employees→summary→history→CSV)
+      scenarios/                  step scenarios (v1: scheduler→employees→summary→CSV)
       utils/storageSnapshot.ts    localStorage snapshot/restore/backup/recovery
       utils/dom.ts                target resolution, click/pointer/press/fill, reduced motion
       utils/demoSession.ts        startDemo/stopDemo (snapshot → load mock → reset UI → engine)

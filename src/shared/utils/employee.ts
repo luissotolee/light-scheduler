@@ -362,3 +362,13 @@ export function employeeToRow(member: TeamMember): (string | number)[] {
 export function employeesToRows(members: TeamMember[]): (string | number)[][] {
   return members.map(employeeToRow)
 }
+
+export function isMemberInWeek(
+  member: Pick<TeamMember, 'startDate' | 'endDate'>,
+  weekStart: string,
+  weekEnd: string,
+): boolean {
+  if (member.startDate > weekEnd) return false
+  if (member.endDate !== undefined && member.endDate < weekStart) return false
+  return true
+}

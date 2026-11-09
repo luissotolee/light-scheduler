@@ -3,111 +3,141 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useSummaryStore } from '@/modules/summary/stores/summary'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import type { Shift } from '@/types'
+import type { Shift, TeamMember } from '@/types'
+import { getWeekKey } from '@/shared/utils/calendar'
 
-const shifts: Shift[] = [
-  {
-    id: 'shift-1',
-    memberId: 'member-1',
-    weekday: 'monday',
-    startMinute: 540,
-    endMinute: 720,
-  },
-  {
-    id: 'shift-2',
-    memberId: 'member-1',
-    weekday: 'tuesday',
-    startMinute: 540,
-    endMinute: 720,
-  },
-  {
-    id: 'shift-3',
-    memberId: 'member-2',
-    weekday: 'monday',
-    startMinute: 780,
-    endMinute: 900,
-  },
-]
+const weekKey = '2026-11-02'
 
-describe('summary store', () => {
+const ada: TeamMember = {
+  id: 'member-1',
+  name: 'Ada',
+  duty: 'employee',
+  contract: 'fulltime',
+  weeklyHours: 40,
+  holidays: [],
+  active: true,
+  startDate: '2025-01-01',
+}
+
+const mondayShift: Shift = {
+  id: 'shift-1',
+  memberId: 'member-1',
+  weekday: 'monday',
+  startMinute: 540,
+  endMinute: 720,
+}
+
+describe('useSummaryStore', () => {
   beforeEach(() => {
     localStorage.clear()
+    document.documentElement.lang = 'en'
     setActivePinia(createPinia())
   })
 
-  it('starts empty for the current week', () => {
-    const store = useSummaryStore()
+  function seed() {
     const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    workspace.setCurrentWeekKey(weekKey)
+    workspace.setShiftsForWeek(weekKey, [mondayShift])
+    return workspace
+  }
 
-    expect(store.currentWeekKey).toBe(workspace.currentWeekKey)
-    expect(store.weekShifts).toEqual([])
-    expect(store.totalShifts).toBe(0)
-    expect(store.assignedMemberCount).toBe(0)
+  it('mirrors the shared workspace week', () => {
+    const workspace = seed()
+    const store = useSummaryStore()
+
+    expect(store.currentWeekKey).toBe(weekKey)
+    workspace.setCurrentWeekKey('2026-11-09')
+    expect(store.currentWeekKey).toBe('2026-11-09')
   })
 
-  it('summarizes the selected week', () => {
+  it('builds day headers for the selected week', () => {
+    seed()
     const store = useSummaryStore()
-    const workspace = useWorkspaceStore()
-    workspace.setCurrentWeekKey('2026-11-02')
-    workspace.setMembers([
-      {
-        id: 'member-1',
-        name: 'Ada',
-        duty: 'employee',
-        contract: 'fulltime',
-        weeklyHours: 40,
-        holidays: [],
-        active: true,
-        startDate: '2025-01-15',
-      },
-      {
-        id: 'member-2',
-        name: 'Bo',
-        duty: 'employee',
-        contract: 'part_time',
-        weeklyHours: 20,
-        holidays: [],
-        active: true,
-        startDate: '2026-02-01',
-      },
+
+    expect(store.dayHeaders).toEqual([
+      { weekday: 'monday', dayOfMonth: 2 },
+      { weekday: 'tuesday', dayOfMonth: 3 },
+      { weekday: 'wednesday', dayOfMonth: 4 },
+      { weekday: 'thursday', dayOfMonth: 5 },
+      { weekday: 'friday', dayOfMonth: 6 },
+      { weekday: 'saturday', dayOfMonth: 7 },
+      { weekday: 'sunday', dayOfMonth: 8 },
     ])
-    workspace.setShiftsForWeek('2026-11-02', shifts)
-
-    expect(store.weekRangeLabel).toBe('Nov 2 – Nov 8, 2026')
-    expect(store.totalShifts).toBe(3)
-    expect(store.assignedMemberCount).toBe(2)
   })
 
-  it('reformats the week range when the locale changes', () => {
+  it('derives rows from workspace members, shifts and days off', () => {
+    seed()
     const store = useSummaryStore()
-    const localeStore = useLocaleStore()
-    const workspace = useWorkspaceStore()
-    workspace.setCurrentWeekKey('2026-11-02')
+
+    expect(store.rows).toHaveLength(1)
+    expect(store.rows[0].memberId).toBe('member-1')
+    expect(store.rows[0].cells.monday).toEqual({
+      kind: 'shifts',
+      shifts: [{ id: 'shift-1', startMinute: 540, endMinute: 720, label: '09:00–12:00' }],
+    })
+    expect(store.rows[0].cells.tuesday).toEqual({ kind: 'off' })
+  })
+
+  it('moves the shared week backwards and forwards', () => {
+    const workspace = seed()
+    const store = useSummaryStore()
+
+    store.goToNextWeek()
+    expect(workspace.currentWeekKey).toBe('2026-11-09')
+
+    store.goToPreviousWeek()
+    expect(workspace.currentWeekKey).toBe(weekKey)
+  })
+
+  it('returns to the current week', () => {
+    const workspace = seed()
+    const store = useSummaryStore()
+
+    store.goToNextWeek()
+    store.goToCurrentWeek()
+
+    expect(workspace.currentWeekKey).toBe(getWeekKey(new Date()))
+  })
+
+  it('localizes the week range live', async () => {
+    seed()
+    const store = useSummaryStore()
 
     expect(store.weekRangeLabel).toBe('Nov 2 – Nov 8, 2026')
 
-    localeStore.setLocale('es')
-
+    useLocaleStore().setLocale('es')
     expect(store.weekRangeLabel).toBe('2 nov – 8 nov, 2026')
   })
 
-  it('resolves member names and labels unknown members', () => {
+  it('uses full zoom for a small roster', () => {
+    seed()
     const store = useSummaryStore()
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([
-      {
-        id: 'member-1',
-        name: 'Ada',
-        duty: 'manager',
-        contract: 'fulltime',
-        weeklyHours: 40,
-        holidays: [],
-        active: true,
-        startDate: '2025-01-15',
-      },
-    ])
 
-    expect(store.memberNameOf('member-1')).toBe('Ada')
-    expect(store.memberNameOf('missing')).toBeNull()
+    expect(store.printZoom).toBe(1)
+  })
+
+  it('reduces zoom for a large roster', () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers(
+      Array.from({ length: 61 }, (_, index) => ({
+        ...ada,
+        id: `member-${index}`,
+        name: `Member ${String(index).padStart(2, '0')}`,
+      })),
+    )
+    workspace.setCurrentWeekKey(weekKey)
+    workspace.setShiftsForWeek(
+      weekKey,
+      Array.from({ length: 61 }, (_, index) => ({
+        ...mondayShift,
+        id: `shift-${index}`,
+        memberId: `member-${index}`,
+      })),
+    )
+
+    const store = useSummaryStore()
+
+    expect(store.printZoom).toBe(0.5)
   })
 })

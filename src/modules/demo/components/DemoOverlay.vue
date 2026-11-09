@@ -31,59 +31,34 @@
         <div class="demo-ring__inner" />
       </div>
 
-      <!-- Narration Card -->
+      <!-- Click Area -->
       <div
-        class="demo-narration"
-        role="status"
-        aria-live="polite"
-        :aria-label="t('demo.narrationAria')"
-        data-test="demo-narration"
+        v-if="demoStore.click.visible"
+        :key="demoStore.click.id"
+        class="demo-click"
+        :style="clickStyle"
+        aria-hidden="true"
+        data-test="demo-click"
       >
-        <div class="demo-narration__progress" :aria-label="progressAria">
-          {{ t('demo.progress', { current: demoStore.stepIndex + 1, total: demoStore.totalSteps }) }}
-        </div>
-        <p class="demo-narration__text">{{ narrationText }}</p>
-
-        <!-- Controls -->
-        <div class="demo-controls" role="group" :aria-label="t('demo.controlsAria')">
-          <button
-            type="button"
-            class="demo-controls__btn"
-            :aria-label="t('demo.previous')"
-            :disabled="demoStore.stepIndex === 0 || demoStore.status === 'paused'"
-            @click="handlePrevious"
-          >
-            {{ t('demo.previous') }}
-          </button>
-
-          <button
-            type="button"
-            class="demo-controls__btn demo-controls__btn--primary"
-            :aria-label="demoStore.status === 'paused' ? t('demo.resume') : t('demo.pause')"
-            @click="handlePauseResume"
-          >
-            {{ demoStore.status === 'paused' ? t('demo.resume') : t('demo.pause') }}
-          </button>
-
-          <button
-            type="button"
-            class="demo-controls__btn"
-            :aria-label="demoStore.stepIndex === demoStore.totalSteps - 1 ? t('demo.finish') : t('demo.next')"
-            @click="handleNext"
-          >
-            {{ demoStore.stepIndex === demoStore.totalSteps - 1 ? t('demo.finish') : t('demo.next') }}
-          </button>
-
-          <button
-            type="button"
-            class="demo-controls__btn demo-controls__btn--exit"
-            :aria-label="t('demo.exitAria')"
-            @click="handleExit"
-          >
-            {{ t('demo.exit') }}
-          </button>
-        </div>
+        <span class="demo-click__circle" />
+        <span class="demo-click__dot" />
       </div>
+
+      <!-- Floating Narration -->
+      <Transition name="demo-callout">
+        <div
+          v-if="showNarration"
+          class="demo-callout"
+          :class="`demo-callout--${bubblePlacement}`"
+          :style="bubbleStyle"
+          role="status"
+          aria-live="polite"
+          :aria-label="t('demo.narrationAria')"
+          data-test="demo-narration"
+        >
+          <p class="demo-callout__text">{{ narrationText }}</p>
+        </div>
+      </Transition>
     </template>
 
     <!-- Restored Toast -->
@@ -101,22 +76,46 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import type { CSSProperties } from 'vue'
 import { useI18n } from '@/shared/i18n'
+import type { MessageKey } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
-import {
-  pauseEngine,
-  resumeEngine,
-  nextStep,
-  previousStep,
-} from '@/modules/demo/player/engine'
 import { stopDemo } from '@/modules/demo/utils/demoSession'
 import { prefersReducedMotion } from '@/modules/demo/utils/dom'
+
+const BUBBLE_MAX_WIDTH = 320
+const BUBBLE_GAP = 14
+const BUBBLE_MARGIN = 12
+const BUBBLE_PREFERRED_SPACE = 170
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
 const reducedMotion = ref(false)
+const viewport = ref({ width: window.innerWidth, height: window.innerHeight })
 
 const isActive = computed(() => demoStore.status === 'running' || demoStore.status === 'paused')
+
+const narrationText = computed(() =>
+  demoStore.currentStep
+    ? t(demoStore.currentStep.narrationKey as MessageKey)
+    : '',
+)
+
+const showNarration = computed(
+  () => isActive.value && narrationText.value.length > 0,
+)
+
+const bubblePlacement = computed<'above' | 'below' | 'center'>(() => {
+  const rect = demoStore.narrationAnchor
+  if (!rect) return 'center'
+
+  const spaceAbove = rect.top
+  const spaceBelow = viewport.value.height - rect.bottom
+
+  if (spaceAbove >= BUBBLE_PREFERRED_SPACE) return 'above'
+  if (spaceBelow >= BUBBLE_PREFERRED_SPACE) return 'below'
+  return spaceAbove >= spaceBelow ? 'above' : 'below'
+})
 
 const cursorStyle = computed(() => {
   const { x, y } = demoStore.cursor
@@ -138,40 +137,60 @@ const ringStyle = computed(() => {
   }
 })
 
-const narrationText = computed(() => {
-  const step = demoStore.currentStep
-  if (!step) return ''
-  return t(step.narrationKey as import('@/shared/i18n/messages/en').MessageKey)
-})
+const clickStyle = computed(() => ({
+  left: `${demoStore.click.x}px`,
+  top: `${demoStore.click.y}px`,
+}))
 
-const progressAria = computed(() => {
-  return `${demoStore.stepIndex + 1} of ${demoStore.totalSteps}`
-})
+type CalloutStyle = CSSProperties & { '--callout-tail-x'?: string }
 
-function handlePrevious(): void {
-  previousStep()
-}
+const bubbleStyle = computed<CalloutStyle>(() => {
+  const maxWidth = Math.min(
+    BUBBLE_MAX_WIDTH,
+    Math.max(BUBBLE_MARGIN * 2, viewport.value.width - BUBBLE_MARGIN * 2),
+  )
+  const rect = demoStore.narrationAnchor
 
-function handleNext(): void {
-  nextStep()
-}
-
-async function handlePauseResume(): Promise<void> {
-  if (demoStore.status === 'paused') {
-    await resumeEngine()
-  } else {
-    await pauseEngine()
+  if (!rect) {
+    return {
+      left: '50%',
+      top: '50%',
+      maxWidth: `${maxWidth}px`,
+      transform: 'translate(-50%, -50%)',
+    }
   }
-}
 
-async function handleExit(): Promise<void> {
-  await stopDemo()
+  const halfWidth = maxWidth / 2
+  const targetCenter = rect.left + rect.width / 2
+  const left = Math.min(
+    Math.max(targetCenter, BUBBLE_MARGIN + halfWidth),
+    viewport.value.width - BUBBLE_MARGIN - halfWidth,
+  )
+  const placement = bubblePlacement.value
+  const top = placement === 'above' ? rect.top - BUBBLE_GAP : rect.bottom + BUBBLE_GAP
+  const translateY = placement === 'above' ? '-100%' : '0'
+  const tailX = Math.min(
+    Math.max(targetCenter - (left - halfWidth), 16),
+    maxWidth - 16,
+  )
+
+  return {
+    left: `${left}px`,
+    top: `${top}px`,
+    maxWidth: `${maxWidth}px`,
+    transform: `translate(-50%, ${translateY})`,
+    '--callout-tail-x': `${tailX}px`,
+  }
+})
+
+function updateViewport(): void {
+  viewport.value = { width: window.innerWidth, height: window.innerHeight }
 }
 
 function handleKeydownEscape(e: KeyboardEvent): void {
   if (!isActive.value) return
   if (e.key === 'Escape') {
-    handleExit()
+    stopDemo()
   }
 }
 
@@ -179,6 +198,8 @@ let keydownHandlerAttached = false
 
 onMounted(() => {
   reducedMotion.value = prefersReducedMotion()
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
 
   if (!keydownHandlerAttached) {
     document.addEventListener('keydown', handleKeydownEscape)
@@ -187,6 +208,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', updateViewport)
+
   if (keydownHandlerAttached) {
     document.removeEventListener('keydown', handleKeydownEscape)
     keydownHandlerAttached = false
@@ -263,96 +286,101 @@ onUnmounted(() => {
   }
 }
 
-.demo-narration {
+.demo-click {
   position: fixed;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
   z-index: 10002;
-  max-width: 90vw;
-  width: 40rem;
-  pointer-events: auto;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.demo-click__circle {
+  display: block;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--color-accent) 20%, transparent),
+    0 0 14px color-mix(in srgb, var(--color-accent) 60%, transparent);
+  animation: demo-click-pop 0.45s ease-out;
+}
+
+.demo-click__dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--color-accent);
+  transform: translate(-50%, -50%);
+}
+
+@keyframes demo-click-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.demo-callout {
+  position: fixed;
+  z-index: 10003;
+  pointer-events: none;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: var(--shadow-lg);
-  font-size: 0.95rem;
-  line-height: 1.5;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
-.demo-narration__progress {
-  margin-bottom: 0.5rem;
-  color: var(--color-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.demo-callout__text {
+  margin: 0;
 }
 
-.demo-narration__text {
-  margin: 0 0 1rem;
+.demo-callout::after {
+  content: '';
+  position: absolute;
+  left: var(--callout-tail-x, 50%);
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 0.5rem solid transparent;
+  border-right: 0.5rem solid transparent;
 }
 
-.demo-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.demo-callout--above::after {
+  bottom: -0.5rem;
+  border-top: 0.5rem solid var(--color-accent);
 }
 
-.demo-controls__btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text);
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+.demo-callout--below::after {
+  top: -0.5rem;
+  border-bottom: 0.5rem solid var(--color-accent);
 }
 
-.demo-controls__btn:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+.demo-callout--center::after {
+  display: none;
 }
 
-.demo-controls__btn:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+.demo-callout-enter-active,
+.demo-callout-leave-active {
+  transition: opacity 0.18s ease;
 }
 
-.demo-controls__btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.demo-controls__btn--primary {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-}
-
-.demo-controls__btn--primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-  border-color: var(--color-accent);
-  color: var(--color-on-accent);
-}
-
-.demo-controls__btn--exit {
-  margin-left: auto;
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-}
-
-.demo-controls__btn--exit:hover:not(:disabled) {
-  background: var(--color-inactive-bg);
-  border-color: var(--color-danger);
-  color: var(--color-danger);
+.demo-callout-enter-from,
+.demo-callout-leave-to {
+  opacity: 0;
 }
 
 .demo-restored {
@@ -390,35 +418,19 @@ onUnmounted(() => {
   }
 }
 
-@media (max-width: 480px) {
-  .demo-narration {
-    bottom: 1rem;
-    left: 1rem;
-    right: 1rem;
-    width: auto;
-    transform: none;
-  }
-
-  .demo-controls {
-    width: 100%;
-  }
-
-  .demo-controls__btn {
-    flex: 1;
-    text-align: center;
-    padding: 0.5rem;
-  }
-
-  .demo-controls__btn--exit {
-    margin-left: 0;
-    width: 100%;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .demo-cursor,
   .demo-ring {
     display: none !important;
+  }
+
+  .demo-click__circle {
+    animation: none;
+  }
+
+  .demo-callout-enter-active,
+  .demo-callout-leave-active {
+    transition: none;
   }
 
   .demo-restored {

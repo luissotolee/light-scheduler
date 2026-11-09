@@ -132,6 +132,7 @@ export async function nextStep(): Promise<void> {
     const demoStore = useDemoStore()
     demoStore.setStep(state.stepIndex)
     demoStore.setCurrentStep(state.scenario.steps[state.stepIndex])
+    resetStepVisuals()
   } else {
     await finishDemo()
   }
@@ -146,6 +147,7 @@ export async function previousStep(): Promise<void> {
     const demoStore = useDemoStore()
     demoStore.setStep(state.stepIndex)
     demoStore.setCurrentStep(state.scenario.steps[state.stepIndex])
+    resetStepVisuals()
   }
 }
 
@@ -222,8 +224,17 @@ async function runSteps(token: number): Promise<'completed' | 'stopped'> {
   return 'stopped'
 }
 
+function resetStepVisuals(): void {
+  const demoStore = useDemoStore()
+  demoStore.setCursor(0, 0, false)
+  demoStore.setRing(null, false)
+  demoStore.hideClick()
+  demoStore.setNarrationAnchor(null)
+}
+
 async function executeStep(step: DemoStep, signal: AbortSignal): Promise<void> {
   const demoStore = useDemoStore()
+  resetStepVisuals()
 
   switch (step.action) {
     case 'navigate': {
@@ -251,62 +262,54 @@ async function executeStep(step: DemoStep, signal: AbortSignal): Promise<void> {
       scrollIntoView(target.element)
 
       const center = getRectCenter(target.rect!)
+      demoStore.setNarrationAnchor(target.rect!)
       demoStore.setCursor(center.x, center.y, true)
+      demoStore.setRing(target.rect!, true)
 
       if (step.action === 'spotlight') {
-        demoStore.setRing(target.rect!, true)
         if (!state.reducedMotion) {
           await sleep(800, signal)
         }
         demoStore.setRing(null, false)
-      } else if (step.action === 'click') {
-        demoStore.setRing(target.rect!, true)
-        clickElement(target.element)
-        demoStore.setRing(null, false)
+      } else {
+        demoStore.showClick(center.x, center.y)
+        if (step.action === 'click') {
+          clickElement(target.element)
+        } else if (step.action === 'pointerClick') {
+          pointerClickElement(target.element)
+        } else if (step.action === 'press') {
+          pressKey(target.element, step.key)
+        } else if (step.action === 'fill') {
+          fillInput(target.element, step.value)
+        }
         if (!state.reducedMotion) {
           await sleep(300, signal)
         }
-      } else if (step.action === 'pointerClick') {
-        demoStore.setRing(target.rect!, true)
-        pointerClickElement(target.element)
         demoStore.setRing(null, false)
-        if (!state.reducedMotion) {
-          await sleep(300, signal)
-        }
-      } else if (step.action === 'press') {
-        demoStore.setRing(target.rect!, true)
-        pressKey(target.element, step.key)
-        demoStore.setRing(null, false)
-        if (!state.reducedMotion) {
-          await sleep(300, signal)
-        }
-      } else if (step.action === 'fill') {
-        demoStore.setRing(target.rect!, true)
-        fillInput(target.element, step.value)
-        demoStore.setRing(null, false)
-        if (!state.reducedMotion) {
-          await sleep(300, signal)
-        }
       }
       break
     }
 
     case 'wait': {
       if (step.waitFor) {
-        await waitForTarget(step.waitFor, { timeoutMs: 5000 })
+        const target = await waitForTarget(step.waitFor, { timeoutMs: 5000 })
+        if (target.rect) {
+          demoStore.setNarrationAnchor(target.rect)
+          demoStore.setRing(target.rect, true)
+          if (!state.reducedMotion) {
+            await sleep(800, signal)
+          }
+          demoStore.setRing(null, false)
+        }
       }
       break
     }
   }
-
-  demoStore.setCursor(0, 0, false)
 }
 
 async function finishDemo(): Promise<void> {
   state.status = 'finishing'
-  const demoStore = useDemoStore()
-  demoStore.setCursor(0, 0, false)
-  demoStore.setRing(null, false)
+  resetStepVisuals()
   await stopEngine()
 }
 

@@ -1,0 +1,157 @@
+﻿<template>
+  <Dialog
+    :visible="visible"
+    modal
+    :header="t('demo.picker.title')"
+    class="demo-picker"
+    data-test="demo-picker"
+    @update:visible="emit('update:visible', $event)"
+  >
+    <p class="demo-picker__description">{{ t('demo.picker.description') }}</p>
+
+    <div
+      class="demo-picker__options"
+      role="group"
+      :aria-label="t('demo.picker.optionsAria')"
+    >
+      <button
+        v-for="option in options"
+        :key="option.id"
+        type="button"
+        class="demo-picker__option"
+        :data-test="`demo-option-${option.key}`"
+        @click="emit('select', option.id)"
+      >
+        <i class="demo-picker__icon" :class="option.icon" aria-hidden="true" />
+        <span class="demo-picker__option-title">{{ t(option.titleKey) }}</span>
+        <span class="demo-picker__option-description">{{ t(option.descriptionKey) }}</span>
+      </button>
+    </div>
+
+    <div class="demo-picker__actions">
+      <Button
+        type="button"
+        :label="t('common.cancel')"
+        severity="secondary"
+        data-test="demo-picker-cancel"
+        @click="emit('update:visible', false)"
+      />
+    </div>
+  </Dialog>
+</template>
+
+<script setup lang="ts">
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import { useI18n } from '@/shared/i18n'
+import type { MessageKey } from '@/shared/i18n'
+
+defineProps<{
+  visible: boolean
+}>()
+
+const emit = defineEmits<{
+  'update:visible': [visible: boolean]
+  select: [scenarioId: string]
+}>()
+
+interface DemoPickerOption {
+  id: string
+  key: string
+  icon: string
+  titleKey: MessageKey
+  descriptionKey: MessageKey
+}
+
+const options: DemoPickerOption[] = [
+  {
+    id: 'employees-demo',
+    key: 'employees',
+    icon: 'pi pi-users',
+    titleKey: 'demo.picker.employees',
+    descriptionKey: 'demo.picker.employeesDescription',
+  },
+  {
+    id: 'scheduler-demo',
+    key: 'scheduler',
+    icon: 'pi pi-calendar',
+    titleKey: 'demo.picker.scheduler',
+    descriptionKey: 'demo.picker.schedulerDescription',
+  },
+  {
+    id: 'summary-demo',
+    key: 'summary',
+    icon: 'pi pi-table',
+    titleKey: 'demo.picker.summary',
+    descriptionKey: 'demo.picker.summaryDescription',
+  },
+]
+
+const { t } = useI18n()
+</script>
+
+<style scoped>
+.demo-picker__description {
+  margin: 0 0 1rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.demo-picker__options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.demo-picker__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.demo-picker__option:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface-alt);
+}
+
+.demo-picker__option:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.demo-picker__icon {
+  color: var(--color-accent);
+  font-size: 1.25rem;
+}
+
+.demo-picker__option-title {
+  font-weight: 700;
+}
+
+.demo-picker__option-description {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.demo-picker__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 48rem) {
+  .demo-picker__options {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

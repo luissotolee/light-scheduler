@@ -84,3 +84,10 @@ export interface DemoRing {
   rect: DOMRect | null
   visible: boolean
 }
+
+export interface DemoClick {
+  x: number
+  y: number
+  id: number
+  visible: boolean
+}
