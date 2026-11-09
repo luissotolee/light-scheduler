@@ -230,20 +230,30 @@ onUnmounted(() => {
   position: fixed;
   z-index: 10001;
   pointer-events: none;
-  color: var(--color-accent);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  color: var(--color-demo-cursor);
+  filter:
+    drop-shadow(0 0 2px var(--color-bg))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
   transition: left 0.15s ease-out, top 0.15s ease-out;
   will-change: left, top;
 }
 
 .demo-cursor__svg {
   display: block;
+  overflow: visible;
+}
+
+.demo-cursor__svg path {
+  stroke: var(--color-bg);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  paint-order: stroke;
 }
 
 .demo-cursor__ripple {
   position: absolute;
   inset: -8px;
-  border: 2px solid var(--color-accent);
+  border: 2px solid var(--color-demo-cursor);
   border-radius: 50%;
   animation: demo-ripple 0.6s ease-out forwards;
 }

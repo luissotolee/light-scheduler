@@ -63,6 +63,20 @@ export const employeesDemoScenario: DemoScenario = {
       pauseMs: 1400,
     },
     {
+      id: 'employees-form-duty',
+      action: 'spotlight',
+      target: { testId: 'employee-duty-select' },
+      narrationKey: 'demo.scenario.employees.formDuty',
+      pauseMs: 1600,
+    },
+    {
+      id: 'employees-form-contract',
+      action: 'spotlight',
+      target: { testId: 'employee-contract-group' },
+      narrationKey: 'demo.scenario.employees.formContract',
+      pauseMs: 1600,
+    },
+    {
       id: 'employees-form-phone',
       action: 'fill',
       target: { testId: 'employee-phone-input' },
@@ -79,20 +93,6 @@ export const employeesDemoScenario: DemoScenario = {
       pauseMs: 1400,
     },
     {
-      id: 'employees-form-duty',
-      action: 'spotlight',
-      target: { testId: 'employee-duty-select' },
-      narrationKey: 'demo.scenario.employees.formDuty',
-      pauseMs: 1600,
-    },
-    {
-      id: 'employees-form-contract',
-      action: 'spotlight',
-      target: { testId: 'employee-contract-group' },
-      narrationKey: 'demo.scenario.employees.formContract',
-      pauseMs: 1600,
-    },
-    {
       id: 'employees-form-hours',
       action: 'fill',
       target: { testId: 'employee-hours-input' },
@@ -105,6 +105,14 @@ export const employeesDemoScenario: DemoScenario = {
       action: 'spotlight',
       target: { testId: 'employee-start-date' },
       narrationKey: 'demo.scenario.employees.formStartDate',
+      pauseMs: 1600,
+    },
+    {
+      id: 'employees-form-comment',
+      action: 'fill',
+      target: { testId: 'employee-comment-input' },
+      value: 'Available weekday mornings',
+      narrationKey: 'demo.scenario.employees.formComment',
       pauseMs: 1600,
     },
     {
@@ -134,6 +142,13 @@ export const employeesDemoScenario: DemoScenario = {
       waitFor: 'details-duty',
       narrationKey: 'demo.scenario.employees.detailsDialog',
       pauseMs: 2000,
+    },
+    {
+      id: 'employees-details-comment',
+      action: 'spotlight',
+      target: { testId: 'details-comment' },
+      narrationKey: 'demo.scenario.employees.detailsComment',
+      pauseMs: 1600,
     },
     {
       id: 'employees-details-close',

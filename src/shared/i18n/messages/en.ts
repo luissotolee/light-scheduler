@@ -300,12 +300,16 @@ export const en = {
   'demo.scenario.employees.formHours': 'Set the weekly hours. This field is required.',
   'demo.scenario.employees.formStartDate':
     'Pick the start date used to decide when the employee can be scheduled.',
+  'demo.scenario.employees.formComment':
+    'Add an optional comment for notes such as availability or shift preferences.',
   'demo.scenario.employees.save': 'Save the employee to add them to the team.',
   'demo.scenario.employees.saved': 'The new employee now appears in the list.',
   'demo.scenario.employees.details':
     "Select a name to open the employee's details and holiday weeks.",
   'demo.scenario.employees.detailsDialog':
-    'The details dialog summarizes role, contract, hours, contact and holidays.',
+    'The details dialog summarizes role, contract, hours, contact, comments and holidays.',
+  'demo.scenario.employees.detailsComment':
+    'Any comments saved on the employee appear at the end of the details.',
   'demo.scenario.employees.closeDetails': 'Close the details to return to the list.',
   'demo.scenario.employees.holidays': 'Open the holiday calendar for an employee.',
   'demo.scenario.employees.holidaysPick': 'Pick the weeks this employee is on holiday.',
@@ -349,7 +353,7 @@ export const en = {
   'demo.scenario.scheduler.hours':
     'The weekly hours table compares scheduled hours with contract hours.',
   'demo.scenario.scheduler.restart':
-    'Use restart week to clear all shifts and days off for the current week.',
+    'Use Clear all to remove every shift and day off from the current week.',
   'demo.scenario.scheduler.confirmRestart':
     'Confirm to clear the week. This only affects the demo data.',
   'demo.scenario.scheduler.restarted': 'The current week is now empty.',

@@ -312,12 +312,16 @@ export const es: Messages = {
   'demo.scenario.employees.formHours': 'Define las horas semanales. Este campo es obligatorio.',
   'demo.scenario.employees.formStartDate':
     'Elige la fecha de inicio que decide cuándo se puede planificar al empleado.',
+  'demo.scenario.employees.formComment':
+    'Añade un comentario opcional para notas como disponibilidad o preferencias de turno.',
   'demo.scenario.employees.save': 'Guarda el empleado para añadirlo al equipo.',
   'demo.scenario.employees.saved': 'El nuevo empleado ya aparece en la lista.',
   'demo.scenario.employees.details':
     'Selecciona un nombre para abrir los detalles del empleado y sus semanas de vacaciones.',
   'demo.scenario.employees.detailsDialog':
-    'El diálogo de detalles resume rol, contrato, horas, contacto y vacaciones.',
+    'El diálogo de detalles resume rol, contrato, horas, contacto, comentarios y vacaciones.',
+  'demo.scenario.employees.detailsComment':
+    'Los comentarios guardados del empleado aparecen al final de los detalles.',
   'demo.scenario.employees.closeDetails': 'Cierra los detalles para volver a la lista.',
   'demo.scenario.employees.holidays': 'Abre el calendario de vacaciones de un empleado.',
   'demo.scenario.employees.holidaysPick':
@@ -368,7 +372,7 @@ export const es: Messages = {
   'demo.scenario.scheduler.hours':
     'La tabla de horas semanales compara las horas planificadas con las del contrato.',
   'demo.scenario.scheduler.restart':
-    'Usa reiniciar semana para borrar los turnos y días libres de la semana actual.',
+    'Usa Borrar todo para eliminar todos los turnos y días libres de la semana actual.',
   'demo.scenario.scheduler.confirmRestart':
     'Confirma para vaciar la semana. Solo afecta a los datos de la demostración.',
   'demo.scenario.scheduler.restarted': 'La semana actual ya está vacía.',
