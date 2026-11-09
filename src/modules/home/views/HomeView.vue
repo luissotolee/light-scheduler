@@ -6,9 +6,12 @@
 
     <ul class="home__features">
       <li v-for="feature in features" :key="feature.path" class="home__feature">
-        <RouterLink class="home__feature-link" :to="feature.path">
-          {{ t(feature.titleKey) }}
-        </RouterLink>
+        <div class="home__feature-header">
+          <i class="home__feature-icon" :class="feature.icon" aria-hidden="true" />
+          <RouterLink class="home__feature-link" :to="feature.path">
+            {{ t(feature.titleKey) }}
+          </RouterLink>
+        </div>
         <p class="home__feature-description">{{ t(feature.descriptionKey) }}</p>
       </li>
     </ul>
@@ -29,21 +32,25 @@ const features = [
     titleKey: 'home.feature.scheduler.title',
     descriptionKey: 'home.feature.scheduler.description',
     path: '/scheduler',
+    icon: 'pi pi-calendar',
   },
   {
     titleKey: 'home.feature.employees.title',
     descriptionKey: 'home.feature.employees.description',
     path: '/employees',
+    icon: 'pi pi-users',
   },
   {
     titleKey: 'home.feature.summary.title',
     descriptionKey: 'home.feature.summary.description',
     path: '/summary',
+    icon: 'pi pi-table',
   },
   {
     titleKey: 'home.feature.archive.title',
     descriptionKey: 'home.feature.archive.description',
     path: '/archive',
+    icon: 'pi pi-file-export',
   },
 ] as const
 </script>
@@ -75,6 +82,17 @@ const features = [
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+}
+
+.home__feature-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home__feature-icon {
+  color: var(--color-accent);
+  font-size: 1.25rem;
 }
 
 .home__feature-link {
