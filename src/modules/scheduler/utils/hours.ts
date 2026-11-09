@@ -1,31 +1,5 @@
 import type { Duty, Shift, TeamMember } from '@/types'
-
-export const WEEKLY_HOURS_GROUP_ORDER: readonly Duty[] = [
-  'head_manager',
-  'assistant',
-  'manager',
-  'employee',
-]
-
-export function dutyRank(duty: Duty): number {
-  const index = WEEKLY_HOURS_GROUP_ORDER.indexOf(duty)
-  return index === -1 ? WEEKLY_HOURS_GROUP_ORDER.length : index
-}
-
-export function compareNames(a: string, b: string): number {
-  return a.localeCompare(b, undefined, { sensitivity: 'base' })
-}
-
-export function compareMembersByDuty(
-  a: Pick<TeamMember, 'id' | 'name' | 'duty'>,
-  b: Pick<TeamMember, 'id' | 'name' | 'duty'>,
-): number {
-  return (
-    dutyRank(a.duty) - dutyRank(b.duty) ||
-    compareNames(a.name, b.name) ||
-    a.id.localeCompare(b.id)
-  )
-}
+import { DUTY_SORT_ORDER, compareNames } from '@/shared/utils/employee'
 
 export interface WeeklyHoursRow {
   memberId: string
@@ -93,7 +67,7 @@ export function buildWeeklyHoursGroups(
   }
 
   const groups: WeeklyHoursGroup[] = []
-  for (const duty of WEEKLY_HOURS_GROUP_ORDER) {
+  for (const duty of DUTY_SORT_ORDER) {
     const rows = rowsByDuty.get(duty)
     if (!rows || rows.length === 0) continue
     rows.sort((a, b) => compareNames(a.name, b.name) || a.memberId.localeCompare(b.memberId))

@@ -120,6 +120,7 @@ function isMembersShape(value: unknown): boolean {
     parseIsoDate(value.startDate) !== null &&
     isOptionalString(value.email) &&
     isOptionalString(value.phone) &&
+    isOptionalString(value.comment) &&
     isOptionalIsoDate(value.endDate)
   )
 }

@@ -49,6 +49,7 @@ export interface BackupEmployee {
   holidays: HolidayWeek[]
   email?: string
   phone?: string
+  comment?: string
   active: boolean
   startDate: string
   endDate?: string
@@ -168,6 +169,10 @@ function parseBackupEmployee(value: unknown): Parsed<BackupEmployee> {
   if (phone !== undefined && typeof phone !== 'string') {
     return { ok: false, error: 'errors.invalidPhone' }
   }
+  const comment = value.comment
+  if (comment !== undefined && typeof comment !== 'string') {
+    return { ok: false, error: 'errors.invalidComment' }
+  }
 
   return {
     ok: true,
@@ -180,6 +185,7 @@ function parseBackupEmployee(value: unknown): Parsed<BackupEmployee> {
       holidays,
       ...(email ? { email } : {}),
       ...(phone ? { phone } : {}),
+      ...(comment?.trim() ? { comment: comment.trim() } : {}),
       active: value.active,
       startDate,
       ...(endDate ? { endDate } : {}),
@@ -310,6 +316,7 @@ function toBackupEmployee(member: TeamMember): BackupEmployee {
     })),
     ...(member.email ? { email: member.email } : {}),
     ...(member.phone ? { phone: member.phone } : {}),
+    ...(member.comment ? { comment: member.comment } : {}),
     active: member.active,
     startDate: member.startDate,
     ...(member.endDate ? { endDate: member.endDate } : {}),
@@ -432,6 +439,7 @@ export function parseBackup(value: unknown): BackupParseResult {
       holidays: employee.holidays,
       ...(employee.email ? { email: employee.email } : {}),
       ...(employee.phone ? { phone: employee.phone } : {}),
+      ...(employee.comment ? { comment: employee.comment } : {}),
       active: employee.active,
       startDate: employee.startDate,
       ...(employee.endDate ? { endDate: employee.endDate } : {}),

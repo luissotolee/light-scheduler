@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
+import Tooltip from 'primevue/tooltip'
 import ArchiveView from '@/modules/archive/views/ArchiveView.vue'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
@@ -56,7 +57,11 @@ describe('ArchiveView', () => {
 
   function mountView() {
     return mount(ArchiveView, {
-      global: { plugins: [pinia, PrimeVue], stubs: { teleport: true } },
+      global: {
+        plugins: [pinia, PrimeVue],
+        directives: { tooltip: Tooltip },
+        stubs: { teleport: true },
+      },
     })
   }
 
@@ -111,7 +116,10 @@ describe('ArchiveView', () => {
 
     expect(wrapper.find('[data-test="export-backup"]').attributes('disabled')).toBeDefined()
     expect(wrapper.find('[data-test="upload-backup"]').attributes('disabled')).toBeUndefined()
-    expect(wrapper.text()).toContain('Download a compressed backup')
+    expect(
+      wrapper.find('[data-test="page-header-info"]').attributes('aria-label'),
+    ).toContain('Download a compressed backup')
+    expect(wrapper.find('.page-header__description').exists()).toBe(false)
     expect(wrapper.find('[data-test="status"]').exists()).toBe(false)
   })
 
@@ -136,7 +144,12 @@ describe('ArchiveView', () => {
       expect(wrapper.find('[data-test="status"]').exists()).toBe(true)
     })
 
-    expect(wrapper.find('[data-test="status"]').text()).toBe('Backup downloaded')
+    const status = wrapper.find('[data-test="status"]')
+    expect(status.text()).toBe('Backup downloaded')
+    expect(status.attributes('data-pd-tooltip')).toBeDefined()
+    expect(status.classes()).toContain('archive__status--success')
+    expect(status.find('.pi-check-circle').exists()).toBe(true)
+    expect(wrapper.find('p[data-test="status"]').exists()).toBe(false)
     expect(downloadName).toMatch(/^backup-.*\.json\.gz$/)
     expect(blobs).toHaveLength(1)
   })
@@ -156,7 +169,11 @@ describe('ArchiveView', () => {
 
     await wrapper.find('[data-test="confirm-accept"]').trigger('click')
 
-    expect(wrapper.find('[data-test="status"]').text()).toBe('Backup restored')
+    const status = wrapper.find('[data-test="status"]')
+    expect(status.text()).toBe('Backup restored')
+    expect(status.attributes('data-pd-tooltip')).toBeDefined()
+    expect(status.classes()).toContain('archive__status--success')
+    expect(status.find('.pi-check-circle').exists()).toBe(true)
     expect(workspace.members).toHaveLength(1)
     expect(workspace.members[0]).toMatchObject({ empId: 'EMP-0001', name: 'Ada' })
     expect(workspace.schedules['2026-11-02']).toHaveLength(1)
@@ -200,9 +217,11 @@ describe('ArchiveView', () => {
       expect(wrapper.find('[data-test="status"]').exists()).toBe(true)
     })
 
-    expect(wrapper.find('[data-test="status"]').text()).toBe(
-      'This file is not a valid Light Scheduler backup',
-    )
+    const status = wrapper.find('[data-test="status"]')
+    expect(status.text()).toBe('This file is not a valid Light Scheduler backup')
+    expect(status.attributes('data-pd-tooltip')).toBeDefined()
+    expect(status.classes()).toContain('archive__status--error')
+    expect(status.find('.pi-exclamation-circle').exists()).toBe(true)
   })
 
   it('renders Spanish copy and statuses live', async () => {

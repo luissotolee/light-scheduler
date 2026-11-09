@@ -9,6 +9,7 @@
     <div class="scheduler__toolbar-wrapper">
       <div class="scheduler__toolbar">
         <Button
+          v-tooltip.top="t('scheduler.previousWeek')"
           type="button"
           icon="pi pi-chevron-left"
           size="small"
@@ -24,6 +25,7 @@
         </div>
 
         <Button
+          v-tooltip.top="t('scheduler.nextWeek')"
           type="button"
           icon="pi pi-chevron-right"
           size="small"

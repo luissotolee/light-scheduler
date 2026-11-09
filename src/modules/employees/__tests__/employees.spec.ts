@@ -15,6 +15,7 @@ const ada: TeamMember = {
   holidays: [{ year: 2026, week: 10 }],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  comment: 'No morning shifts',
   active: true,
   startDate: '2025-01-15',
 }
@@ -84,6 +85,7 @@ describe('employees store', () => {
     expect(added?.name).toBe('Ada')
     expect(added?.email).toBeUndefined()
     expect(added?.phone).toBe('+1 555 010 0000')
+    expect(added?.comment).toBeUndefined()
     expect(added?.id).toBeTruthy()
     expect(added?.duty).toBe('employee')
     expect(added?.contract).toBe('fulltime')
@@ -106,6 +108,16 @@ describe('employees store', () => {
 
     expect(added?.email).toBe('ada@example.com')
     expect(added?.holidays).toEqual([])
+  })
+
+  it('adds a trimmed comment and omits a blank one', () => {
+    const store = useEmployeesStore()
+
+    const withComment = store.addMember({ ...basePayload, comment: '  No morning shifts  ' })
+    expect(withComment?.comment).toBe('No morning shifts')
+
+    const blankComment = store.addMember({ ...basePayload, name: 'Bo', comment: '   ' })
+    expect(blankComment?.comment).toBeUndefined()
   })
 
   it('stores empty phone and email as absent values', () => {
@@ -204,6 +216,7 @@ describe('employees store', () => {
       weeklyHours: 40,
       holidays: [{ year: 2026, week: 10 }],
       phone: '+1 555 010 0000',
+      comment: 'No morning shifts',
       active: true,
       startDate: '2025-01-15',
     })
@@ -295,6 +308,39 @@ describe('employees store', () => {
 
     expect(store.status.error).toBeNull()
     expect(store.filteredMembers[0].phone).toBeUndefined()
+  })
+
+  it('preserves the existing comment when an update omits it', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.updateMember(ada.id, { name: 'Ada Lovelace' })
+
+    expect(store.status.error).toBeNull()
+    expect(store.filteredMembers[0].comment).toBe('No morning shifts')
+  })
+
+  it('removes the existing comment when an update provides a blank value', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.updateMember(ada.id, { comment: '   ' })
+
+    expect(store.status.error).toBeNull()
+    expect(store.filteredMembers[0].comment).toBeUndefined()
+  })
+
+  it('updates the existing comment when one is provided', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.updateMember(ada.id, { comment: '  Available weekends only  ' })
+
+    expect(store.status.error).toBeNull()
+    expect(store.filteredMembers[0].comment).toBe('Available weekends only')
   })
 
   it('removes the existing email when an update provides a blank value', () => {
@@ -706,7 +752,11 @@ describe('employees store', () => {
     expect(workspace.members[0].active).toBe(false)
 
     store.reactivateMember(ada.id)
-    expect(workspace.members[0]).toMatchObject({ active: true, startDate: ada.startDate })
+    expect(workspace.members[0]).toMatchObject({
+      active: true,
+      startDate: ada.startDate,
+      comment: 'No morning shifts',
+    })
     expect(workspace.members[0].endDate).toBeUndefined()
 
     const afterFirst = workspace.members[0]

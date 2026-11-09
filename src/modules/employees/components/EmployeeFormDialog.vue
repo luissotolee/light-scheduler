@@ -56,6 +56,40 @@
         </small>
       </div>
 
+      <fieldset class="employee-form__field employee-form__field--full">
+        <legend class="employee-form__label">{{ t('employees.form.contract') }}</legend>
+        <div
+          class="employee-form__radio-group"
+          role="radiogroup"
+          data-test="employee-contract-group"
+          :aria-label="t('employees.form.contractGroup')"
+          aria-required="true"
+          :aria-invalid="contractError ? 'true' : undefined"
+          :aria-describedby="contractError ? 'employee-contract-error' : undefined"
+        >
+          <div v-for="value in CONTRACTS" :key="value" class="employee-form__radio">
+            <RadioButton
+              v-model="form.contract"
+              :input-id="`employee-contract-${value}`"
+              name="contract"
+              :value="value"
+              required
+            />
+            <label class="employee-form__radio-label" :for="`employee-contract-${value}`">
+              {{ t(`contract.${value}`) }}
+            </label>
+          </div>
+        </div>
+        <small
+          v-if="contractError"
+          id="employee-contract-error"
+          class="employee-form__error"
+          data-test="contract-error"
+        >
+          {{ contractError }}
+        </small>
+      </fieldset>
+
       <div class="employee-form__field">
         <label class="employee-form__label" for="employee-phone">
           {{ t('employees.form.phone') }}
@@ -157,39 +191,18 @@
         </small>
       </div>
 
-      <fieldset class="employee-form__field employee-form__field--full">
-        <legend class="employee-form__label">{{ t('employees.form.contract') }}</legend>
-        <div
-          class="employee-form__radio-group"
-          role="radiogroup"
-          data-test="employee-contract-group"
-          :aria-label="t('employees.form.contractGroup')"
-          aria-required="true"
-          :aria-invalid="contractError ? 'true' : undefined"
-          :aria-describedby="contractError ? 'employee-contract-error' : undefined"
-        >
-          <div v-for="value in CONTRACTS" :key="value" class="employee-form__radio">
-            <RadioButton
-              v-model="form.contract"
-              :input-id="`employee-contract-${value}`"
-              name="contract"
-              :value="value"
-              required
-            />
-            <label class="employee-form__radio-label" :for="`employee-contract-${value}`">
-              {{ t(`contract.${value}`) }}
-            </label>
-          </div>
-        </div>
-        <small
-          v-if="contractError"
-          id="employee-contract-error"
-          class="employee-form__error"
-          data-test="contract-error"
-        >
-          {{ contractError }}
-        </small>
-      </fieldset>
+      <div class="employee-form__field employee-form__field--full">
+        <label class="employee-form__label" for="employee-comment">
+          {{ t('employees.form.comment') }}
+        </label>
+        <Textarea
+          id="employee-comment"
+          v-model="form.comment"
+          rows="3"
+          data-test="employee-comment-input"
+          :placeholder="t('employees.form.commentPlaceholder')"
+        />
+      </div>
 
       <small
         v-if="holidaysError"
@@ -223,6 +236,7 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import RadioButton from 'primevue/radiobutton'
 import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
 import type { Contract, Duty, EmployeeFormErrors, NewTeamMember, TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { isoDateToDate, toLocalIsoDate } from '@/shared/utils/calendar'
@@ -247,6 +261,7 @@ type FormState = {
   weeklyHours: number | null
   email: string
   phone: string
+  comment: string
   startDate: Date | null
 }
 
@@ -257,6 +272,7 @@ const form = reactive<FormState>({
   weeklyHours: null,
   email: '',
   phone: '',
+  comment: '',
   startDate: new Date(),
 })
 
@@ -305,6 +321,7 @@ function resetForm(): void {
   form.weeklyHours = props.member?.weeklyHours ?? null
   form.email = props.member?.email ?? ''
   form.phone = props.member?.phone ?? ''
+  form.comment = props.member?.comment ?? ''
   form.startDate = props.member?.startDate ? isoDateToDate(props.member.startDate) : new Date()
 }
 

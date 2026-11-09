@@ -25,6 +25,7 @@ const ada: TeamMember = {
   ],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  comment: 'No morning shifts',
   active: true,
   startDate: '2025-01-15',
 }
@@ -127,6 +128,7 @@ describe('buildBackup', () => {
         ],
         email: 'ada@example.com',
         phone: '+1 555 010 0000',
+        comment: 'No morning shifts',
         active: true,
         startDate: '2025-01-15',
       },
@@ -203,6 +205,7 @@ describe('parseBackup', () => {
       ],
       email: 'ada@example.com',
       phone: '+1 555 010 0000',
+      comment: 'No morning shifts',
     })
     expect(parsed.data.members[1]).toMatchObject({
       empId: 'EMP-0002',
@@ -338,6 +341,25 @@ describe('parseBackup', () => {
       ok: false,
       error: 'errors.invalidPhone',
     })
+    expect(parseBackup(backupRecord({ employees: [employeeRecord({ comment: 1 })] }))).toEqual({
+      ok: false,
+      error: 'errors.invalidComment',
+    })
+  })
+
+  it('trims and preserves an optional comment', () => {
+    const parsed = parseBackup(
+      backupRecord({ employees: [employeeRecord({ comment: '  No morning shifts  ' })] }),
+    )
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.members[0].comment).toBe('No morning shifts')
+
+    const withoutComment = parseBackup(backupRecord())
+    expect(withoutComment.ok).toBe(true)
+    if (!withoutComment.ok) return
+    expect(withoutComment.data.members[0].comment).toBeUndefined()
   })
 
   it('rejects duplicate employee ids', () => {

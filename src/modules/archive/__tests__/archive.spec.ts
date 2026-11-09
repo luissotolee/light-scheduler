@@ -26,6 +26,7 @@ const ada: TeamMember = {
   ],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  comment: 'No morning shifts',
   active: true,
   startDate: '2025-01-15',
 }
@@ -115,9 +116,9 @@ describe('archive store', () => {
       new Uint8Array([0xef, 0xbb, 0xbf]),
     )
     expect(await blob.slice(3).text()).toBe(
-      'emp_id,name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate\r\n' +
-        'EMP-0001,Ada,manager,fulltime,40,2026-W10;2026-W11,ada@example.com,+1 555 010 0000,true,2025-01-15,\r\n' +
-        'EMP-0002,Bo,employee,part_time,20,,,,true,2026-02-01,',
+      'emp_id,name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate,comment\r\n' +
+        'EMP-0001,Ada,manager,fulltime,40,2026-W10;2026-W11,ada@example.com,+1 555 010 0000,true,2025-01-15,,No morning shifts\r\n' +
+        'EMP-0002,Bo,employee,part_time,20,,,,true,2026-02-01,,',
     )
   })
 
@@ -179,6 +180,7 @@ describe('archive store', () => {
       name: 'Ada',
       email: 'ada@example.com',
       phone: '+1 555 010 0000',
+      comment: 'No morning shifts',
       active: true,
       startDate: '2025-01-15',
     })
@@ -189,6 +191,23 @@ describe('archive store', () => {
     })
     expect(workspace.members[1].email).toBeUndefined()
     expect(workspace.members[1].phone).toBeUndefined()
+    expect(workspace.members[1].comment).toBeUndefined()
+  })
+
+  it('imports and trims the optional comment column', () => {
+    const workspace = useWorkspaceStore()
+    const store = useArchiveStore()
+
+    store.importMembers(
+      'name,duty,contract,weeklyHours,holidays,comment\r\n' +
+        'Ada,manager,fulltime,40,,  No morning shifts  ',
+    )
+
+    expect(store.status).toEqual({
+      state: 'success',
+      message: { kind: 'simple', code: 'archive.importedOne', params: { count: 1 } },
+    })
+    expect(workspace.members[0].comment).toBe('No morning shifts')
   })
 
   it('round-trips an inactive member with its end date', async () => {
@@ -448,7 +467,7 @@ describe('archive store', () => {
     )
     expect(enMembers).toContain('\r\n')
     expect(enMembers).toContain(
-      'name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate',
+      'name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate,comment',
     )
     expect(enMembers).toContain('true,')
     expect(enMembers).toContain('part_time')

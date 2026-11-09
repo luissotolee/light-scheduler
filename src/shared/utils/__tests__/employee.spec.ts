@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import type { EmployeeFormInput, HolidayWeek, TeamMember, WeekKey } from '@/types'
+import type { Duty, EmployeeFormInput, HolidayWeek, TeamMember, WeekKey } from '@/types'
 import {
   CONTRACTS,
   DUTIES,
+  DUTY_SORT_ORDER,
   EMPLOYEE_HEADERS,
   MAX_HOLIDAY_WEEKS,
   PHONE_PREFIX_MAX_DIGITS,
   PHONE_PREFIX_MIN_DIGITS,
   SPANISH_PHONE_DIGITS,
+  compareMembersByDuty,
+  compareNames,
   dutyModifier,
+  dutyRank,
   employeeToRow,
   employeesToRows,
   firstEmployeeFormError,
@@ -40,6 +44,7 @@ const headers = [
   'active',
   'startDate',
   'endDate',
+  'comment',
 ]
 
 const member: TeamMember = {
@@ -55,6 +60,7 @@ const member: TeamMember = {
   ],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  comment: 'No morning shifts',
   active: true,
   startDate: '2025-01-15',
 }
@@ -76,7 +82,78 @@ describe('employee constants', () => {
       'active',
       'startDate',
       'endDate',
+      'comment',
     ])
+  })
+})
+
+describe('member ordering', () => {
+  it('orders duties head manager, assistant, manager, employee', () => {
+    expect(DUTY_SORT_ORDER).toEqual(['head_manager', 'assistant', 'manager', 'employee'])
+    expect(dutyRank('head_manager')).toBe(0)
+    expect(dutyRank('assistant')).toBe(1)
+    expect(dutyRank('manager')).toBe(2)
+    expect(dutyRank('employee')).toBe(3)
+  })
+
+  it('sorts unknown duties last', () => {
+    expect(dutyRank('unknown' as Duty)).toBe(4)
+  })
+
+  it('compares names case-insensitively', () => {
+    expect(compareNames('ada', 'Ada')).toBe(0)
+    expect(compareNames('Ada', 'Bo')).toBeLessThan(0)
+    expect(compareNames('Bo', 'Ada')).toBeGreaterThan(0)
+  })
+
+  describe('compareMembersByDuty', () => {
+    function sortable(id: string, name: string, duty: Duty) {
+      return { id, name, duty }
+    }
+
+    it('orders members by role priority', () => {
+      const members = [
+        sortable('e', 'Eve', 'employee'),
+        sortable('m', 'Max', 'manager'),
+        sortable('a', 'Al', 'assistant'),
+        sortable('h', 'Hana', 'head_manager'),
+      ]
+
+      expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual([
+        'h',
+        'a',
+        'm',
+        'e',
+      ])
+    })
+
+    it('orders alphabetically, case-insensitively, within a role', () => {
+      const members = [
+        sortable('c', 'cy', 'manager'),
+        sortable('b', 'Ada', 'manager'),
+        sortable('a', 'bo', 'manager'),
+      ]
+
+      expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual(['b', 'a', 'c'])
+    })
+
+    it('breaks name ties by id', () => {
+      const members = [sortable('b', 'Ada', 'manager'), sortable('a', 'Ada', 'manager')]
+
+      expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual(['a', 'b'])
+    })
+
+    it('sorts unknown duties last', () => {
+      const members = [
+        sortable('unknown', 'Zed', 'unknown' as Duty),
+        sortable('known', 'Ada', 'employee'),
+      ]
+
+      expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual([
+        'known',
+        'unknown',
+      ])
+    })
   })
 })
 
@@ -207,6 +284,7 @@ describe('validateEmployeeForm', () => {
     weeklyHours: 40,
     email: '  ada@example.com ',
     phone: ' +1 555 010 0000 ',
+    comment: '  No morning shifts  ',
     holidays: [
       { year: 2026, week: 12 },
       { year: 2026, week: 10 },
@@ -224,12 +302,24 @@ describe('validateEmployeeForm', () => {
         weeklyHours: 40,
         email: 'ada@example.com',
         phone: '+1 555 010 0000',
+        comment: 'No morning shifts',
         holidays: [
           { year: 2026, week: 10 },
           { year: 2026, week: 12 },
         ],
       },
     })
+  })
+
+  it('accepts an empty or whitespace-only comment as an empty string', () => {
+    for (const comment of ['', '   ']) {
+      const result = validateEmployeeForm({ ...validInput, comment })
+
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.value.comment).toBe('')
+      }
+    }
   })
 
   it('accepts empty or whitespace-only email and phone as empty strings', () => {
@@ -327,6 +417,7 @@ describe('validateEmployeeForm', () => {
         weeklyHours: 0,
         email: 'not-an-email',
         phone: '123',
+        comment: '',
         holidays,
         startDate: 'not-a-date',
       }),
@@ -345,9 +436,9 @@ describe('validateEmployeeForm', () => {
       message: 'errors.requiredName',
     })
 
-    expect(firstEmployeeFormError({ phone: 'errors.invalidPhone', email: 'errors.invalidEmail' })).toBe(
-      'errors.invalidEmail',
-    )
+    expect(
+      firstEmployeeFormError({ phone: 'errors.invalidPhone', email: 'errors.invalidEmail' }),
+    ).toBe('errors.invalidEmail')
   })
 
   it('includes a valid start date and omits a blank one', () => {
@@ -617,6 +708,38 @@ describe('validateEmployees', () => {
     })
   })
 
+  it('parses and trims the optional comment column', () => {
+    const result = validateEmployees(headers, [
+      // prettier-ignore
+      ['Ada', 'manager', 'fulltime', '40', '', '', '', '', '', '', '  No morning shifts  '],
+      // prettier-ignore
+      ['Bo', 'employee', 'part_time', '20', '', '', '', '', '', '', ''],
+    ])
+
+    expect(result).toEqual({
+      ok: true,
+      data: [
+        {
+          name: 'Ada',
+          duty: 'manager',
+          contract: 'fulltime',
+          weeklyHours: 40,
+          holidays: [],
+          active: true,
+          comment: 'No morning shifts',
+        },
+        {
+          name: 'Bo',
+          duty: 'employee',
+          contract: 'part_time',
+          weeklyHours: 20,
+          holidays: [],
+          active: true,
+        },
+      ],
+    })
+  })
+
   it('parses active, start date, and end date columns', () => {
     const result = validateEmployees(headers, [
       ['Ada', 'manager', 'fulltime', '40', '', '', '', 'false', '2020-01-01', '2026-11-08'],
@@ -731,6 +854,7 @@ describe('row mapping', () => {
       'true',
       '2025-01-15',
       '',
+      'No morning shifts',
     ])
   })
 
@@ -747,7 +871,20 @@ describe('row mapping', () => {
         active: true,
         startDate: '2026-11-08',
       }),
-    ).toEqual(['EMP-0002', 'Bo', 'employee', 'fulltime', 40, '', '', '', 'true', '2026-11-08', ''])
+    ).toEqual([
+      'EMP-0002',
+      'Bo',
+      'employee',
+      'fulltime',
+      40,
+      '',
+      '',
+      '',
+      'true',
+      '2026-11-08',
+      '',
+      '',
+    ])
   })
 
   it('serializes inactive members with their end date', () => {
@@ -776,6 +913,7 @@ describe('row mapping', () => {
       'false',
       '2020-01-01',
       '2026-11-08',
+      '',
     ])
   })
 
@@ -841,6 +979,8 @@ describe('isMemberInWeek', () => {
   })
 
   it('excludes member with startDate after week and no endDate', () => {
-    expect(isMemberInWeek(member({ startDate: '2026-11-09', endDate: undefined }), weekStart, weekEnd)).toBe(false)
+    expect(
+      isMemberInWeek(member({ startDate: '2026-11-09', endDate: undefined }), weekStart, weekEnd),
+    ).toBe(false)
   })
 })

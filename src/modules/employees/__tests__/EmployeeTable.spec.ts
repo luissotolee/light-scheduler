@@ -67,13 +67,6 @@ describe('EmployeeTable', () => {
     expect(wrapper.text()).toContain('Weekends')
   })
 
-  it('renders the employee id column', () => {
-    const wrapper = mountTable()
-
-    expect(wrapper.find('[data-test="employee-id-member-1"]').text()).toBe('EMP-0001')
-    expect(wrapper.find('[data-test="employee-id-member-2"]').text()).toBe('EMP-0002')
-  })
-
   it('adds duty and contract modifier classes to chips', () => {
     const wrapper = mountTable()
 

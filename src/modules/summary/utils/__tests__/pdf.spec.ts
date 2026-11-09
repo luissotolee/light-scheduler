@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SummaryDayHeader, SummaryRow } from '@/modules/summary/types'
 import { buildSummaryPdf, saveSummaryPdf } from '@/modules/summary/utils/pdf'
+import { buildSummaryRows } from '@/modules/summary/utils/rows'
+import type { Shift, TeamMember, Weekday } from '@/types'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 import { WEEKDAY_ORDER, weekdayDayOfMonth } from '@/shared/utils/calendar'
-import type { Weekday } from '@/types'
 
 const weekKey = '2026-11-02'
 const days: SummaryDayHeader[] = WEEKDAY_ORDER.map((weekday) => ({
@@ -88,7 +89,8 @@ describe('buildSummaryPdf', () => {
   })
 
   it('starts a new page when the rows do not fit', () => {
-    const rows = Array.from({ length: 80 }, (_, index) => row(`Employee ${index}`))
+    // Enough single-line rows to exceed the printable height of one page.
+    const rows = Array.from({ length: 60 }, (_, index) => row(`Employee ${index}`))
     const pdf = decode(
       buildSummaryPdf({
         rows,
@@ -99,8 +101,95 @@ describe('buildSummaryPdf', () => {
       }),
     )
 
+    // Check if we have page breaks by looking for the '/Page' pattern
     const pageCount = pdf.match(/\/Type \/Page\b/g)?.length ?? 0
     expect(pageCount).toBeGreaterThan(1)
+  })
+
+  it('orders members by duty (head_manager → assistant → manager → employee), then name, then id in the PDF', () => {
+    const members: TeamMember[] = [
+      {
+        id: 'employee-b',
+        empId: 'EMP-0002',
+        name: 'Bea Employee',
+        duty: 'employee',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+        active: true,
+        startDate: '2025-01-01',
+      },
+      {
+        id: 'employee-a',
+        empId: 'EMP-0003',
+        name: 'Ada Employee',
+        duty: 'employee',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+        active: true,
+        startDate: '2025-01-01',
+      },
+      {
+        id: 'manager',
+        empId: 'EMP-0004',
+        name: 'Max Manager',
+        duty: 'manager',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+        active: true,
+        startDate: '2025-01-01',
+      },
+      {
+        id: 'assistant',
+        empId: 'EMP-0005',
+        name: 'Al Assistant',
+        duty: 'assistant',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+        active: true,
+        startDate: '2025-01-01',
+      },
+      {
+        id: 'head',
+        empId: 'EMP-0006',
+        name: 'Hana Head',
+        duty: 'head_manager',
+        contract: 'fulltime',
+        weeklyHours: 40,
+        holidays: [],
+        active: true,
+        startDate: '2025-01-01',
+      },
+    ]
+    const shifts: Shift[] = []
+    const rows = buildSummaryRows({ members, shifts, dayOffs: [], weekKey })
+    const pdf = decode(
+      buildSummaryPdf({
+        rows,
+        days,
+        weekKey,
+        weekRangeLabel: 'Nov 2 – Nov 8, 2026',
+        locale: 'en',
+      }),
+    )
+
+    // Check the order by looking at the positions of names in the PDF
+    const namePositions = rows.map((row) => {
+      const index = pdf.indexOf(row.name)
+      return [index]
+    })
+
+    // The expected order should be: head, assistant, manager, employee-a, employee-b
+    expect(namePositions).toEqual([
+      [pdf.indexOf('Hana Head')],
+      [pdf.indexOf('Al Assistant')],
+      [pdf.indexOf('Max Manager')],
+      [pdf.indexOf('Ada Employee')],
+      [pdf.indexOf('Bea Employee')],
+    ])
   })
 })
 

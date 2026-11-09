@@ -95,6 +95,7 @@ export const useArchiveStore = defineStore('archive', () => {
     const members: TeamMember[] = validated.data.map((record) => {
       const email = record.email?.trim()
       const phone = record.phone?.trim()
+      const comment = record.comment?.trim()
       const active = record.active ?? true
       const empId = record.empId ?? createEmpId([...usedEmpIds])
       usedEmpIds.add(empId)
@@ -112,6 +113,7 @@ export const useArchiveStore = defineStore('archive', () => {
         ...(active === false && record.endDate ? { endDate: record.endDate } : {}),
         ...(email ? { email } : {}),
         ...(phone ? { phone } : {}),
+        ...(comment ? { comment } : {}),
         empId,
       }
     })

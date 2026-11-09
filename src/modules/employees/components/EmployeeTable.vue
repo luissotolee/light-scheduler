@@ -27,14 +27,6 @@
       </template>
     </Column>
 
-    <Column field="empId" :header="t('employees.column.id')">
-      <template #body="{ data }">
-        <span class="employee-table__id" :data-test="`employee-id-${data.id}`">
-          {{ data.empId }}
-        </span>
-      </template>
-    </Column>
-
     <Column field="duty" :header="t('employees.column.duty')">
       <template #body="{ data }">
         <Chip
@@ -238,12 +230,6 @@ function contractModifier(value: unknown): string {
 }
 
 .employee-table__hours {
-  color: var(--color-muted);
-}
-
-.employee-table__id {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.85rem;
   color: var(--color-muted);
 }
 

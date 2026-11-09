@@ -29,6 +29,7 @@ export interface TeamMember {
   holidays: HolidayWeek[]
   email?: string
   phone?: string
+  comment?: string
   active: boolean
   startDate: string
   endDate?: string
@@ -43,6 +44,7 @@ export interface NewTeamMember {
   holidays?: HolidayWeek[]
   email?: string
   phone?: string
+  comment?: string
   startDate?: string
 }
 
@@ -59,6 +61,7 @@ export interface EmployeeFormInput {
   weeklyHours: unknown
   email: string
   phone: string
+  comment: string
   holidays?: HolidayWeek[]
   startDate?: string
 }

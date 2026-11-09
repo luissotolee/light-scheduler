@@ -84,6 +84,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       weeklyHours: payload.weeklyHours,
       email: payload.email ?? '',
       phone: payload.phone ?? '',
+      comment: payload.comment ?? '',
       holidays: payload.holidays ?? [],
       startDate: payload.startDate,
     })
@@ -105,6 +106,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       startDate: value.startDate ?? todayIsoDate(),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
+      ...(value.comment ? { comment: value.comment } : {}),
       empId: createEmpId(workspace().members.map((m) => m.empId)),
     }
     workspace().upsertMember(member)
@@ -124,6 +126,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       holidays: patch.holidays ?? member.holidays,
       email: patch.email ?? member.email ?? '',
       phone: patch.phone ?? member.phone ?? '',
+      comment: patch.comment ?? member.comment ?? '',
       startDate: patch.startDate ?? member.startDate,
     })
 
@@ -145,6 +148,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       ...(member.endDate ? { endDate: member.endDate } : {}),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
+      ...(value.comment ? { comment: value.comment } : {}),
       empId: member.empId,
     })
     setError(null)
@@ -220,6 +224,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       startDate: member.startDate,
       ...(member.email ? { email: member.email } : {}),
       ...(member.phone ? { phone: member.phone } : {}),
+      ...(member.comment ? { comment: member.comment } : {}),
       empId: member.empId,
     })
   }

@@ -56,6 +56,15 @@
             {{ formatIsoDate(member.endDate, locale) }}
           </dd>
         </div>
+        <div class="employee-details__item employee-details__item--full">
+          <dt class="employee-details__label">{{ t('employees.details.comment') }}</dt>
+          <dd
+            class="employee-details__value employee-details__value--multiline"
+            data-test="details-comment"
+          >
+            {{ member.comment || t('common.dash') }}
+          </dd>
+        </div>
       </dl>
 
       <div class="employee-details__holidays">
@@ -147,9 +156,18 @@ const contractLabel = computed(() =>
   font-size: 0.85rem;
 }
 
+.employee-details__item--full {
+  grid-column: 1 / -1;
+}
+
 .employee-details__value {
   margin: 0;
   color: var(--color-text);
+}
+
+.employee-details__value--multiline {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .employee-details__section-title {

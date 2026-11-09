@@ -20,6 +20,7 @@ const member: TeamMember = {
   weeklyHours: 40,
   holidays: [{ year: 2026, week: 10 }],
   email: 'ada@example.com',
+  comment: 'No morning shifts',
   active: true,
   startDate: '2025-01-15',
 }
@@ -87,6 +88,7 @@ describe('persistence guards', () => {
   it('validates team members', () => {
     expect(isTeamMember(member)).toBe(true)
     expect(isTeamMember({ ...member, email: undefined, phone: undefined })).toBe(true)
+    expect(isTeamMember({ ...member, comment: undefined })).toBe(true)
     expect(isTeamMember({ ...member, endDate: undefined })).toBe(true)
     expect(isTeamMember({ ...member, phone: '+1 555 010 0000', endDate: '2026-11-08' })).toBe(true)
 
@@ -105,6 +107,7 @@ describe('persistence guards', () => {
     expect(isTeamMember({ ...member, startDate: undefined })).toBe(false)
     expect(isTeamMember({ ...member, startDate: 'not-a-date' })).toBe(false)
     expect(isTeamMember({ ...member, email: 42 })).toBe(false)
+    expect(isTeamMember({ ...member, comment: 42 })).toBe(false)
     expect(isTeamMember({ ...member, endDate: null })).toBe(false)
     expect(isTeamMember({ ...member, endDate: 'not-a-date' })).toBe(false)
     expect(isTeamMember({ ...member, empId: undefined })).toBe(false)

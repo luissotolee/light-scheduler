@@ -114,19 +114,43 @@ describe('buildSummaryRows', () => {
     expect(rows.map((row) => row.memberId)).toEqual(['inactive'])
   })
 
-  it('sorts rows alphabetically with a member-id tiebreak', () => {
+  it('orders rows by duty, then name, then member id', () => {
     const rows = buildSummaryRows({
       members: [
-        member({ id: 'b', name: 'ada' }),
-        member({ id: 'a', name: 'Ada' }),
-        member({ id: 'c', name: 'Zoe' }),
+        member({ id: 'employee-b', name: 'Bea Employee', duty: 'employee' }),
+        member({ id: 'employee-a', name: 'Ada Employee', duty: 'employee' }),
+        member({ id: 'manager', name: 'Max Manager', duty: 'manager' }),
+        member({ id: 'assistant', name: 'Al Assistant', duty: 'assistant' }),
+        member({ id: 'head', name: 'Hana Head', duty: 'head_manager' }),
       ],
       shifts: [],
       dayOffs: [],
       weekKey,
     })
 
-    expect(rows.map((row) => row.memberId)).toEqual(['a', 'b', 'c'])
+    expect(rows.map((row) => row.memberId)).toEqual([
+      'head',
+      'assistant',
+      'manager',
+      'employee-a',
+      'employee-b',
+    ])
+  })
+
+  it('sorts alphabetically within a duty and breaks name ties by id', () => {
+    const rows = buildSummaryRows({
+      members: [
+        member({ id: 'c', name: 'cy', duty: 'manager' }),
+        member({ id: 'b', name: 'Ada', duty: 'manager' }),
+        member({ id: 'a', name: 'bo', duty: 'manager' }),
+        member({ id: 'd', name: 'Ada', duty: 'manager' }),
+      ],
+      shifts: [],
+      dayOffs: [],
+      weekKey,
+    })
+
+    expect(rows.map((row) => row.memberId)).toEqual(['b', 'd', 'a', 'c'])
   })
 
   it('marks days without shifts as OFF', () => {
@@ -227,7 +251,10 @@ describe('summaryRowUnits', () => {
   it('counts one unit for a single shift', () => {
     const value = row({
       cells: {
-        monday: { kind: 'shifts', shifts: [{ id: 's1', startMinute: 540, endMinute: 720, label: '' }] },
+        monday: {
+          kind: 'shifts',
+          shifts: [{ id: 's1', startMinute: 540, endMinute: 720, label: '' }],
+        },
         tuesday: { kind: 'off' },
         wednesday: { kind: 'off' },
         thursday: { kind: 'off' },

@@ -17,7 +17,27 @@ export const MAX_HOLIDAY_WEEKS = 6
 
 export const DUTIES: readonly Duty[] = ['manager', 'employee', 'assistant', 'head_manager']
 
+export const DUTY_SORT_ORDER: readonly Duty[] = ['head_manager', 'assistant', 'manager', 'employee']
+
 export const CONTRACTS: readonly Contract[] = ['fulltime', 'part_time', 'weekends']
+
+export function dutyRank(duty: Duty): number {
+  const index = DUTY_SORT_ORDER.indexOf(duty)
+  return index === -1 ? DUTY_SORT_ORDER.length : index
+}
+
+export function compareNames(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { sensitivity: 'base' })
+}
+
+export function compareMembersByDuty(
+  a: Pick<TeamMember, 'id' | 'name' | 'duty'>,
+  b: Pick<TeamMember, 'id' | 'name' | 'duty'>,
+): number {
+  return (
+    dutyRank(a.duty) - dutyRank(b.duty) || compareNames(a.name, b.name) || a.id.localeCompare(b.id)
+  )
+}
 
 export const EMP_ID_MAX_LENGTH = 32
 
@@ -143,6 +163,8 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
   const phone = input.phone.trim()
   if (phone && !isValidPhone(phone)) errors.phone = 'errors.invalidPhone'
 
+  const comment = input.comment.trim()
+
   const holidays = normalizeHolidays(input.holidays ?? [])
   if (holidays.length > MAX_HOLIDAY_WEEKS) {
     errors.holidays = 'errors.maxHolidays'
@@ -171,6 +193,7 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
       holidays,
       email,
       phone,
+      comment,
       ...(startDate ? { startDate } : {}),
     },
   }
@@ -226,6 +249,7 @@ export const EMPLOYEE_HEADERS: readonly string[] = [
   'active',
   'startDate',
   'endDate',
+  'comment',
 ]
 
 const REQUIRED_HEADERS = ['name', 'duty', 'contract', 'weeklyHours', 'holidays']
@@ -334,6 +358,8 @@ export function validateEmployees(
       rowErrors.push({ row: rowNumber, message: 'errors.endNotAllowedActive' })
     }
 
+    const comment = valueAt(row, 'comment').trim()
+
     const rawEmpId = valueAt(row, 'emp_id').trim()
     const empId = rawEmpId ? rawEmpId : undefined
 
@@ -362,6 +388,7 @@ export function validateEmployees(
       holidays,
       ...(email ? { email } : {}),
       ...(phone ? { phone } : {}),
+      ...(comment ? { comment } : {}),
       ...(active === null ? {} : { active }),
       ...(startDate ? { startDate } : {}),
       ...(endDate ? { endDate } : {}),
@@ -385,6 +412,7 @@ export function employeeToRow(member: TeamMember): (string | number)[] {
     member.active ? 'true' : 'false',
     member.startDate,
     member.endDate ?? '',
+    member.comment ?? '',
   ]
 }
 

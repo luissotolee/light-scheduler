@@ -1,6 +1,10 @@
 <template>
   <section class="archive">
-    <PageHeader :title="t('archive.title')" :description="t('archive.description')" />
+    <PageHeader
+      :title="t('archive.title')"
+      :description="t('archive.description')"
+      description-tooltip
+    />
 
     <div class="archive__panel">
       <h2 class="archive__heading">{{ t('archive.exportHeading') }}</h2>
@@ -11,10 +15,26 @@
           class="archive__button"
           data-test="export-backup"
           :disabled="!canExportBackup"
-          @click="store.exportBackup"
+          @click="handleExport"
         >
           {{ t('archive.exportBackup') }}
         </button>
+        <span
+          v-if="exportStatusText"
+          v-tooltip.top="exportStatusText"
+          class="archive__status"
+          :class="`archive__status--${status.state}`"
+          role="status"
+          tabindex="0"
+          data-test="status"
+        >
+          <i
+            class="pi archive__status-icon"
+            :class="status.state === 'error' ? 'pi-exclamation-circle' : 'pi-check-circle'"
+            aria-hidden="true"
+          />
+          <span class="archive__sr">{{ exportStatusText }}</span>
+        </span>
       </div>
     </div>
 
@@ -38,18 +58,24 @@
         >
           {{ t('archive.uploadBackup') }}
         </button>
+        <span
+          v-if="restoreStatusText"
+          v-tooltip.top="restoreStatusText"
+          class="archive__status"
+          :class="`archive__status--${status.state}`"
+          role="status"
+          tabindex="0"
+          data-test="status"
+        >
+          <i
+            class="pi archive__status-icon"
+            :class="status.state === 'error' ? 'pi-exclamation-circle' : 'pi-check-circle'"
+            aria-hidden="true"
+          />
+          <span class="archive__sr">{{ restoreStatusText }}</span>
+        </span>
       </div>
     </div>
-
-    <p
-      v-if="status.message"
-      class="archive__status"
-      :class="`archive__status--${status.state}`"
-      data-test="status"
-      role="status"
-    >
-      {{ statusText }}
-    </p>
 
     <ConfirmActionDialog
       :visible="backupImportVisible"
@@ -77,8 +103,16 @@ const store = useArchiveStore()
 const { status, canExportBackup, backupImportVisible } = storeToRefs(store)
 const { t, tc } = useI18n()
 const backupFileInput = ref<HTMLInputElement | null>(null)
+const lastAction = ref<'export' | 'restore' | null>(null)
 
 const statusText = computed(() => formatCsvStatus(status.value, t, tc))
+const exportStatusText = computed(() => (lastAction.value === 'export' ? statusText.value : ''))
+const restoreStatusText = computed(() => (lastAction.value === 'restore' ? statusText.value : ''))
+
+function handleExport(): void {
+  lastAction.value = 'export'
+  store.exportBackup()
+}
 
 function openBackupPicker(): void {
   store.resetStatus()
@@ -93,6 +127,7 @@ async function handleBackupFile(event: Event): Promise<void> {
   target.value = ''
   if (!file) return
 
+  lastAction.value = 'restore'
   await store.prepareBackupImport(file)
 }
 
@@ -164,20 +199,37 @@ function handleBackupImportVisibility(visible: boolean): void {
 }
 
 .archive__status {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-alt);
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: help;
 }
 
 .archive__status--success {
-  border-color: var(--color-accent);
   color: var(--color-accent);
 }
 
 .archive__status--error {
-  border-color: var(--color-danger);
   color: var(--color-danger);
+}
+
+.archive__status:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.archive__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
