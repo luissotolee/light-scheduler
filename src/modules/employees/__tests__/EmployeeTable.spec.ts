@@ -8,6 +8,7 @@ import type { TeamMember } from '@/types'
 const members: TeamMember[] = [
   {
     id: 'member-1',
+    empId: 'EMP-0001',
     name: 'Ada',
     duty: 'head_manager',
     contract: 'part_time',
@@ -20,6 +21,7 @@ const members: TeamMember[] = [
   },
   {
     id: 'member-2',
+    empId: 'EMP-0002',
     name: 'Bo',
     duty: 'assistant',
     contract: 'weekends',

@@ -9,6 +9,7 @@
     <div class="scheduler__toolbar-wrapper">
       <div class="scheduler__toolbar">
         <Button
+          v-tooltip.top="t('scheduler.previousWeek')"
           type="button"
           icon="pi pi-chevron-left"
           size="small"
@@ -24,6 +25,7 @@
         </div>
 
         <Button
+          v-tooltip.top="t('scheduler.nextWeek')"
           type="button"
           icon="pi pi-chevron-right"
           size="small"
@@ -45,13 +47,14 @@
         </h2>
         <div class="scheduler__actions">
           <Button
+            v-tooltip.top="t('scheduler.clearAll')"
             type="button"
-            icon="pi pi-refresh"
+            icon="pi pi-trash"
             size="small"
             text
             rounded
             severity="danger"
-            :aria-label="t('scheduler.restart')"
+            :aria-label="t('scheduler.clearAll')"
             data-test="restart-week"
             @click="openRestartConfirm"
           />

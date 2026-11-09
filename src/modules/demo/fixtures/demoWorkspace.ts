@@ -1,5 +1,6 @@
 import type { TeamMember, Shift, DayOff, WeekKey } from '@/types'
 import type { PersistedWorkspace } from '@/shared/utils/persistence'
+import { WORKSPACE_SCHEMA_VERSION } from '@/shared/utils/persistence'
 import { getWeekKey, addWeeks } from '@/shared/utils/calendar'
 import { createId } from '@/shared/utils/id'
 import { MOCK_EMPLOYEES } from '@/shared/fixtures/employees'
@@ -73,7 +74,7 @@ export function buildDemoWorkspace(now: Date = new Date()): PersistedWorkspace {
   }
 
   return {
-    version: 1,
+    version: WORKSPACE_SCHEMA_VERSION,
     members: MOCK_EMPLOYEES,
     schedules,
     dayOffs,

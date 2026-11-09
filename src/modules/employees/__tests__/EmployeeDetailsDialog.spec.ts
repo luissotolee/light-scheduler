@@ -10,6 +10,7 @@ enableAutoUnmount(afterEach)
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'head_manager',
   contract: 'part_time',
@@ -17,6 +18,7 @@ const ada: TeamMember = {
   holidays: [{ year: 2026, week: 10 }],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  comment: 'No morning shifts',
   active: true,
   startDate: '2025-01-15',
 }
@@ -54,11 +56,13 @@ describe('EmployeeDetailsDialog', () => {
 
     const body = dialogBody()
     expect(body.text()).toContain('Ada')
+    expect(body.find('[data-test="details-emp-id"]').text()).toBe('EMP-0001')
     expect(body.find('[data-test="details-duty"]').text()).toBe('Head manager')
     expect(body.find('[data-test="details-contract"]').text()).toBe('Part-time')
     expect(body.find('[data-test="details-hours"]').text()).toBe('32')
     expect(body.find('[data-test="details-email"]').text()).toBe('ada@example.com')
     expect(body.find('[data-test="details-phone"]').text()).toBe('+1 555 010 0000')
+    expect(body.find('[data-test="details-comment"]').text()).toBe('No morning shifts')
     expect(body.find('[data-test="details-status"]').text()).toBe('Active')
     expect(body.find('[data-test="details-start-date"]').text()).toBe('Jan 15, 2025')
     expect(body.find('[data-test="details-end-date"]').exists()).toBe(false)
@@ -87,10 +91,19 @@ describe('EmployeeDetailsDialog', () => {
   })
 
   it('shows a dash for missing contact details', async () => {
-    await mountDialog({ ...ada, email: undefined, phone: undefined })
+    await mountDialog({ ...ada, email: undefined, phone: undefined, comment: undefined })
 
     expect(dialogBody().find('[data-test="details-email"]').text()).toBe('—')
     expect(dialogBody().find('[data-test="details-phone"]').text()).toBe('—')
+    expect(dialogBody().find('[data-test="details-comment"]').text()).toBe('—')
+  })
+
+  it('preserves multiline comments', async () => {
+    await mountDialog({ ...ada, comment: 'No morning shifts\nWeekends only' })
+
+    expect(dialogBody().find('[data-test="details-comment"]').text()).toBe(
+      'No morning shifts\nWeekends only',
+    )
   })
 
   it('emits update:visible false when closed', async () => {

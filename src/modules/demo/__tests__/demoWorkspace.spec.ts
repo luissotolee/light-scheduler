@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
-import { parsePersistedWorkspace } from '@/shared/utils/persistence'
+import { parsePersistedWorkspace, WORKSPACE_SCHEMA_VERSION } from '@/shared/utils/persistence'
 
 describe('demoWorkspace', () => {
   it('builds a valid workspace that passes parsePersistedWorkspace', () => {
@@ -12,7 +12,7 @@ describe('demoWorkspace', () => {
 
   it('contains all required fields', () => {
     const workspace = buildDemoWorkspace()
-    expect(workspace.version).toBe(1)
+    expect(workspace.version).toBe(WORKSPACE_SCHEMA_VERSION)
     expect(Array.isArray(workspace.members)).toBe(true)
     expect(typeof workspace.schedules).toBe('object')
     expect(typeof workspace.dayOffs).toBe('object')

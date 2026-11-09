@@ -14,6 +14,7 @@ const weekKey = '2026-11-02'
 function member(overrides: Partial<TeamMember> = {}): TeamMember {
   return {
     id: 'member-1',
+    empId: 'EMP-0001',
     name: 'Ada',
     duty: 'employee',
     contract: 'fulltime',
@@ -102,6 +103,21 @@ describe('SummaryView', () => {
     expect(wrapper.get('[data-test="summary-cell-member-1-tuesday"]').text()).toBe('OFF')
   })
 
+  it('renders rows in consistent member ordering (head_manager → assistant → manager → employee, alpha within each group)', () => {
+    seed([
+      member({ id: 'head', name: 'Hana Head', duty: 'head_manager' }),
+      member({ id: 'assistant', name: 'Al Assistant', duty: 'assistant' }),
+      member({ id: 'manager', name: 'Max Manager', duty: 'manager' }),
+      member({ id: 'employee-b', name: 'Bea Employee', duty: 'employee' }),
+      member({ id: 'employee-a', name: 'Ada Employee', duty: 'employee' }),
+    ])
+    const wrapper = mountView()
+
+    expect(
+      wrapper.findAll('[data-test="summary-table"] tbody th[scope="row"]').map((th) => th.text()),
+    ).toEqual(['Hana Head', 'Al Assistant', 'Max Manager', 'Ada Employee', 'Bea Employee'])
+  })
+
   it('shows a VACATIONS row for members on holiday', () => {
     seed([member({ holidays: [getIsoWeek(new Date(2026, 10, 2))] })])
     const wrapper = mountView()
@@ -163,8 +179,11 @@ describe('SummaryView', () => {
     expect(print).not.toHaveBeenCalled()
     expect(createObjectURL).toHaveBeenCalledOnce()
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
-    expect(downloadName).toMatch(/^summary-.*\.pdf$/)
-    expect(blobs[0]?.type).toBe('application/pdf')
+    expect(downloadName).toBe('2026-11_Schedule_2nd.pdf')
+
+    const blob = blobs[0]
+    expect(blob.type).toBe('application/pdf')
+    expect(await blob.text()).toContain('%PDF-1.4')
   })
 
   it('localizes labels and weekdays to Spanish live', async () => {

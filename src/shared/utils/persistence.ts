@@ -1,9 +1,16 @@
 import type { DayOff, HolidayWeek, Shift, TeamMember, Weekday, WeekKey } from '@/types'
 import { getIsoWeeksInYear, parseIsoDate } from '@/shared/utils/calendar'
-import { isContract, isDuty, normalizeHolidays, parseWeeklyHours } from '@/shared/utils/employee'
+import {
+  createSequentialEmpId,
+  isContract,
+  isDuty,
+  isValidEmpId,
+  normalizeHolidays,
+  parseWeeklyHours,
+} from '@/shared/utils/employee'
 
 export const WORKSPACE_STORAGE_KEY = 'light-scheduler.workspace'
-export const WORKSPACE_SCHEMA_VERSION = 1
+export const WORKSPACE_SCHEMA_VERSION = 2
 
 export interface PersistedWorkspace {
   version: typeof WORKSPACE_SCHEMA_VERSION
@@ -100,10 +107,9 @@ function parseHolidayWeeks(value: unknown): HolidayWeek[] | null {
   return normalizeHolidays(holidays)
 }
 
-export function isTeamMember(value: unknown): value is TeamMember {
-  if (!isRecord(value)) return false
-
+function isMembersShape(value: unknown): boolean {
   return (
+    isRecord(value) &&
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
     isDuty(value.duty) &&
@@ -114,37 +120,95 @@ export function isTeamMember(value: unknown): value is TeamMember {
     parseIsoDate(value.startDate) !== null &&
     isOptionalString(value.email) &&
     isOptionalString(value.phone) &&
+    isOptionalString(value.comment) &&
     isOptionalIsoDate(value.endDate)
   )
 }
 
+export function isTeamMember(value: unknown): value is TeamMember {
+  if (!isMembersShape(value)) return false
+  const record = value as Record<string, unknown>
+  return typeof record.empId === 'string' && isValidEmpId(record.empId)
+}
+
+function parseSchedules(value: unknown): Record<WeekKey, Shift[]> | null {
+  if (!isRecord(value)) return null
+  return parseWeekRecord(value, isShift)
+}
+
+function parseDayOffs(value: unknown): Record<WeekKey, DayOff[]> | null {
+  if (!isRecord(value)) return null
+  return parseWeekRecord(value, isDayOff)
+}
+
+function migrateV1Members(members: TeamMember[]): TeamMember[] {
+  const used = new Set<string>()
+  for (const member of members) {
+    const existing = (member as Partial<TeamMember>).empId
+    if (typeof existing === 'string' && isValidEmpId(existing) && !used.has(existing)) {
+      used.add(existing)
+    }
+  }
+
+  return members.map((member) => {
+    const existing = (member as Partial<TeamMember>).empId
+    if (typeof existing === 'string' && isValidEmpId(existing)) {
+      return { ...member, empId: existing }
+    }
+
+    const empId = createSequentialEmpId([...used])
+    used.add(empId)
+    return { ...member, empId }
+  })
+}
+
 export function parsePersistedWorkspace(value: unknown): PersistedWorkspace | null {
   if (!isRecord(value)) return null
-  if (value.version !== WORKSPACE_SCHEMA_VERSION) return null
 
-  const members = parseList(value.members, isTeamMember)
-  if (members === null) return null
-
-  const schedules = parseWeekRecord(value.schedules, isShift)
+  const schedules = parseSchedules(value.schedules)
   if (schedules === null) return null
 
-  const dayOffs = parseWeekRecord(value.dayOffs, isDayOff)
+  const dayOffs = parseDayOffs(value.dayOffs)
   if (dayOffs === null) return null
 
   const currentWeekKey = parseIsoDate(value.currentWeekKey)
   if (currentWeekKey === null) return null
 
-  return {
-    version: WORKSPACE_SCHEMA_VERSION,
-    members,
-    schedules,
-    dayOffs,
-    currentWeekKey,
+  if (value.version === WORKSPACE_SCHEMA_VERSION) {
+    const members = parseList(value.members, isTeamMember)
+    if (members === null) return null
+
+    return {
+      version: WORKSPACE_SCHEMA_VERSION,
+      members,
+      schedules,
+      dayOffs,
+      currentWeekKey,
+    }
   }
+
+  if (value.version === 1) {
+    const members = parseList(value.members, (item): item is TeamMember => {
+      if (!isMembersShape(item)) return false
+      const record = item as Record<string, unknown>
+      return record.empId === undefined || typeof record.empId === 'string'
+    })
+    if (members === null) return null
+
+    return {
+      version: WORKSPACE_SCHEMA_VERSION,
+      members: migrateV1Members(members),
+      schedules,
+      dayOffs,
+      currentWeekKey,
+    }
+  }
+
+  return null
 }
 
 export function serializeWorkspace(
-  payload: Omit<PersistedWorkspace, 'version'>,
+  workspace: Omit<PersistedWorkspace, 'version'>,
 ): PersistedWorkspace {
-  return { version: WORKSPACE_SCHEMA_VERSION, ...payload }
+  return { version: WORKSPACE_SCHEMA_VERSION, ...workspace }
 }

@@ -34,7 +34,18 @@ describe('HomeView', () => {
     expect(paths).toContain('/scheduler')
     expect(paths).toContain('/employees')
     expect(paths).toContain('/summary')
-    expect(paths).toContain('/csv')
+    expect(paths).toContain('/archive')
+  })
+
+  it('shows a feature icon on every card', () => {
+    const wrapper = mountView()
+    const icons = wrapper.findAll('.home__feature-icon').map((icon) => icon.classes())
+
+    expect(icons).toHaveLength(4)
+    expect(icons[0]).toContain('pi-calendar')
+    expect(icons[1]).toContain('pi-users')
+    expect(icons[2]).toContain('pi-table')
+    expect(icons[3]).toContain('pi-file-export')
   })
 
   it('translates the feature cards live', async () => {

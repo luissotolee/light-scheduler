@@ -8,23 +8,29 @@
   >
     <div class="holiday-dialog__body">
       <div class="holiday-dialog__year">
-        <button
+        <Button
+          v-tooltip.top="t('holidays.previousYear')"
           type="button"
-          class="holiday-dialog__year-button"
+          icon="pi pi-chevron-left"
+          size="small"
+          text
+          rounded
+          :aria-label="t('holidays.previousYear')"
           data-test="previous-year"
           @click="changeYear(-1)"
-        >
-          {{ t('holidays.previousYear') }}
-        </button>
+        />
         <span class="holiday-dialog__year-label" data-test="current-year">{{ year }}</span>
-        <button
+        <Button
+          v-tooltip.top="t('holidays.nextYear')"
           type="button"
-          class="holiday-dialog__year-button"
+          icon="pi pi-chevron-right"
+          size="small"
+          text
+          rounded
+          :aria-label="t('holidays.nextYear')"
           data-test="next-year"
           @click="changeYear(1)"
-        >
-          {{ t('holidays.nextYear') }}
-        </button>
+        />
       </div>
 
       <p class="holiday-dialog__counter" data-test="counter">
@@ -151,15 +157,14 @@ function save(): void {
 .holiday-dialog__year {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
 .holiday-dialog__year-label {
   font-weight: 600;
 }
 
-.holiday-dialog__year-button,
 .holiday-dialog__week {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
@@ -170,13 +175,11 @@ function save(): void {
   cursor: pointer;
 }
 
-.holiday-dialog__year-button:hover:not(:disabled),
 .holiday-dialog__week:hover:not(:disabled) {
   border-color: var(--color-accent);
   color: var(--color-accent);
 }
 
-.holiday-dialog__year-button:focus-visible,
 .holiday-dialog__week:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;

@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
-import { useCsvStore } from '@/modules/csv/stores/csv'
+import { useArchiveStore } from '@/modules/archive/stores/archive'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { startDemo, stopDemo } from '@/modules/demo/utils/demoSession'
@@ -60,8 +60,8 @@ describe('demoSession', () => {
     const schedulerStore = useSchedulerStore()
     schedulerStore.selectWeekday('friday')
 
-    const csvStore = useCsvStore()
-    csvStore.setError('csv.importFailed')
+    const archiveStore = useArchiveStore()
+    archiveStore.setError('archive.importFailed')
 
     mockedStartEngine.mockResolvedValue(undefined)
 
@@ -71,7 +71,7 @@ describe('demoSession', () => {
     expect(employeesStore.formVisible).toBe(false)
     expect(schedulerStore.selectedWeekday).toBe('monday')
     expect(schedulerStore.error).toBeNull()
-    expect(csvStore.status.state).toBe('idle')
+    expect(archiveStore.status.state).toBe('idle')
   })
 
   it('navigates to scheduler route', async () => {

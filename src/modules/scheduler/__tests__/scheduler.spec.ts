@@ -22,6 +22,7 @@ describe('scheduler store', () => {
     const workspace = useWorkspaceStore()
     const member: TeamMember = {
       id: 'member-1',
+      empId: 'EMP-0001',
       name: 'Ada',
       duty: 'employee',
       contract: 'fulltime',
@@ -45,6 +46,7 @@ describe('scheduler store', () => {
     const workspace = useWorkspaceStore()
     const active: TeamMember = {
       id: 'member-1',
+      empId: 'EMP-0002',
       name: 'Ada',
       duty: 'employee',
       contract: 'fulltime',
@@ -55,6 +57,7 @@ describe('scheduler store', () => {
     }
     const inactive: TeamMember = {
       id: 'member-2',
+      empId: 'EMP-0003',
       name: 'Bo',
       duty: 'employee',
       contract: 'part_time',
@@ -233,6 +236,7 @@ describe('scheduler store', () => {
 function makeMember(overrides: Partial<TeamMember> = {}): TeamMember {
   return {
     id: 'member-1',
+    empId: 'EMP-0004',
     name: 'Ada',
     duty: 'employee',
     contract: 'fulltime',
@@ -896,6 +900,7 @@ describe('scheduler weekly hours groups', () => {
       makeMember({ id: 'ada', name: 'Ada Lovelace', duty: 'manager', weeklyHours: 40 }),
       makeMember({
         id: 'gone',
+        empId: 'EMP-0005',
         name: 'Gone Member',
         duty: 'employee',
         active: false,

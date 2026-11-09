@@ -12,6 +12,7 @@ import type { TeamMember } from '@/types'
 export const MOCK_EMPLOYEES: TeamMember[] = [
   {
     id: 'emp-mock-01',
+    empId: 'EMP-0001',
     name: 'Alice Martínez',
     duty: 'head_manager',
     contract: 'fulltime',
@@ -22,11 +23,13 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
     ],
     email: 'alice.martinez@example.com',
     phone: '+34 600 000 001',
+    comment: 'Prefers morning shifts',
     active: true,
     startDate: '2024-03-04',
   },
   {
     id: 'emp-mock-02',
+    empId: 'EMP-0002',
     name: 'Bruno García',
     duty: 'manager',
     contract: 'fulltime',
@@ -34,22 +37,26 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
     holidays: [],
     email: 'bruno.garcia@example.com',
     phone: '+34 600 000 002',
+    comment: 'No morning shifts',
     active: true,
     startDate: '2025-01-06',
   },
   {
     id: 'emp-mock-03',
+    empId: 'EMP-0003',
     name: 'Carmen López',
     duty: 'employee',
     contract: 'part_time',
     weeklyHours: 24,
     holidays: [{ year: 2026, week: 10 }],
     email: 'carmen.lopez@example.com',
+    comment: 'Available weekends only',
     active: true,
     startDate: '2025-08-11',
   },
   {
     id: 'emp-mock-04',
+    empId: 'EMP-0004',
     name: 'David Pérez',
     duty: 'assistant',
     contract: 'weekends',
@@ -64,6 +71,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-05',
+    empId: 'EMP-0005',
     name: 'Elena Ruiz',
     duty: 'manager',
     contract: 'fulltime',
@@ -74,6 +82,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-06',
+    empId: 'EMP-0006',
     name: 'Fernando Gómez',
     duty: 'employee',
     contract: 'part_time',
@@ -91,6 +100,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-07',
+    empId: 'EMP-0007',
     name: 'Gabriela Moreno',
     duty: 'head_manager',
     contract: 'fulltime',
@@ -103,6 +113,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-08',
+    empId: 'EMP-0008',
     name: 'Héctor Navarro',
     duty: 'assistant',
     contract: 'fulltime',
@@ -118,6 +129,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-09',
+    empId: 'EMP-0009',
     name: 'Irene Castillo',
     duty: 'employee',
     contract: 'weekends',
@@ -129,6 +141,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-10',
+    empId: 'EMP-0010',
     name: 'Javier Romero',
     duty: 'manager',
     contract: 'part_time',
@@ -143,6 +156,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-11',
+    empId: 'EMP-0011',
     name: 'Laura Domínguez',
     duty: 'assistant',
     contract: 'weekends',
@@ -156,6 +170,7 @@ export const MOCK_EMPLOYEES: TeamMember[] = [
   },
   {
     id: 'emp-mock-12',
+    empId: 'EMP-0012',
     name: 'Mario Serrano',
     duty: 'head_manager',
     contract: 'fulltime',

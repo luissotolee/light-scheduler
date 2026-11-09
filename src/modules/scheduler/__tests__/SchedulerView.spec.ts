@@ -14,6 +14,7 @@ import { formatWeekRange, getWeekKey } from '@/shared/utils/calendar'
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'manager',
   contract: 'fulltime',
@@ -25,6 +26,7 @@ const ada: TeamMember = {
 
 const bo: TeamMember = {
   id: 'member-2',
+  empId: 'EMP-0002',
   name: 'Bo',
   duty: 'assistant',
   contract: 'part_time',
@@ -116,9 +118,9 @@ describe('SchedulerView', () => {
 
     expect(actions.exists()).toBe(true)
     expect(restart.element.tagName).toBe('BUTTON')
-    expect(restart.attributes('aria-label')).toBe('Restart week schedule')
+    expect(restart.attributes('aria-label')).toBe('Clear all')
     expect(restart.text()).toBe('')
-    expect(restart.find('.pi-refresh').exists()).toBe(true)
+    expect(restart.find('.pi-trash').exists()).toBe(true)
   })
 
   it('combines selected day and restart button in the day header', () => {
@@ -432,7 +434,7 @@ describe('SchedulerView', () => {
       'Semana anterior',
     )
     expect(wrapper.find('[data-test="restart-week"]').attributes('aria-label')).toBe(
-      'Reiniciar planificación semanal',
+      'Borrar todo',
     )
     expect(wrapper.find('.weekly-hours__title').text()).toBe('Horas semanales')
   })
@@ -475,4 +477,5 @@ describe('SchedulerView', () => {
     expect(wrapper.text()).toContain('15:00–16:00')
     expect(wrapper.text()).not.toContain('12:00–13:00')
   })
+
 })

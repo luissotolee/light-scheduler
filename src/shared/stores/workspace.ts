@@ -107,6 +107,39 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     schedules.value = { ...schedules.value, [weekKey]: shifts }
   }
 
+  function removeMemberShiftsForWeeks(memberId: string, weekKeys: Iterable<WeekKey>): void {
+    const targets = new Set(weekKeys)
+    if (targets.size === 0) return
+
+    let changed = false
+    const nextSchedules: Record<WeekKey, Shift[]> = {}
+    for (const [weekKey, shifts] of Object.entries(schedules.value)) {
+      if (!targets.has(weekKey)) {
+        nextSchedules[weekKey] = shifts
+        continue
+      }
+
+      const remaining = shifts.filter((shift) => shift.memberId !== memberId)
+      if (remaining.length === shifts.length) {
+        nextSchedules[weekKey] = shifts
+        continue
+      }
+
+      changed = true
+      if (remaining.length > 0) nextSchedules[weekKey] = remaining
+    }
+
+    if (changed) schedules.value = nextSchedules
+  }
+
+  function replaceScheduleData(
+    nextSchedules: Record<WeekKey, Shift[]>,
+    nextDayOffs: Record<WeekKey, DayOff[]>,
+  ): void {
+    schedules.value = nextSchedules
+    dayOffs.value = nextDayOffs
+  }
+
   function setDayOffsForWeek(weekKey: WeekKey, offs: DayOff[]): void {
     if (offs.length === 0) {
       const nextDayOffs = { ...dayOffs.value }
@@ -159,6 +192,8 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     removeMember,
     findMember,
     setShiftsForWeek,
+    removeMemberShiftsForWeeks,
+    replaceScheduleData,
     setDayOffsForWeek,
     setCurrentWeekKey,
     markLoaded,

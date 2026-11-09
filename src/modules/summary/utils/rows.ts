@@ -1,7 +1,7 @@
 import type { DayOff, Shift, TeamMember, WeekKey, Weekday } from '@/types'
 import type { SummaryCell, SummaryRow } from '@/modules/summary/types'
 import { WEEKDAY_ORDER, holidayToWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
-import { isMemberInWeek } from '@/shared/utils/employee'
+import { compareMembersByDuty, isMemberInWeek } from '@/shared/utils/employee'
 import { formatExtendedMinutes } from '@/shared/utils/shifts'
 
 export const SUMMARY_PRINT_MAX_ROW_UNITS = 30
@@ -40,6 +40,7 @@ export function buildSummaryRows(params: {
 
   return members
     .filter((member) => isMemberInWeek(member, weekKey, weekEnd))
+    .sort(compareMembersByDuty) // Same role/name ordering as the scheduler so summary, PDF, and print agree.
     .map((member) => {
       const isVacation = isVacationWeek(member, weekKey)
       const cells = {} as Record<Weekday, SummaryCell>
@@ -78,11 +79,6 @@ export function buildSummaryRows(params: {
         cells,
       }
     })
-    .sort(
-      (a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) ||
-        a.memberId.localeCompare(b.memberId),
-    )
 }
 
 export function summaryRowUnits(rows: readonly SummaryRow[]): number {

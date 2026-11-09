@@ -14,11 +14,10 @@ import {
 } from '@/shared/utils/shifts'
 import {
   buildWeeklyHoursGroups,
-  compareMembersByDuty,
   minutesToHours,
   sumShiftMinutes,
 } from '@/modules/scheduler/utils/hours'
-import { isMemberInWeek } from '@/shared/utils/employee'
+import { compareMembersByDuty, isMemberInWeek } from '@/shared/utils/employee'
 import { countDaysOffByMember } from '@/modules/scheduler/utils/off'
 import { closestShiftIndex, MAX_SHIFTS_PER_ROW } from '@/modules/scheduler/utils/grid'
 
@@ -119,7 +118,11 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       const closestIndex = closestShiftIndex(range, others)
       if (closestIndex !== -1) {
         const closest = others[closestIndex]
-        const relocated: Shift = { ...closest, startMinute: range.startMinute, endMinute: range.endMinute }
+        const relocated: Shift = {
+          ...closest,
+          startMinute: range.startMinute,
+          endMinute: range.endMinute,
+        }
         workspace().setShiftsForWeek(
           currentWeekKey.value,
           currentWeekShifts.value.map((s) => (s.id === closest.id ? relocated : s)),

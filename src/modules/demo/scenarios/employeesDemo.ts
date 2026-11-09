@@ -157,6 +157,13 @@ export const employeesDemoScenario: DemoScenario = {
       pauseMs: 1600,
     },
     {
+      id: 'employees-holidays-next-year',
+      action: 'click',
+      target: { testId: 'next-year' },
+      narrationKey: 'demo.scenario.employees.holidaysNextYear',
+      pauseMs: 1000,
+    },
+    {
       id: 'employees-holidays-select',
       action: 'click',
       target: { testId: 'week-20' },

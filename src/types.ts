@@ -29,9 +29,11 @@ export interface TeamMember {
   holidays: HolidayWeek[]
   email?: string
   phone?: string
+  comment?: string
   active: boolean
   startDate: string
   endDate?: string
+  empId: string
 }
 
 export interface NewTeamMember {
@@ -42,12 +44,14 @@ export interface NewTeamMember {
   holidays?: HolidayWeek[]
   email?: string
   phone?: string
+  comment?: string
   startDate?: string
 }
 
 export interface EmployeeCsvRecord extends NewTeamMember {
   active?: boolean
   endDate?: string
+  empId?: string
 }
 
 export interface EmployeeFormInput {
@@ -57,6 +61,7 @@ export interface EmployeeFormInput {
   weeklyHours: unknown
   email: string
   phone: string
+  comment: string
   holidays?: HolidayWeek[]
   startDate?: string
 }

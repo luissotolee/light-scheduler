@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { inferDelimiter, parseCsv, toCsv } from '@/shared/utils/csv'
+import { formatCsvStatus, inferDelimiter, parseCsv, toCsv } from '@/shared/utils/csv'
+import type { MessageKey } from '@/shared/i18n/messages/en'
 
 describe('inferDelimiter', () => {
   it('prefers a comma', () => {
@@ -119,5 +120,79 @@ describe('toCsv', () => {
       headers: ['member', 'weekday', 'start', 'end'],
       rows: [['Ada', 'monday', '09:00', '17:00']],
     })
+  })
+})
+
+describe('formatCsvStatus', () => {
+  const t = (key: MessageKey, params?: Record<string, string | number>): string => {
+    if (key === 'archive.rowError') return `Row ${params?.row}: ${params?.message}`
+    if (key === 'errors.invalidDuty') return 'Duty is invalid'
+    return `${key}${params && Object.keys(params).length > 0 ? ` ${JSON.stringify(params)}` : ''}`
+  }
+  const tc = (
+    oneKey: MessageKey,
+    otherKey: MessageKey,
+    count: number,
+    params?: Record<string, string | number>,
+  ): string => t(count === 1 ? oneKey : otherKey, params)
+
+  it('returns an empty string for idle status', () => {
+    expect(formatCsvStatus({ state: 'idle', message: null }, t, tc)).toBe('')
+  })
+
+  it('formats simple and row-error messages', () => {
+    expect(
+      formatCsvStatus(
+        { state: 'success', message: { kind: 'simple', code: 'archive.employeesExported' } },
+        t,
+        tc,
+      ),
+    ).toBe('archive.employeesExported')
+
+    expect(
+      formatCsvStatus(
+        {
+          state: 'error',
+          message: { kind: 'rowError', row: 2, messageCode: 'errors.invalidDuty' },
+        },
+        t,
+        tc,
+      ),
+    ).toBe('Row 2: Duty is invalid')
+  })
+
+  it('selects the plural form for employee and schedule imports', () => {
+    expect(
+      formatCsvStatus(
+        {
+          state: 'success',
+          message: { kind: 'simple', code: 'archive.importedOne', params: { count: 1 } },
+        },
+        t,
+        tc,
+      ),
+    ).toBe('archive.importedOne {"count":1}')
+
+    expect(
+      formatCsvStatus(
+        {
+          state: 'success',
+          message: { kind: 'simple', code: 'archive.importedMany', params: { count: 3 } },
+        },
+        t,
+        tc,
+      ),
+    ).toBe('archive.importedMany {"count":3}')
+
+    expect(
+      formatCsvStatus(
+        {
+          state: 'success',
+          message: { kind: 'simple', code: 'archive.schedulesImportedMany', params: { count: 3 } },
+        },
+        t,
+        tc,
+      ),
+    ).toBe('archive.schedulesImportedMany {"count":3}')
   })
 })

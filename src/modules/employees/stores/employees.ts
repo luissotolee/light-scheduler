@@ -3,8 +3,13 @@ import { computed, ref } from 'vue'
 import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import { todayIsoDate } from '@/shared/utils/calendar'
-import { MAX_HOLIDAY_WEEKS, normalizeHolidays, validateEmployeeForm } from '@/shared/utils/employee'
+import { holidayToWeekKey, todayIsoDate } from '@/shared/utils/calendar'
+import {
+  MAX_HOLIDAY_WEEKS,
+  createEmpId,
+  normalizeHolidays,
+  validateEmployeeForm,
+} from '@/shared/utils/employee'
 import { createId } from '@/shared/utils/id'
 
 interface EmployeesStatus {
@@ -12,10 +17,9 @@ interface EmployeesStatus {
   error: MessageKey | null
 }
 
-interface PendingAction {
-  kind: 'remove' | 'deactivate'
-  id: string
-}
+type PendingAction =
+  | { kind: 'remove' | 'deactivate'; id: string }
+  | { kind: 'holidays'; id: string; holidays: HolidayWeek[] }
 
 export const useEmployeesStore = defineStore('employees', () => {
   const search = ref('')
@@ -80,6 +84,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       weeklyHours: payload.weeklyHours,
       email: payload.email ?? '',
       phone: payload.phone ?? '',
+      comment: payload.comment ?? '',
       holidays: payload.holidays ?? [],
       startDate: payload.startDate,
     })
@@ -101,6 +106,8 @@ export const useEmployeesStore = defineStore('employees', () => {
       startDate: value.startDate ?? todayIsoDate(),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
+      ...(value.comment ? { comment: value.comment } : {}),
+      empId: createEmpId(workspace().members.map((m) => m.empId)),
     }
     workspace().upsertMember(member)
     setError(null)
@@ -119,6 +126,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       holidays: patch.holidays ?? member.holidays,
       email: patch.email ?? member.email ?? '',
       phone: patch.phone ?? member.phone ?? '',
+      comment: patch.comment ?? member.comment ?? '',
       startDate: patch.startDate ?? member.startDate,
     })
 
@@ -140,9 +148,18 @@ export const useEmployeesStore = defineStore('employees', () => {
       ...(member.endDate ? { endDate: member.endDate } : {}),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
+      ...(value.comment ? { comment: value.comment } : {}),
+      empId: member.empId,
     })
     setError(null)
     return true
+  }
+
+  function hasShiftsForHolidays(id: string, holidays: HolidayWeek[]): boolean {
+    const weekKeys = new Set(holidays.map(holidayToWeekKey))
+    return [...weekKeys].some((weekKey) =>
+      (workspace().schedules[weekKey] ?? []).some((shift) => shift.memberId === id),
+    )
   }
 
   function setHolidays(id: string, holidays: HolidayWeek[]): void {
@@ -156,7 +173,31 @@ export const useEmployeesStore = defineStore('employees', () => {
     }
 
     workspace().upsertMember({ ...member, holidays: normalized })
+    workspace().removeMemberShiftsForWeeks(
+      id,
+      normalized.map((holiday) => holidayToWeekKey(holiday)),
+    )
     setError(null)
+  }
+
+  function requestSetHolidays(id: string, holidays: HolidayWeek[]): void {
+    const member = workspace().findMember(id)
+    if (!member) return
+
+    const normalized = normalizeHolidays(holidays)
+    if (normalized.length > MAX_HOLIDAY_WEEKS) {
+      setError('errors.maxHolidays')
+      return
+    }
+
+    if (hasShiftsForHolidays(id, normalized)) {
+      pendingAction.value = { kind: 'holidays', id, holidays: normalized }
+      confirmVisible.value = true
+      setError(null)
+      return
+    }
+
+    setHolidays(id, normalized)
   }
 
   function deactivateMember(id: string): void {
@@ -183,6 +224,8 @@ export const useEmployeesStore = defineStore('employees', () => {
       startDate: member.startDate,
       ...(member.email ? { email: member.email } : {}),
       ...(member.phone ? { phone: member.phone } : {}),
+      ...(member.comment ? { comment: member.comment } : {}),
+      empId: member.empId,
     })
   }
 
@@ -202,6 +245,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     const action = pendingAction.value
     if (action?.kind === 'remove') removeMember(action.id)
     if (action?.kind === 'deactivate') deactivateMember(action.id)
+    if (action?.kind === 'holidays') setHolidays(action.id, action.holidays)
     cancelAction()
   }
 
@@ -315,6 +359,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     addMember,
     updateMember,
     setHolidays,
+    requestSetHolidays,
     deactivateMember,
     reactivateMember,
     requestRemove,

@@ -3,6 +3,7 @@ import { DOMWrapper, enableAutoUnmount, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
+import Tooltip from 'primevue/tooltip'
 import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
 import type { HolidayWeek } from '@/types'
 
@@ -30,7 +31,7 @@ describe('HolidayWeeksDialog', () => {
   async function mountDialog(visible = true, selected: HolidayWeek[] = [], initialYear?: number) {
     const wrapper = mount(HolidayWeeksDialog, {
       props: { visible, memberName: 'Ada', selected, initialYear },
-      global: { plugins: [PrimeVue] },
+      global: { plugins: [PrimeVue], directives: { tooltip: Tooltip } },
     })
     await nextTick()
     return wrapper
@@ -87,6 +88,22 @@ describe('HolidayWeeksDialog', () => {
       ],
     ])
     expect(wrapper.emitted('update:visible')).toEqual([[false]])
+  })
+
+  it('renders icon-only year navigation controls with accessible labels', async () => {
+    await mountDialog(true, [], 2026)
+
+    const previous = dialogBody().find('[data-test="previous-year"]')
+    const next = dialogBody().find('[data-test="next-year"]')
+
+    expect(previous.element.tagName).toBe('BUTTON')
+    expect(next.element.tagName).toBe('BUTTON')
+    expect(previous.attributes('aria-label')).toBe('Previous year')
+    expect(next.attributes('aria-label')).toBe('Next year')
+    expect(previous.text()).toBe('')
+    expect(next.text()).toBe('')
+    expect(previous.find('.pi-chevron-left').exists()).toBe(true)
+    expect(next.find('.pi-chevron-right').exists()).toBe(true)
   })
 
   it('navigates between years', async () => {

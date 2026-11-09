@@ -23,8 +23,10 @@
         @click="emit('select', option.id)"
       >
         <i class="demo-picker__icon" :class="option.icon" aria-hidden="true" />
-        <span class="demo-picker__option-title">{{ t(option.titleKey) }}</span>
-        <span class="demo-picker__option-description">{{ t(option.descriptionKey) }}</span>
+        <span class="demo-picker__option-body">
+          <span class="demo-picker__option-title">{{ t(option.titleKey) }}</span>
+          <span class="demo-picker__option-description">{{ t(option.descriptionKey) }}</span>
+        </span>
       </button>
     </div>
 
@@ -91,6 +93,10 @@ const { t } = useI18n()
 </script>
 
 <style scoped>
+.demo-picker {
+  width: min(32rem, 92vw);
+}
+
 .demo-picker__description {
   margin: 0 0 1rem;
   color: var(--color-muted);
@@ -99,14 +105,14 @@ const { t } = useI18n()
 
 .demo-picker__options {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.75rem;
 }
 
 .demo-picker__option {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  align-items: flex-start;
+  gap: 0.75rem;
   padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -131,6 +137,13 @@ const { t } = useI18n()
 .demo-picker__icon {
   color: var(--color-accent);
   font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.demo-picker__option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .demo-picker__option-title {
@@ -147,11 +160,5 @@ const { t } = useI18n()
   display: flex;
   justify-content: flex-end;
   margin-top: 1.25rem;
-}
-
-@media (max-width: 48rem) {
-  .demo-picker__options {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

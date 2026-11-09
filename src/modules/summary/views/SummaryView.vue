@@ -91,7 +91,7 @@ import { saveSummaryPdf } from '@/modules/summary/utils/pdf'
 import { useI18n } from '@/shared/i18n'
 
 const store = useSummaryStore()
-const { rows, dayHeaders, weekRangeLabel, printZoom } = storeToRefs(store)
+const { rows, dayHeaders, weekRangeLabel, printZoom, currentWeekKey } = storeToRefs(store)
 const { t, locale } = useI18n()
 
 function printSummary(): void {
@@ -102,6 +102,7 @@ function savePdf(): void {
   saveSummaryPdf({
     rows: rows.value,
     days: dayHeaders.value,
+    weekKey: currentWeekKey.value,
     weekRangeLabel: weekRangeLabel.value,
     locale: locale.value,
   })

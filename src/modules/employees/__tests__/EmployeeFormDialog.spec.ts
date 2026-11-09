@@ -16,6 +16,7 @@ enableAutoUnmount(afterEach)
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'manager',
   contract: 'fulltime',
@@ -23,6 +24,7 @@ const ada: TeamMember = {
   holidays: [{ year: 2026, week: 10 }],
   email: 'ada@example.com',
   phone: '+1 555 010 0000',
+  comment: 'No morning shifts',
   active: true,
   startDate: '2025-01-15',
 }
@@ -74,6 +76,7 @@ describe('EmployeeFormDialog', () => {
           holidays: [],
           phone: '+1 555 010 0000',
           email: '',
+          comment: '',
           startDate: todayIsoDate(),
         },
       ],
@@ -98,6 +101,7 @@ describe('EmployeeFormDialog', () => {
           holidays: [],
           phone: '',
           email: '',
+          comment: '',
           startDate: todayIsoDate(),
         },
       ],
@@ -132,6 +136,7 @@ describe('EmployeeFormDialog', () => {
           holidays: ada.holidays,
           phone: '+1 555 010 0000',
           email: 'new@example.com',
+          comment: 'No morning shifts',
           startDate: ada.startDate,
         },
       ],
@@ -156,6 +161,46 @@ describe('EmployeeFormDialog', () => {
           holidays: ada.holidays,
           phone: '',
           email: '',
+          comment: 'No morning shifts',
+          startDate: ada.startDate,
+        },
+      ],
+    ])
+  })
+
+  it('pre-fills the comment textarea when editing', async () => {
+    const wrapper = await mountDialog(true, ada)
+
+    expect((dialogBody().find('#employee-comment').element as HTMLTextAreaElement).value).toBe(
+      'No morning shifts',
+    )
+
+    await dialogBody().find('#employee-comment').setValue('  Available weekends only  ')
+    await dialogBody().find('form').trigger('submit')
+
+    expect(wrapper.emitted('submit')?.[0]?.[0]).toMatchObject({
+      comment: 'Available weekends only',
+    })
+  })
+
+  it('submits an empty comment when it is cleared on edit', async () => {
+    const wrapper = await mountDialog(true, ada)
+
+    await dialogBody().find('#employee-comment').setValue('   ')
+    await nextTick()
+    await dialogBody().find('form').trigger('submit')
+
+    expect(wrapper.emitted('submit')).toEqual([
+      [
+        {
+          name: 'Ada',
+          duty: 'manager',
+          contract: 'fulltime',
+          weeklyHours: 40,
+          holidays: ada.holidays,
+          phone: '+1 555 010 0000',
+          email: 'ada@example.com',
+          comment: '',
           startDate: ada.startDate,
         },
       ],
@@ -172,6 +217,7 @@ describe('EmployeeFormDialog', () => {
     expect(body.find('legend').text()).toBe('Contract *')
     expect(body.find('label[for="employee-phone"]').text()).toBe('Phone')
     expect(body.find('label[for="employee-email"]').text()).toBe('Email')
+    expect(body.find('label[for="employee-comment"]').text()).toBe('Comment')
     expect(body.text()).not.toContain('(optional)')
 
     expect(body.find('#employee-name').attributes('placeholder')).toBe('e.g. Jane Doe')
@@ -179,6 +225,9 @@ describe('EmployeeFormDialog', () => {
       'e.g. 612 345 678 or +34 612 345 678',
     )
     expect(body.find('#employee-email').attributes('placeholder')).toBe('e.g. jane@example.com')
+    expect(body.find('#employee-comment').attributes('placeholder')).toBe(
+      'e.g. No morning shifts',
+    )
     expect(body.find('#employee-hours').attributes('placeholder')).toBe('e.g. 40')
   })
 
@@ -383,6 +432,7 @@ describe('EmployeeFormDialog', () => {
           holidays: [],
           phone: '',
           email: '',
+          comment: '',
           startDate: '2026-12-01',
         },
       ],
@@ -426,6 +476,10 @@ describe('EmployeeFormDialog', () => {
       'nora.ejemplo@example.com',
     )
     fillInput(
+      dialogBody().find('[data-test="employee-comment-input"]').element as HTMLElement,
+      'No morning shifts',
+    )
+    fillInput(
       dialogBody().find('[data-test="employee-hours-input"]').element as HTMLElement,
       '32',
     )
@@ -436,6 +490,7 @@ describe('EmployeeFormDialog', () => {
       name: 'Nora Ejemplo',
       phone: '+34 600 123 456',
       email: 'nora.ejemplo@example.com',
+      comment: 'No morning shifts',
       weeklyHours: 32,
     })
   })

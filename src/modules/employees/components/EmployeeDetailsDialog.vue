@@ -9,6 +9,10 @@
     <div v-if="member" class="employee-details__body">
       <dl class="employee-details__list">
         <div class="employee-details__item">
+          <dt class="employee-details__label">{{ t('employees.details.empId') }}</dt>
+          <dd class="employee-details__value" data-test="details-emp-id">{{ member.empId }}</dd>
+        </div>
+        <div class="employee-details__item">
           <dt class="employee-details__label">{{ t('employees.details.duty') }}</dt>
           <dd class="employee-details__value" data-test="details-duty">{{ dutyLabel }}</dd>
         </div>
@@ -50,6 +54,15 @@
           <dt class="employee-details__label">{{ t('employees.details.endDate') }}</dt>
           <dd class="employee-details__value" data-test="details-end-date">
             {{ formatIsoDate(member.endDate, locale) }}
+          </dd>
+        </div>
+        <div class="employee-details__item employee-details__item--full">
+          <dt class="employee-details__label">{{ t('employees.details.comment') }}</dt>
+          <dd
+            class="employee-details__value employee-details__value--multiline"
+            data-test="details-comment"
+          >
+            {{ member.comment || t('common.dash') }}
           </dd>
         </div>
       </dl>
@@ -143,9 +156,18 @@ const contractLabel = computed(() =>
   font-size: 0.85rem;
 }
 
+.employee-details__item--full {
+  grid-column: 1 / -1;
+}
+
 .employee-details__value {
   margin: 0;
   color: var(--color-text);
+}
+
+.employee-details__value--multiline {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .employee-details__section-title {

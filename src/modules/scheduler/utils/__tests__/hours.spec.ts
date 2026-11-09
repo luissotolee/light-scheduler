@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { Duty, Shift, TeamMember } from '@/types'
+import type { Shift, TeamMember } from '@/types'
 import {
   buildWeeklyHoursGroups,
-  compareMembersByDuty,
-  compareNames,
-  dutyRank,
   formatDiff,
   formatHours,
   initialsOf,
@@ -15,6 +12,7 @@ import {
 function makeMember(overrides: Partial<TeamMember> = {}): TeamMember {
   return {
     id: 'member-1',
+    empId: 'EMP-0001',
     name: 'Ada Lovelace',
     duty: 'employee',
     contract: 'fulltime',
@@ -101,77 +99,6 @@ describe('formatDiff', () => {
   })
 })
 
-describe('dutyRank', () => {
-  it('orders duties head manager, assistant, manager, employee', () => {
-    expect(dutyRank('head_manager')).toBe(0)
-    expect(dutyRank('assistant')).toBe(1)
-    expect(dutyRank('manager')).toBe(2)
-    expect(dutyRank('employee')).toBe(3)
-  })
-
-  it('sorts unknown duties last', () => {
-    expect(dutyRank('unknown' as Duty)).toBe(4)
-  })
-})
-
-describe('compareNames', () => {
-  it('compares names case-insensitively', () => {
-    expect(compareNames('ada', 'Ada')).toBe(0)
-    expect(compareNames('Ada', 'Bo')).toBeLessThan(0)
-    expect(compareNames('Bo', 'Ada')).toBeGreaterThan(0)
-  })
-})
-
-describe('compareMembersByDuty', () => {
-  function member(id: string, name: string, duty: Duty) {
-    return { id, name, duty }
-  }
-
-  it('orders members by role priority', () => {
-    const members = [
-      member('e', 'Eve', 'employee'),
-      member('m', 'Max', 'manager'),
-      member('a', 'Al', 'assistant'),
-      member('h', 'Hana', 'head_manager'),
-    ]
-
-    expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual([
-      'h',
-      'a',
-      'm',
-      'e',
-    ])
-  })
-
-  it('orders alphabetically, case-insensitively, within a role', () => {
-    const members = [
-      member('c', 'cy', 'manager'),
-      member('b', 'Ada', 'manager'),
-      member('a', 'bo', 'manager'),
-    ]
-
-    expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual(['b', 'a', 'c'])
-  })
-
-  it('breaks name ties by id', () => {
-    const members = [member('b', 'Ada', 'manager'), member('a', 'Ada', 'manager')]
-
-    expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual(['a', 'b'])
-  })
-
-  it('sorts unknown duties last', () => {
-    const members = [
-      member('unknown', 'Zed', 'unknown' as Duty),
-      member('known', 'Ada', 'employee'),
-    ]
-
-    expect(members.sort(compareMembersByDuty).map((entry) => entry.id)).toEqual([
-      'known',
-      'unknown',
-    ])
-  })
-})
-
 describe('buildWeeklyHoursGroups', () => {
   it('groups rows in duty order and omits empty groups', () => {
     const members = [
@@ -252,4 +179,3 @@ describe('buildWeeklyHoursGroups', () => {
     expect(groups[0].rows.map((row) => row.memberId)).toEqual(['active', 'inactive'])
   })
 })
-
