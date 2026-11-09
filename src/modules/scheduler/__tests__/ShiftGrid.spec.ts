@@ -9,6 +9,7 @@ import { buildDaySlots } from '@/shared/utils/shifts'
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'manager',
   contract: 'fulltime',
@@ -20,6 +21,7 @@ const ada: TeamMember = {
 
 const bo: TeamMember = {
   id: 'member-2',
+  empId: 'EMP-0002',
   name: 'Bo',
   duty: 'assistant',
   contract: 'part_time',

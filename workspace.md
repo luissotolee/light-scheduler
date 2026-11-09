@@ -1,6 +1,6 @@
 # Workspace context — light-scheduler
 
-Frontend-only weekly shift scheduler (Vue 3 + TypeScript + Pinia + PrimeVue, Vite/Vitest). No backend; state lives in the browser and round-trips via CSV. Use this file to locate code quickly; load the matching skill from `.kilo/skills/` for the conventions that apply to each area.
+Frontend-only weekly shift scheduler (Vue 3 + TypeScript + Pinia + PrimeVue, Vite/Vitest). No backend; state lives in the browser and round-trips via a gzip-compressed JSON backup (plus CSV for the weekly schedule). Use this file to locate code quickly; load the matching skill from `.kilo/skills/` for the conventions that apply to each area.
 
 ## Architecture pattern
 
@@ -17,26 +17,26 @@ Lightweight feature-module / vertical-slice layout:
 - `scheduler/` — weekly shift view + shift actions (`scheduler` store: `addShift`, `removeShift`, `updateShift`, week navigation).
 - `employees/` — employee CRUD + holiday dialogs (`employees` store + `EmployeeTable`/`EmployeeFormDialog`/`EmployeeDetailsDialog`/`HolidayWeeksDialog`). The domain entity is `TeamMember` (see `src/types.ts`).
 - `summary/` — read-only weekly summary (`summary` store).
-- `csv/` — employee/schedule import/export wiring (`csv` store).
+- `archive/` — `.json.gz` backup export/restore plus weekly schedule CSV wiring (`archive` store). Backup format helpers live in `shared/utils/archiveBackup.ts`; backups key schedules by ISO year → week → `empId` and omit empty weeks.
 - `demo/` — in-app real-time guided demo (mock data, localStorage snapshot/restore, step scenarios, visual cursor/ring/ripple, narration overlay). Vertical slice: `scenarios/`, `fixtures/`, `utils/`, `player/`, `stores/`, `components/`. See `.kilo/skills/guided-demo/SKILL.md`.
-- `shared/` — `workspace` store (source of truth for `members` + `schedules`); utils `calendar`/`shifts`/`employee`/`csv`/`download`/`id`; components `AppNav`/`PageHeader`/`EmptyState`/`ConfirmActionDialog`/`LanguageSwitcher`/`LocaleFlag`; `fixtures/employees.ts` (mock data reused by demo).
+- `shared/` — `workspace` store (source of truth for `members` + `schedules` + `dayOffs`); utils `calendar`/`shifts`/`employee`/`csv`/`csvFile`/`scheduleCsv`/`archiveBackup`/`download`/`id`; components `AppNav`/`PageHeader`/`EmptyState`/`ConfirmActionDialog`/`LanguageSwitcher`/`LocaleFlag`; `fixtures/employees.ts` (mock data reused by demo).
 - `shared/i18n/` — localization: `messages/en.ts` + `messages/es.ts` (two languages, both must stay in sync), `index.ts` (`useI18n`, `t`, `tc`), `types.ts` (`Locale`/`LOCALE_META`), `primevue.ts` (PrimeVue locale options); plus the `locale` store in `shared/stores/locale.ts`.
 
 ## Where to find each kind of file
 
-| Kind | Location |
-|---|---|
-| Routed view | `src/modules/<module>/views/` |
-| Presentational component (shared) | `src/shared/components/` |
-| Presentational component (module) | `src/modules/<module>/components/` |
-| Pinia store (shared) | `src/shared/stores/` |
-| Pinia store (module) | `src/modules/<module>/stores/` |
-| Pure util / adapter (shared) | `src/shared/utils/` |
-| Module-local util | `src/modules/<module>/utils/` |
-| Shared domain type | `src/types.ts` |
-| Module-local type | `src/modules/<module>/types.ts` |
-| Test | sibling `__tests__/` folder (`src/modules/<module>/__tests__/` or `src/shared/<area>/__tests__/`) |
-| Message catalog (text/labels) | `src/shared/i18n/messages/en.ts` + `src/shared/i18n/messages/es.ts` (update **both**) |
+| Kind                              | Location                                                                                          |
+| --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Routed view                       | `src/modules/<module>/views/`                                                                     |
+| Presentational component (shared) | `src/shared/components/`                                                                          |
+| Presentational component (module) | `src/modules/<module>/components/`                                                                |
+| Pinia store (shared)              | `src/shared/stores/`                                                                              |
+| Pinia store (module)              | `src/modules/<module>/stores/`                                                                    |
+| Pure util / adapter (shared)      | `src/shared/utils/`                                                                               |
+| Module-local util                 | `src/modules/<module>/utils/`                                                                     |
+| Shared domain type                | `src/types.ts`                                                                                    |
+| Module-local type                 | `src/modules/<module>/types.ts`                                                                   |
+| Test                              | sibling `__tests__/` folder (`src/modules/<module>/__tests__/` or `src/shared/<area>/__tests__/`) |
+| Message catalog (text/labels)     | `src/shared/i18n/messages/en.ts` + `src/shared/i18n/messages/es.ts` (update **both**)             |
 
 ## Languages (i18n)
 

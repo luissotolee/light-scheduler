@@ -10,6 +10,7 @@ const weekKey = '2026-11-02'
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'employee',
   contract: 'fulltime',

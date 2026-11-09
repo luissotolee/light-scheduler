@@ -41,9 +41,9 @@ const features = [
     path: '/summary',
   },
   {
-    titleKey: 'home.feature.csv.title',
-    descriptionKey: 'home.feature.csv.description',
-    path: '/csv',
+    titleKey: 'home.feature.archive.title',
+    descriptionKey: 'home.feature.archive.description',
+    path: '/archive',
   },
 ] as const
 </script>

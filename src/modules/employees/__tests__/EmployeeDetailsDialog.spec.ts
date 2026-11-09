@@ -10,6 +10,7 @@ enableAutoUnmount(afterEach)
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'head_manager',
   contract: 'part_time',
@@ -54,6 +55,7 @@ describe('EmployeeDetailsDialog', () => {
 
     const body = dialogBody()
     expect(body.text()).toContain('Ada')
+    expect(body.find('[data-test="details-emp-id"]').text()).toBe('EMP-0001')
     expect(body.find('[data-test="details-duty"]').text()).toBe('Head manager')
     expect(body.find('[data-test="details-contract"]').text()).toBe('Part-time')
     expect(body.find('[data-test="details-hours"]').text()).toBe('32')

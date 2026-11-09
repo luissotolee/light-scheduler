@@ -13,6 +13,7 @@ import { buildDaySlots } from '@/shared/utils/shifts'
 
 const member: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'employee',
   contract: 'fulltime',

@@ -11,5 +11,5 @@ export const NAV_ITEMS: NavItem[] = [
   { labelKey: 'nav.scheduler', name: 'scheduler', path: '/scheduler' },
   { labelKey: 'nav.summary', name: 'summary', path: '/summary' },
   { labelKey: 'nav.employees', name: 'employees', path: '/employees' },
-  { labelKey: 'nav.csv', name: 'csv', path: '/csv' },
+  { labelKey: 'nav.archive', name: 'archive', path: '/archive' },
 ]

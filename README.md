@@ -1,25 +1,27 @@
 # Light Scheduler
 
-Light Scheduler is a light, modern weekly shift scheduler for creating daily shifts across a week for many employees. It is a frontend-only application: there is no backend, and all data lives in browser state and round-trips through CSV files so work can resume where it was left off. Built with Vue 3, Vite, TypeScript, Pinia, PrimeVue, and Vitest, with CI/CD automated by GitHub Actions.
+Light Scheduler is a light, modern weekly shift scheduler for creating daily shifts across a week for many employees. It is a frontend-only application: there is no backend, and all data lives in browser state and round-trips through a compressed JSON backup file so work can resume where it was left off. Built with Vue 3, Vite, TypeScript, Pinia, PrimeVue, and Vitest, with CI/CD automated by GitHub Actions.
 
 ## Features
 
-The product scope covers three pages plus CSV import/export:
+The product scope covers the scheduling pages plus an Archive page for import/export:
 
-| Page      | Purpose                                                                     | Status  |
-| --------- | --------------------------------------------------------------------------- | ------- |
-| Scheduler | Create and manage daily shifts at a weekly cadence for employees.           | Planned |
-| Employees | Manage employee records used when building schedules.                       | Planned |
-| Summary   | Review the weekly schedule and print it or save it as PDF.                  | Planned |
-| CSV I/O   | Upload and download employee and weekly schedule files, as described below. | Planned |
+| Page      | Purpose                                                           | Status  |
+| --------- | ----------------------------------------------------------------- | ------- |
+| Scheduler | Create and manage daily shifts at a weekly cadence for employees. | Planned |
+| Employees | Manage employee records used when building schedules.             | Planned |
+| Summary   | Review the weekly schedule and print it or save it as PDF.        | Planned |
+| Archive   | Download or restore a compressed JSON backup of the workspace.    | Planned |
 
-CSV import and export uses two separate file types: employees and weekly schedules. Each can be uploaded and downloaded independently, so a working file can be exported, edited elsewhere, and re-imported to resume where work was left off. Imports accept both UTF-8 and Windows-1252 encodings for compatibility with common spreadsheet tools.
+The Archive page downloads a single `backup-<timestamp>.json.gz` file containing every employee plus the years, weeks, and shifts that have data. Weeks without shifts are omitted. Restoring a backup replaces the current employees, shifts, and days off. The Scheduler page also keeps CSV import/export for the weekly schedule, so a week can be edited in a spreadsheet and brought back.
 
-There is no backend. CSV parsing, serialization, downloads, and all other application behavior run in the browser.
+Backups are gzip-compressed with the browser's native `CompressionStream`/`DecompressionStream`, so no additional runtime dependency is required.
+
+There is no backend. Backup encoding, CSV parsing, downloads, and all other application behavior run in the browser.
 
 ## Current status
 
-Light Scheduler is at the base-structure stage. The app includes the application shell, a top navigation bar, a Home landing page, and lazily loaded skeletons for Scheduler, Employees, Summary, and CSV I/O. A shared workspace store holds employees, weekly shifts, and the current week, while a page store per page holds page-local UI state. The pure calendar, shift, CSV, and download utilities are implemented and tested. Shift editing, employee create/edit forms, schedule review tables, and CSV import parsing are planned and not yet implemented.
+Light Scheduler is at the base-structure stage. The app includes the application shell, a top navigation bar, a Home landing page, and lazily loaded skeletons for Scheduler, Employees, Summary, and Archive. A shared workspace store holds employees, weekly shifts, and the current week, while a page store per page holds page-local UI state. The pure calendar, shift, CSV, and download utilities are implemented and tested. Shift editing, employee create/edit forms, schedule review tables, and CSV import parsing are planned and not yet implemented.
 
 ## Stack
 
@@ -81,11 +83,12 @@ src/
     employees.ts          Employees page state and member actions
     scheduler.ts          Scheduler page week navigation and shift actions
     summary.ts            read-only weekly summary getters
-    csv.ts                employee and schedule export wiring
+    archive.ts            backup export/restore and weekly schedule CSV wiring
     __tests__/
   utils/
     calendar.ts           timezone-safe local ISO week helpers
     shifts.ts             HH:mm parsing and half-open overlap helpers
+    archiveBackup.ts      gzip JSON backup build, validation, encode, and decode
     csv.ts                pure RFC 4180 CSV parsing and serialization
     download.ts           Blob download and timestamped filename helpers
     id.ts                 id generation helper
@@ -95,13 +98,13 @@ src/
     SchedulerView.vue     weekly shift skeleton
     EmployeesView.vue     employee search/list skeleton
     SummaryView.vue       weekly summary and print skeleton
-    CsvView.vue           export skeleton with import placeholders
+    ArchiveView.vue       export/import page for workspace information
     __tests__/
   modules/
     demo/                 in-app real-time guided demo (see .kilo/skills/guided-demo/SKILL.md)
       types.ts                    DemoScenario, DemoStep, DemoAction, DemoTarget
       fixtures/demoWorkspace.ts   buildDemoWorkspace(now?) → PersistedWorkspace
-      scenarios/                  step scenarios (v1: scheduler→employees→summary→CSV)
+      scenarios/                  step scenarios (v1: scheduler→employees→summary→Archive)
       utils/storageSnapshot.ts    localStorage snapshot/restore/backup/recovery
       utils/dom.ts                target resolution, click/pointer/press/fill, reduced motion
       utils/demoSession.ts        startDemo/stopDemo (snapshot → load mock → reset UI → engine)

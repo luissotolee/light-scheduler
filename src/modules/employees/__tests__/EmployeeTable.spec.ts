@@ -8,6 +8,7 @@ import type { TeamMember } from '@/types'
 const members: TeamMember[] = [
   {
     id: 'member-1',
+    empId: 'EMP-0001',
     name: 'Ada',
     duty: 'head_manager',
     contract: 'part_time',
@@ -20,6 +21,7 @@ const members: TeamMember[] = [
   },
   {
     id: 'member-2',
+    empId: 'EMP-0002',
     name: 'Bo',
     duty: 'assistant',
     contract: 'weekends',
@@ -63,6 +65,13 @@ describe('EmployeeTable', () => {
     expect(wrapper.text()).toContain('Bo')
     expect(wrapper.text()).toContain('Assistant')
     expect(wrapper.text()).toContain('Weekends')
+  })
+
+  it('renders the employee id column', () => {
+    const wrapper = mountTable()
+
+    expect(wrapper.find('[data-test="employee-id-member-1"]').text()).toBe('EMP-0001')
+    expect(wrapper.find('[data-test="employee-id-member-2"]').text()).toBe('EMP-0002')
   })
 
   it('adds duty and contract modifier classes to chips', () => {

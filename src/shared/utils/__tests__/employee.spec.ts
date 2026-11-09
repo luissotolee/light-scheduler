@@ -44,6 +44,7 @@ const headers = [
 
 const member: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'head_manager',
   contract: 'part_time',
@@ -64,6 +65,7 @@ describe('employee constants', () => {
     expect(CONTRACTS).toEqual(['fulltime', 'part_time', 'weekends'])
     expect(MAX_HOLIDAY_WEEKS).toBe(6)
     expect(EMPLOYEE_HEADERS).toEqual([
+      'emp_id',
       'name',
       'duty',
       'contract',
@@ -718,6 +720,7 @@ describe('validateEmployees', () => {
 describe('row mapping', () => {
   it('maps a member to the canonical column order', () => {
     expect(employeeToRow(member)).toEqual([
+      'EMP-0001',
       'Ada',
       'head_manager',
       'part_time',
@@ -735,6 +738,7 @@ describe('row mapping', () => {
     expect(
       employeeToRow({
         id: 'member-2',
+        empId: 'EMP-0002',
         name: 'Bo',
         duty: 'employee',
         contract: 'fulltime',
@@ -743,13 +747,14 @@ describe('row mapping', () => {
         active: true,
         startDate: '2026-11-08',
       }),
-    ).toEqual(['Bo', 'employee', 'fulltime', 40, '', '', '', 'true', '2026-11-08', ''])
+    ).toEqual(['EMP-0002', 'Bo', 'employee', 'fulltime', 40, '', '', '', 'true', '2026-11-08', ''])
   })
 
   it('serializes inactive members with their end date', () => {
     expect(
       employeeToRow({
         id: 'member-3',
+        empId: 'EMP-0003',
         name: 'Cy',
         duty: 'assistant',
         contract: 'weekends',
@@ -759,7 +764,19 @@ describe('row mapping', () => {
         startDate: '2020-01-01',
         endDate: '2026-11-08',
       }),
-    ).toEqual(['Cy', 'assistant', 'weekends', 12, '', '', '', 'false', '2020-01-01', '2026-11-08'])
+    ).toEqual([
+      'EMP-0003',
+      'Cy',
+      'assistant',
+      'weekends',
+      12,
+      '',
+      '',
+      '',
+      'false',
+      '2020-01-01',
+      '2026-11-08',
+    ])
   })
 
   it('maps a list of members', () => {
@@ -775,6 +792,7 @@ describe('isMemberInWeek', () => {
   function member(overrides: Partial<Pick<TeamMember, 'startDate' | 'endDate'>> = {}) {
     return {
       id: 'member-1',
+      empId: 'EMP-0004',
       name: 'Test Member',
       duty: 'employee',
       contract: 'fulltime',

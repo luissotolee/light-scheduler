@@ -14,6 +14,7 @@ import { readJson, writeJson } from '@/shared/utils/storage'
 
 const member: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'employee',
   contract: 'fulltime',
@@ -52,7 +53,7 @@ describe('workspace store', () => {
     expect(store.schedules).toEqual({})
     expect(store.currentWeekKey).toBe(getWeekKey(new Date()))
     expect(store.dataLoaded).toBe(false)
-    expect(store.schemaVersion).toBe(1)
+    expect(store.schemaVersion).toBe(WORKSPACE_SCHEMA_VERSION)
     expect(store.memberCount).toBe(0)
     expect(store.activeMembers).toEqual([])
     expect(store.currentWeekShifts).toEqual([])
@@ -180,6 +181,23 @@ describe('workspace store', () => {
     expect(store.dayOffs).toEqual({ '2026-10-26': [otherDayOff] })
   })
 
+  it('replaces all schedule data atomically', () => {
+    const store = useWorkspaceStore()
+    store.setShiftsForWeek('2026-10-26', [shift])
+    store.setDayOffsForWeek('2026-10-26', [dayOff])
+
+    const nextShift: Shift = { ...shift, id: 'shift-9', weekday: 'friday' }
+    const nextDayOff: DayOff = { memberId: member.id, weekday: 'sunday' }
+
+    store.replaceScheduleData(
+      { '2026-11-02': [nextShift] },
+      { '2026-11-02': [nextDayOff] },
+    )
+
+    expect(store.schedules).toEqual({ '2026-11-02': [nextShift] })
+    expect(store.dayOffs).toEqual({ '2026-11-02': [nextDayOff] })
+  })
+
   it('marks data as loaded', () => {
     const store = useWorkspaceStore()
 
@@ -248,7 +266,7 @@ describe('workspace store', () => {
   it('falls back to defaults when the persisted schema version is unsupported', () => {
     writeJson(WORKSPACE_STORAGE_KEY, {
       ...serializeWorkspace(persistedPayload),
-      version: 2,
+      version: 99,
     })
 
     const store = useWorkspaceStore()

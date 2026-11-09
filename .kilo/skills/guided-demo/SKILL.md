@@ -143,7 +143,7 @@ interface DemoScenario {
 ```
 
 ```ts
-// In CsvView.vue (already has data-test="export-employees")
+// In ArchiveView.vue (already has data-test="export-employees")
 <button data-test="export-employees" ...>
 ```
 

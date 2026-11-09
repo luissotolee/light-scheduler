@@ -7,6 +7,7 @@ import { todayIsoDate } from '@/shared/utils/calendar'
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'manager',
   contract: 'fulltime',
@@ -19,6 +20,7 @@ const ada: TeamMember = {
 }
 const bo: TeamMember = {
   id: 'member-2',
+  empId: 'EMP-0002',
   name: 'Bo',
   duty: 'employee',
   contract: 'part_time',
@@ -195,6 +197,7 @@ describe('employees store', () => {
 
     expect(store.filteredMembers[0]).toEqual({
       id: ada.id,
+      empId: 'EMP-0001',
       name: 'Ada Lovelace',
       duty: 'manager',
       contract: 'fulltime',

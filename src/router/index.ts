@@ -25,9 +25,9 @@ export function createAppRouter(
         component: () => import('@/modules/summary/views/SummaryView.vue'),
       },
       {
-        path: '/csv',
-        name: 'csv',
-        component: () => import('@/modules/csv/views/CsvView.vue'),
+        path: '/archive',
+        name: 'archive',
+        component: () => import('@/modules/archive/views/ArchiveView.vue'),
       },
     ],
   })

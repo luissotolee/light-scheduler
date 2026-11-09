@@ -4,7 +4,35 @@
       :title="t('scheduler.title')"
       :description="t('scheduler.description')"
       description-tooltip
-    />
+    >
+      <template #actions>
+        <Button
+          type="button"
+          icon="pi pi-download"
+          size="small"
+          :label="t('scheduler.exportSchedules')"
+          :disabled="!canExportSchedule"
+          data-test="export-schedules"
+          @click="archiveStore.exportSchedule"
+        />
+        <Button
+          type="button"
+          icon="pi pi-upload"
+          size="small"
+          :label="t('scheduler.importSchedules')"
+          data-test="import-schedules"
+          @click="openSchedulePicker"
+        />
+        <input
+          ref="scheduleFileInput"
+          type="file"
+          accept=".csv,text/csv"
+          class="visually-hidden"
+          data-test="schedule-file"
+          @change="handleScheduleFile"
+        />
+      </template>
+    </PageHeader>
 
     <div class="scheduler__toolbar-wrapper">
       <div class="scheduler__toolbar">
@@ -35,6 +63,16 @@
         />
       </div>
     </div>
+
+    <p
+      v-if="archiveStatus.message"
+      class="scheduler__archive-status"
+      :class="`scheduler__archive-status--${archiveStatus.state}`"
+      data-test="schedule-status"
+      role="status"
+    >
+      {{ archiveStatusText }}
+    </p>
 
     <p v-if="errorMessage" class="scheduler__error" role="alert">{{ errorMessage }}</p>
 
@@ -88,6 +126,17 @@
       @update:visible="handleResetVisibility"
       @confirm="confirmReset"
     />
+
+    <ConfirmActionDialog
+      :visible="scheduleImportVisible"
+      :header="t('archive.confirm.importHeader')"
+      :message="t('archive.confirm.importMessage')"
+      :confirm-label="t('archive.confirm.importLabel')"
+      severity="danger"
+      data-test="schedule-import-confirm"
+      @update:visible="handleScheduleImportVisibility"
+      @confirm="confirmScheduleImport"
+    />
   </section>
 </template>
 
@@ -101,6 +150,7 @@ import WeekdayTabs from '@/modules/scheduler/components/WeekdayTabs.vue'
 import ShiftGrid from '@/modules/scheduler/components/ShiftGrid.vue'
 import WeeklyHoursTable from '@/modules/scheduler/components/WeeklyHoursTable.vue'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { useArchiveStore } from '@/modules/archive/stores/archive'
 import type { ShiftRangeInput, ShiftResizeInput } from '@/modules/scheduler/types'
 import { useI18n } from '@/shared/i18n'
 import {
@@ -110,6 +160,8 @@ import {
   weekdayDayOfMonth,
 } from '@/shared/utils/calendar'
 import { buildDaySlots } from '@/shared/utils/shifts'
+import { readCsvFile } from '@/shared/utils/csvFile'
+import { formatCsvStatus } from '@/shared/utils/csv'
 
 const store = useSchedulerStore()
 const {
@@ -120,7 +172,9 @@ const {
   selectedWeekdayDate,
   weeklyHoursGroups,
 } = storeToRefs(store)
-const { t, locale } = useI18n()
+const archiveStore = useArchiveStore()
+const { status: archiveStatus, scheduleImportVisible, canExportSchedule } = storeToRefs(archiveStore)
+const { t, tc, locale } = useI18n()
 
 const weekdayOptions = computed(() =>
   WEEKDAY_ORDER.map((value) => ({
@@ -132,8 +186,10 @@ const weekdayOptions = computed(() =>
 const selectedDayLabel = computed(() => formatFullDate(selectedWeekdayDate.value, locale.value))
 const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value, locale.value))
 const errorMessage = computed(() => (error.value ? t(error.value) : ''))
+const archiveStatusText = computed(() => formatCsvStatus(archiveStatus.value, t, tc))
 const slots = buildDaySlots()
 const resetDialogVisible = ref(false)
+const scheduleFileInput = ref<HTMLInputElement | null>(null)
 
 function openRestartConfirm(): void {
   resetDialogVisible.value = true
@@ -146,6 +202,36 @@ function handleResetVisibility(visible: boolean): void {
 function confirmReset(): void {
   store.resetCurrentWeek()
   resetDialogVisible.value = false
+}
+
+function openSchedulePicker(): void {
+  archiveStore.resetStatus()
+  scheduleFileInput.value?.click()
+}
+
+async function handleScheduleFile(event: Event): Promise<void> {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement)) return
+
+  const file = target.files?.[0]
+  target.value = ''
+  if (!file) return
+
+  const result = await readCsvFile(file)
+  if (!result.ok) {
+    archiveStore.setError(result.error)
+    return
+  }
+
+  archiveStore.prepareScheduleImport(result.text)
+}
+
+function handleScheduleImportVisibility(visible: boolean): void {
+  if (!visible) archiveStore.cancelScheduleImport()
+}
+
+function confirmScheduleImport(): void {
+  archiveStore.confirmScheduleImport()
 }
 
 function handleCreate(input: ShiftRangeInput): void {
@@ -194,6 +280,36 @@ function handleRemove(id: string): void {
   border-radius: var(--radius-sm);
   background: var(--color-inactive-bg);
   color: var(--color-danger);
+}
+
+.scheduler__archive-status {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+
+.scheduler__archive-status--success {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.scheduler__archive-status--error {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .scheduler__content {

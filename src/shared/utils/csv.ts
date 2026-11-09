@@ -1,5 +1,58 @@
 import type { MessageKey } from '@/shared/i18n/messages/en'
 
+export type CsvStatusState = 'idle' | 'success' | 'error'
+
+export type CsvStatusMessage =
+  | { kind: 'simple'; code: MessageKey; params?: Record<string, string | number> }
+  | { kind: 'rowError'; row: number; messageCode: MessageKey }
+
+export interface CsvStatus {
+  state: CsvStatusState
+  message: CsvStatusMessage | null
+}
+
+export type Translate = (key: MessageKey, params?: Record<string, string | number>) => string
+
+export type TranslatePlural = (
+  oneKey: MessageKey,
+  otherKey: MessageKey,
+  count: number,
+  params?: Record<string, string | number>,
+) => string
+
+export function formatCsvStatus(
+  status: CsvStatus,
+  t: Translate,
+  tc: TranslatePlural,
+): string {
+  const message = status.message
+  if (!message) return ''
+
+  if (message.kind === 'rowError') {
+    return t('archive.rowError', { row: message.row, message: t(message.messageCode) })
+  }
+
+  if (message.code === 'archive.importedOne' || message.code === 'archive.importedMany') {
+    const count = Number(message.params?.count ?? 0)
+    return tc('archive.importedOne', 'archive.importedMany', count, message.params)
+  }
+
+  if (
+    message.code === 'archive.schedulesImportedOne' ||
+    message.code === 'archive.schedulesImportedMany'
+  ) {
+    const count = Number(message.params?.count ?? 0)
+    return tc(
+      'archive.schedulesImportedOne',
+      'archive.schedulesImportedMany',
+      count,
+      message.params,
+    )
+  }
+
+  return t(message.code, message.params)
+}
+
 export type CsvParseResult =
   | { ok: true; headers: string[]; rows: string[][] }
   | { ok: false; error: MessageKey }

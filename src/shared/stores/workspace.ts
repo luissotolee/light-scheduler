@@ -107,6 +107,14 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     schedules.value = { ...schedules.value, [weekKey]: shifts }
   }
 
+  function replaceScheduleData(
+    nextSchedules: Record<WeekKey, Shift[]>,
+    nextDayOffs: Record<WeekKey, DayOff[]>,
+  ): void {
+    schedules.value = nextSchedules
+    dayOffs.value = nextDayOffs
+  }
+
   function setDayOffsForWeek(weekKey: WeekKey, offs: DayOff[]): void {
     if (offs.length === 0) {
       const nextDayOffs = { ...dayOffs.value }
@@ -159,6 +167,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     removeMember,
     findMember,
     setShiftsForWeek,
+    replaceScheduleData,
     setDayOffsForWeek,
     setCurrentWeekKey,
     markLoaded,

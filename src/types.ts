@@ -32,6 +32,7 @@ export interface TeamMember {
   active: boolean
   startDate: string
   endDate?: string
+  empId: string
 }
 
 export interface NewTeamMember {
@@ -48,6 +49,7 @@ export interface NewTeamMember {
 export interface EmployeeCsvRecord extends NewTeamMember {
   active?: boolean
   endDate?: string
+  empId?: string
 }
 
 export interface EmployeeFormInput {

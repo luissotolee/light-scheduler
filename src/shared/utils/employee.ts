@@ -19,6 +19,16 @@ export const DUTIES: readonly Duty[] = ['manager', 'employee', 'assistant', 'hea
 
 export const CONTRACTS: readonly Contract[] = ['fulltime', 'part_time', 'weekends']
 
+export const EMP_ID_MAX_LENGTH = 32
+
+const EMP_ID_PATTERN = /^([A-Za-z0-9][A-Za-z0-9_-]*)$/u
+
+export function isValidEmpId(value: string): boolean {
+  const trimmed = value.trim()
+  if (trimmed.length < 1 || trimmed.length > EMP_ID_MAX_LENGTH) return false
+  return EMP_ID_PATTERN.test(trimmed)
+}
+
 export function dutyModifier(duty: Duty): string {
   return duty.replace('_', '-')
 }
@@ -205,6 +215,7 @@ export function normalizeHolidays(holidays: HolidayWeek[]): HolidayWeek[] {
 }
 
 export const EMPLOYEE_HEADERS: readonly string[] = [
+  'emp_id',
   'name',
   'duty',
   'contract',
@@ -241,6 +252,7 @@ export function validateEmployees(
 
   const data: EmployeeCsvRecord[] = []
   const errors: RowError[] = []
+  const seenEmpIds = new Set<string>()
 
   rows.forEach((row, index) => {
     const rowNumber = index + 2
@@ -322,6 +334,21 @@ export function validateEmployees(
       rowErrors.push({ row: rowNumber, message: 'errors.endNotAllowedActive' })
     }
 
+    const rawEmpId = valueAt(row, 'emp_id').trim()
+    const empId = rawEmpId ? rawEmpId : undefined
+
+    if (empId && !isValidEmpId(empId)) {
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidEmpId' })
+    }
+
+    if (empId && seenEmpIds.has(empId)) {
+      rowErrors.push({ row: rowNumber, message: 'errors.duplicateEmpId' })
+    }
+
+    if (empId) {
+      seenEmpIds.add(empId)
+    }
+
     if (rowErrors.length > 0) {
       errors.push(...rowErrors)
       return
@@ -338,6 +365,7 @@ export function validateEmployees(
       ...(active === null ? {} : { active }),
       ...(startDate ? { startDate } : {}),
       ...(endDate ? { endDate } : {}),
+      ...(empId ? { empId } : {}),
     })
   })
 
@@ -346,6 +374,7 @@ export function validateEmployees(
 
 export function employeeToRow(member: TeamMember): (string | number)[] {
   return [
+    member.empId,
     member.name,
     member.duty,
     member.contract,
@@ -371,4 +400,30 @@ export function isMemberInWeek(
   if (member.startDate > weekEnd) return false
   if (member.endDate !== undefined && member.endDate < weekStart) return false
   return true
+}
+
+export function createEmpId(existing: string[]): string {
+  const prefix = 'EMP'
+  let counter = 1
+  let candidate = `${prefix}-${counter.toString().padStart(4, '0')}`
+  while (existing.includes(candidate)) {
+    counter += 1
+    candidate = `${prefix}-${counter.toString().padStart(4, '0')}`
+  }
+  return candidate
+}
+
+export function createSequentialEmpId(existing: string[], preferred?: string): string {
+  const prefix = 'EMP'
+  const used = new Set(existing)
+  if (preferred && isValidEmpId(preferred) && !used.has(preferred)) {
+    return preferred
+  }
+  let counter = 1
+  let candidate = `${prefix}-${counter.toString().padStart(4, '0')}`
+  while (used.has(candidate)) {
+    counter += 1
+    candidate = `${prefix}-${counter.toString().padStart(4, '0')}`
+  }
+  return candidate
 }

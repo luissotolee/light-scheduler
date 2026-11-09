@@ -14,7 +14,7 @@ describe('translate', () => {
 
   it('interpolates named parameters', () => {
     expect(translate(en, 'employees.count', { count: 3 })).toBe('Employees: 3')
-    expect(translate(es, 'csv.rowError', { row: 2, message: 'Fila inválida' })).toBe(
+    expect(translate(es, 'archive.rowError', { row: 2, message: 'Fila inválida' })).toBe(
       'Fila 2: Fila inválida',
     )
   })
@@ -59,8 +59,8 @@ describe('useI18n', () => {
   it('selects singular and plural messages with tc', () => {
     const { tc } = useI18n()
 
-    expect(tc('csv.importedOne', 'csv.importedMany', 1, { count: 1 })).toBe('Imported 1 employee')
-    expect(tc('csv.importedOne', 'csv.importedMany', 2, { count: 2 })).toBe(
+    expect(tc('archive.importedOne', 'archive.importedMany', 1, { count: 1 })).toBe('Imported 1 employee')
+    expect(tc('archive.importedOne', 'archive.importedMany', 2, { count: 2 })).toBe(
       'Imported 2 employees',
     )
   })
@@ -68,17 +68,17 @@ describe('useI18n', () => {
   it('supports the two-form plural contract for 0, 1, and 2 in both locales', () => {
     const { tc, setLocale } = useI18n()
 
-    expect(tc('csv.importedOne', 'csv.importedMany', 0, { count: 0 })).toBe('Imported 0 employees')
-    expect(tc('csv.importedOne', 'csv.importedMany', 1, { count: 1 })).toBe('Imported 1 employee')
-    expect(tc('csv.importedOne', 'csv.importedMany', 2, { count: 2 })).toBe('Imported 2 employees')
+    expect(tc('archive.importedOne', 'archive.importedMany', 0, { count: 0 })).toBe('Imported 0 employees')
+    expect(tc('archive.importedOne', 'archive.importedMany', 1, { count: 1 })).toBe('Imported 1 employee')
+    expect(tc('archive.importedOne', 'archive.importedMany', 2, { count: 2 })).toBe('Imported 2 employees')
 
     setLocale('es')
 
-    expect(tc('csv.importedOne', 'csv.importedMany', 0, { count: 0 })).toBe(
+    expect(tc('archive.importedOne', 'archive.importedMany', 0, { count: 0 })).toBe(
       'Se importaron 0 empleados',
     )
-    expect(tc('csv.importedOne', 'csv.importedMany', 1, { count: 1 })).toBe('Se importó 1 empleado')
-    expect(tc('csv.importedOne', 'csv.importedMany', 2, { count: 2 })).toBe(
+    expect(tc('archive.importedOne', 'archive.importedMany', 1, { count: 1 })).toBe('Se importó 1 empleado')
+    expect(tc('archive.importedOne', 'archive.importedMany', 2, { count: 2 })).toBe(
       'Se importaron 2 empleados',
     )
   })

@@ -4,7 +4,12 @@ import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { todayIsoDate } from '@/shared/utils/calendar'
-import { MAX_HOLIDAY_WEEKS, normalizeHolidays, validateEmployeeForm } from '@/shared/utils/employee'
+import {
+  MAX_HOLIDAY_WEEKS,
+  createEmpId,
+  normalizeHolidays,
+  validateEmployeeForm,
+} from '@/shared/utils/employee'
 import { createId } from '@/shared/utils/id'
 
 interface EmployeesStatus {
@@ -101,6 +106,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       startDate: value.startDate ?? todayIsoDate(),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
+      empId: createEmpId(workspace().members.map((m) => m.empId)),
     }
     workspace().upsertMember(member)
     setError(null)
@@ -140,6 +146,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       ...(member.endDate ? { endDate: member.endDate } : {}),
       ...(value.phone ? { phone: value.phone } : {}),
       ...(value.email ? { email: value.email } : {}),
+      empId: member.empId,
     })
     setError(null)
     return true
@@ -183,6 +190,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       startDate: member.startDate,
       ...(member.email ? { email: member.email } : {}),
       ...(member.phone ? { phone: member.phone } : {}),
+      empId: member.empId,
     })
   }
 

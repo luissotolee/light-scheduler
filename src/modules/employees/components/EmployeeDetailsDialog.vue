@@ -9,6 +9,10 @@
     <div v-if="member" class="employee-details__body">
       <dl class="employee-details__list">
         <div class="employee-details__item">
+          <dt class="employee-details__label">{{ t('employees.details.empId') }}</dt>
+          <dd class="employee-details__value" data-test="details-emp-id">{{ member.empId }}</dd>
+        </div>
+        <div class="employee-details__item">
           <dt class="employee-details__label">{{ t('employees.details.duty') }}</dt>
           <dd class="employee-details__value" data-test="details-duty">{{ dutyLabel }}</dd>
         </div>

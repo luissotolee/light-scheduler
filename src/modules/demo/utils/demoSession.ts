@@ -1,7 +1,7 @@
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
-import { useCsvStore } from '@/modules/csv/stores/csv'
+import { useArchiveStore } from '@/modules/archive/stores/archive'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
 import {
   captureAppStorage,
@@ -57,8 +57,8 @@ export async function startDemo(scenarioId: string): Promise<boolean> {
     schedulerStore.selectWeekday('monday')
     schedulerStore.clearError()
 
-    const csvStore = useCsvStore()
-    csvStore.resetStatus()
+    const archiveStore = useArchiveStore()
+    archiveStore.resetStatus()
 
     await router.push('/scheduler')
     await router.isReady()
@@ -131,10 +131,10 @@ export async function stopDemo(): Promise<void> {
 
   const employeesStore = useEmployeesStore()
   const schedulerStore = useSchedulerStore()
-  const csvStore = useCsvStore()
+  const archiveStore = useArchiveStore()
 
   employeesStore.resetUi()
   schedulerStore.selectWeekday('monday')
   schedulerStore.clearError()
-  csvStore.resetStatus()
+  archiveStore.resetStatus()
 }

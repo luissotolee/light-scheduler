@@ -34,7 +34,7 @@ describe('HomeView', () => {
     expect(paths).toContain('/scheduler')
     expect(paths).toContain('/employees')
     expect(paths).toContain('/summary')
-    expect(paths).toContain('/csv')
+    expect(paths).toContain('/archive')
   })
 
   it('translates the feature cards live', async () => {

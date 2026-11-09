@@ -16,6 +16,7 @@ enableAutoUnmount(afterEach)
 
 const ada: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'manager',
   contract: 'fulltime',

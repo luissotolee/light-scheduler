@@ -13,6 +13,7 @@ import type { PersistedWorkspace } from '@/shared/utils/persistence'
 
 const member: TeamMember = {
   id: 'member-1',
+  empId: 'EMP-0001',
   name: 'Ada',
   duty: 'employee',
   contract: 'fulltime',
@@ -106,6 +107,9 @@ describe('persistence guards', () => {
     expect(isTeamMember({ ...member, email: 42 })).toBe(false)
     expect(isTeamMember({ ...member, endDate: null })).toBe(false)
     expect(isTeamMember({ ...member, endDate: 'not-a-date' })).toBe(false)
+    expect(isTeamMember({ ...member, empId: undefined })).toBe(false)
+    expect(isTeamMember({ ...member, empId: '' })).toBe(false)
+    expect(isTeamMember({ ...member, empId: 'not valid!' })).toBe(false)
   })
 })
 
@@ -129,7 +133,7 @@ describe('parsePersistedWorkspace', () => {
   })
 
   it('rejects an unsupported schema version', () => {
-    expect(parsePersistedWorkspace({ ...serializeWorkspace(payload), version: 2 })).toBeNull()
+    expect(parsePersistedWorkspace({ ...serializeWorkspace(payload), version: 99 })).toBeNull()
     expect(
       parsePersistedWorkspace({ ...serializeWorkspace(payload), version: undefined }),
     ).toBeNull()
@@ -181,5 +185,68 @@ describe('parsePersistedWorkspace', () => {
 
     expect(parsePersistedWorkspace({ ...valid, currentWeekKey: 'not-a-date' })).toBeNull()
     expect(parsePersistedWorkspace({ ...valid, currentWeekKey: undefined })).toBeNull()
+  })
+
+  it('rejects v2 members without a valid employee id', () => {
+    const valid = serializeWorkspace(payload)
+
+    expect(
+      parsePersistedWorkspace({ ...valid, members: [{ ...member, empId: undefined }] }),
+    ).toBeNull()
+  })
+
+  it('migrates v1 payloads with deterministic employee ids', () => {
+    const legacyMember = {
+      id: 'member-1',
+      name: 'Ada',
+      duty: 'employee',
+      contract: 'fulltime',
+      weeklyHours: 40,
+      holidays: [],
+      active: true,
+      startDate: '2025-01-15',
+    }
+    const legacy = {
+      version: 1,
+      members: [legacyMember, { ...legacyMember, id: 'member-2', name: 'Bo' }],
+      schedules: { '2026-11-02': [shift] },
+      dayOffs: { '2026-11-02': [dayOff] },
+      currentWeekKey: '2026-11-02',
+    }
+
+    const first = parsePersistedWorkspace(legacy)
+    const second = parsePersistedWorkspace(legacy)
+
+    expect(first).not.toBeNull()
+    expect(first?.version).toBe(WORKSPACE_SCHEMA_VERSION)
+    expect(first?.members.map((item) => item.empId)).toEqual(['EMP-0001', 'EMP-0002'])
+    expect(second?.members.map((item) => item.empId)).toEqual(['EMP-0001', 'EMP-0002'])
+    expect(first?.schedules).toEqual(legacy.schedules)
+    expect(first?.dayOffs).toEqual(legacy.dayOffs)
+    expect(first?.currentWeekKey).toBe('2026-11-02')
+  })
+
+  it('preserves employee ids already present in v1 payloads', () => {
+    const legacy = {
+      version: 1,
+      members: [
+        {
+          id: 'member-1',
+          name: 'Ada',
+          duty: 'employee',
+          contract: 'fulltime',
+          weeklyHours: 40,
+          holidays: [],
+          active: true,
+          startDate: '2025-01-15',
+          empId: 'EMP-0042',
+        },
+      ],
+      schedules: {},
+      dayOffs: {},
+      currentWeekKey: '2026-11-02',
+    }
+
+    expect(parsePersistedWorkspace(legacy)?.members[0].empId).toBe('EMP-0042')
   })
 })

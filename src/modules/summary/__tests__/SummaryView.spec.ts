@@ -14,6 +14,7 @@ const weekKey = '2026-11-02'
 function member(overrides: Partial<TeamMember> = {}): TeamMember {
   return {
     id: 'member-1',
+    empId: 'EMP-0001',
     name: 'Ada',
     duty: 'employee',
     contract: 'fulltime',

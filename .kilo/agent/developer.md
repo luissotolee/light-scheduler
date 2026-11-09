@@ -3,7 +3,6 @@ description: Implements a task or approved plan end-to-end, editing files, runni
 mode: all
 model: kilo/cohere/north-mini-code:free
 variant: thinking
-steps: 100
 color: "#10B981"
 permission:
   "github_*": allow

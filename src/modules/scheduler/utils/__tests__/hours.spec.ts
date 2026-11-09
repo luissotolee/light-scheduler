@@ -15,6 +15,7 @@ import {
 function makeMember(overrides: Partial<TeamMember> = {}): TeamMember {
   return {
     id: 'member-1',
+    empId: 'EMP-0001',
     name: 'Ada Lovelace',
     duty: 'employee',
     contract: 'fulltime',
