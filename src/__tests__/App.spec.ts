@@ -115,7 +115,6 @@ describe('App', () => {
     expect(wrapper.find('[data-test="demo-banner"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="demo-banner"]').text()).toContain(en['demo.banner'])
     expect(wrapper.find('[data-test="demo-progress"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="demo-narration"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="demo-previous"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="demo-pause"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="demo-next"]').exists()).toBe(true)

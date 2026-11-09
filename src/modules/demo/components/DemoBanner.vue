@@ -17,17 +17,7 @@
     </div>
 
     <p
-      v-if="showStepInfo"
-      class="demo-banner__narration"
-      role="status"
-      aria-live="polite"
-      :aria-label="t('demo.narrationAria')"
-      data-test="demo-narration"
-    >
-      {{ narrationText }}
-    </p>
-    <p
-      v-else-if="errorMessage"
+      v-if="errorMessage"
       class="demo-banner__error"
       role="alert"
       data-test="demo-error"
@@ -119,12 +109,6 @@ const progressLabel = computed(() =>
   }),
 )
 
-const narrationText = computed(() =>
-  demoStore.currentStep
-    ? t(demoStore.currentStep.narrationKey as MessageKey)
-    : '',
-)
-
 const errorMessage = computed(() =>
   demoStore.status === 'error' && demoStore.errorKey
     ? t(demoStore.errorKey as MessageKey)
@@ -183,12 +167,6 @@ function togglePause(): void {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.demo-banner__narration {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.45;
 }
 
 .demo-banner__error {

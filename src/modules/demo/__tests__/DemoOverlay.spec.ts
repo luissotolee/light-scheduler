@@ -62,14 +62,14 @@ describe('DemoOverlay', () => {
     expect(wrapper.find('[data-test="demo-restored"]').text()).toBe(en['demo.restored'])
   })
 
-  it('has no .demo-narration or .demo-controls on mount', () => {
+  it('has no callout or controls without a current step', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const store = useDemoStore()
     store.status = 'running'
     store.showRestoredFlag = false
     wrapper = mount(DemoOverlay, { global: { plugins: [pinia] } })
-    expect(wrapper.find('.demo-narration').exists()).toBe(false)
+    expect(wrapper.find('.demo-callout').exists()).toBe(false)
     expect(wrapper.find('.demo-controls').exists()).toBe(false)
   })
 
@@ -110,5 +110,88 @@ describe('DemoOverlay', () => {
 
     expect(wrapper.find('.demo-overlay').exists()).toBe(true)
     wrapper.unmount()
+  })
+
+  function mountRunning(overrides: Record<string, unknown> = {}) {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useDemoStore()
+    store.status = 'running'
+    store.showRestoredFlag = false
+    store.totalSteps = 1
+    store.currentStep = {
+      id: '1',
+      action: 'spotlight',
+      target: { testId: 'test' },
+      narrationKey: 'demo.scenario.scheduler.intro',
+    }
+    Object.assign(store, overrides)
+    const mounted = mount(DemoOverlay, { global: { plugins: [pinia] }, attachTo: document.body })
+    wrapper = mounted
+    return { wrapper: mounted, store }
+  }
+
+  it('renders the step narration as a floating callout', () => {
+    const { wrapper } = mountRunning()
+
+    const callout = wrapper.find('[data-test="demo-narration"]')
+    expect(callout.exists()).toBe(true)
+    expect(callout.text()).toBe(en['demo.scenario.scheduler.intro'])
+    expect(callout.attributes('role')).toBe('status')
+    expect(callout.attributes('aria-live')).toBe('polite')
+    expect(callout.attributes('aria-label')).toBe(en['demo.narrationAria'])
+  })
+
+  it('anchors the callout near the highlighted target', () => {
+    const rect = {
+      x: 100,
+      y: 300,
+      width: 100,
+      height: 40,
+      top: 300,
+      left: 100,
+      right: 200,
+      bottom: 340,
+      toJSON: () => {},
+    } as DOMRect
+    const { wrapper } = mountRunning({ narrationAnchor: rect })
+
+    const callout = wrapper.find('.demo-callout')
+    expect(callout.classes()).toContain('demo-callout--above')
+    expect(callout.attributes('style')).toContain('left: 172px')
+    expect(callout.attributes('style')).toContain('top: 286px')
+  })
+
+  it('centers the callout when a step has no target', () => {
+    const { wrapper } = mountRunning()
+
+    const callout = wrapper.find('.demo-callout')
+    expect(callout.classes()).toContain('demo-callout--center')
+    expect(callout.attributes('style')).toContain('top: 50%')
+    expect(callout.attributes('style')).toContain('translate(-50%, -50%)')
+  })
+
+  it('renders the click area circle when a click occurs', async () => {
+    const { wrapper, store } = mountRunning()
+
+    store.showClick(50, 75)
+    await wrapper.vm.$nextTick()
+    const click = wrapper.find('[data-test="demo-click"]')
+
+    expect(click.exists()).toBe(true)
+    expect(click.attributes('aria-hidden')).toBe('true')
+    expect(click.attributes('style')).toContain('left: 50px')
+    expect(click.attributes('style')).toContain('top: 75px')
+  })
+
+  it('hides the click area when it is cleared', async () => {
+    const { wrapper, store } = mountRunning()
+
+    store.showClick(50, 75)
+    await wrapper.vm.$nextTick()
+    store.hideClick()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="demo-click"]').exists()).toBe(false)
   })
 })

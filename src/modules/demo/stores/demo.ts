@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { DemoStatus, DemoCursor, DemoRing, DemoScenario, DemoStep } from '@/modules/demo/types'
+import type { DemoStatus, DemoCursor, DemoRing, DemoClick, DemoScenario, DemoStep } from '@/modules/demo/types'
 import { hasDemoRecoveryError, clearDemoRecoveryError, isDemoRecovered, clearDemoRecovered } from '@/modules/demo/utils/storageSnapshot'
 
 export const useDemoStore = defineStore('demo', () => {
@@ -10,6 +10,8 @@ export const useDemoStore = defineStore('demo', () => {
   const errorKey = ref<string | null>(null)
   const cursor = ref<DemoCursor>({ x: 0, y: 0, visible: false })
   const ring = ref<DemoRing>({ rect: null, visible: false })
+  const click = ref<DemoClick>({ x: 0, y: 0, id: 0, visible: false })
+  const narrationAnchor = ref<DOMRect | null>(null)
   const showRestoredFlag = ref(false)
 
   const currentStep = ref<DemoStep | null>(null)
@@ -43,6 +45,8 @@ export const useDemoStore = defineStore('demo', () => {
     totalSteps.value = 0
     cursor.value = { x: 0, y: 0, visible: false }
     ring.value = { rect: null, visible: false }
+    click.value = { x: 0, y: 0, id: 0, visible: false }
+    narrationAnchor.value = null
     errorKey.value = null
   }
 
@@ -60,6 +64,18 @@ export const useDemoStore = defineStore('demo', () => {
 
   function setRing(rect: DOMRect | null, visible: boolean): void {
     ring.value = { rect, visible }
+  }
+
+  function showClick(x: number, y: number): void {
+    click.value = { x, y, id: click.value.id + 1, visible: true }
+  }
+
+  function hideClick(): void {
+    click.value = { ...click.value, visible: false }
+  }
+
+  function setNarrationAnchor(rect: DOMRect | null): void {
+    narrationAnchor.value = rect
   }
 
   function reportError(key: string): void {
@@ -100,6 +116,8 @@ export const useDemoStore = defineStore('demo', () => {
     errorKey,
     cursor,
     ring,
+    click,
+    narrationAnchor,
     showRestoredFlag,
     currentStep,
     totalSteps,
@@ -112,6 +130,9 @@ export const useDemoStore = defineStore('demo', () => {
     resume,
     setCursor,
     setRing,
+    showClick,
+    hideClick,
+    setNarrationAnchor,
     reportError,
     clearError,
     showRestored,

@@ -73,14 +73,16 @@ describe('DemoBanner', () => {
     expect(wrapper.find('[data-test="demo-banner"]').exists()).toBe(false)
   })
 
-  it('running: badge, description, translated narration, translated progress', () => {
+  it('running: badge, description and translated progress', () => {
     const wrapper = mountBanner()
     expect(wrapper.find('.demo-banner__badge').text()).toBe(en['demo.badge'])
     expect(wrapper.find('.demo-banner__message').text()).toBe(en['demo.banner'])
-    expect(wrapper.find('[data-test="demo-narration"]').text()).toContain(
-      en['demo.scenario.scheduler.intro'],
-    )
     expect(wrapper.find('[data-test="demo-progress"]').text()).toContain('Step 1 of 2')
+  })
+
+  it('leaves step narration to the overlay callout', () => {
+    const wrapper = mountBanner()
+    expect(wrapper.find('[data-test="demo-narration"]').exists()).toBe(false)
   })
 
   it('uses chevron icons for previous and next', () => {
@@ -142,13 +144,8 @@ describe('DemoBanner', () => {
     expect(resumeEngine).toHaveBeenCalled()
   })
 
-  it('exposes accessibility semantics for narration and controls', () => {
+  it('exposes accessibility semantics for controls', () => {
     const wrapper = mountBanner()
-    const narration = wrapper.find('[data-test="demo-narration"]')
-    expect(narration.attributes('role')).toBe('status')
-    expect(narration.attributes('aria-live')).toBe('polite')
-    expect(narration.attributes('aria-label')).toBe(en['demo.narrationAria'])
-
     const controls = wrapper.find('.demo-banner__controls')
     expect(controls.attributes('role')).toBe('group')
     expect(controls.attributes('aria-label')).toBe(en['demo.controlsAria'])
