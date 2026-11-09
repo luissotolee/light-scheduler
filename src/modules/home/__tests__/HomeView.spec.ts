@@ -34,7 +34,6 @@ describe('HomeView', () => {
     expect(paths).toContain('/scheduler')
     expect(paths).toContain('/employees')
     expect(paths).toContain('/summary')
-    expect(paths).toContain('/history')
     expect(paths).toContain('/csv')
   })
 

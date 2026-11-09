@@ -41,11 +41,6 @@ const features = [
     path: '/summary',
   },
   {
-    titleKey: 'home.feature.history.title',
-    descriptionKey: 'home.feature.history.description',
-    path: '/history',
-  },
-  {
     titleKey: 'home.feature.csv.title',
     descriptionKey: 'home.feature.csv.description',
     path: '/csv',

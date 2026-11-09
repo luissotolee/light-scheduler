@@ -84,10 +84,16 @@ export function pressKey(element: HTMLElement, key: string): void {
 }
 
 export function fillInput(element: HTMLElement, value: string): void {
-  if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-    element.value = value
-    element.dispatchEvent(new Event('input', { bubbles: true }))
-    element.dispatchEvent(new Event('change', { bubbles: true }))
+  const input =
+    element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement
+      ? element
+      : element.querySelector<HTMLInputElement | HTMLTextAreaElement>('input, textarea')
+
+  if (input) {
+    input.value = value
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    input.dispatchEvent(new Event('blur'))
   } else if (element.contentEditable === 'true') {
     element.textContent = value
     element.dispatchEvent(new Event('input', { bubbles: true }))

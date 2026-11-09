@@ -15,10 +15,10 @@ import {
 import {
   buildWeeklyHoursGroups,
   compareMembersByDuty,
-  isMemberInWeek,
   minutesToHours,
   sumShiftMinutes,
 } from '@/modules/scheduler/utils/hours'
+import { isMemberInWeek } from '@/shared/utils/employee'
 import { countDaysOffByMember } from '@/modules/scheduler/utils/off'
 import { closestShiftIndex, MAX_SHIFTS_PER_ROW } from '@/modules/scheduler/utils/grid'
 

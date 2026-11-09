@@ -4,12 +4,20 @@
     class="demo-mode-button"
     :aria-label="t('demo.startAria')"
     :aria-pressed="isDemoActive"
+    aria-haspopup="dialog"
+    :aria-expanded="pickerVisible"
     :disabled="starting"
     data-test="demo-start-button"
-    @click="handleStart"
+    @click="openPicker"
   >
     {{ t('demo.start') }}
   </button>
+
+  <DemoPickerDialog
+    :visible="pickerVisible"
+    @update:visible="pickerVisible = $event"
+    @select="handleSelect"
+  />
 </template>
 
 <script setup lang="ts">
@@ -17,22 +25,26 @@ import { computed, ref } from 'vue'
 import { useI18n } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { startDemo } from '@/modules/demo/utils/demoSession'
-import { getDemoScenario } from '@/modules/demo/scenarios'
+import DemoPickerDialog from '@/modules/demo/components/DemoPickerDialog.vue'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
 const starting = ref(false)
+const pickerVisible = ref(false)
 
 const isDemoActive = computed(() => demoStore.status !== 'idle')
 
-async function handleStart(): Promise<void> {
+function openPicker(): void {
   if (starting.value) return
+  pickerVisible.value = true
+}
+
+async function handleSelect(scenarioId: string): Promise<void> {
+  if (starting.value) return
+  pickerVisible.value = false
   starting.value = true
   try {
-    const scenario = getDemoScenario('scheduler-demo')
-    if (scenario) {
-      await startDemo(scenario.id)
-    }
+    await startDemo(scenarioId)
   } finally {
     starting.value = false
   }

@@ -27,7 +27,9 @@ src/modules/demo/
 │   └── demoWorkspace.ts        # buildDemoWorkspace(now?) → PersistedWorkspace
 ├── scenarios/
 │   ├── index.ts                # demoScenarios registry, getDemoScenario, listDemoScenarios
-│   └── schedulerDemo.ts        # v1 scenario: scheduler → employees → summary → history → CSV
+│   ├── employeesDemo.ts        # employees-demo: search, add, edit, holidays, deactivate/reactivate, remove
+│   ├── schedulerDemo.ts        # scheduler-demo: weeks, weekdays, shift CRUD, day off, weekly hours, restart
+│   └── summaryDemo.ts          # summary-demo: week navigation, summary table, print, PDF
 ├── utils/
 │   ├── storageSnapshot.ts      # captureAppStorage, restoreAppStorage, writeDemoBackup, readDemoBackup, clearDemoBackup, recoverInterruptedDemo
 │   ├── dom.ts                  # waitForTarget, resolveTarget, getRectCenter, clickElement, pointerClickElement, pressKey, fillInput, prefersReducedMotion
@@ -37,7 +39,8 @@ src/modules/demo/
 ├── stores/
 │   └── demo.ts                 # Pinia store: status, scenarioId, stepIndex, errorKey, cursor, ring, showRestoredFlag
 ├── components/
-│   ├── DemoModeButton.vue      # Shell button to start demo
+│   ├── DemoModeButton.vue      # Shell button that opens the scenario picker
+│   ├── DemoPickerDialog.vue    # Modal with the Employees / Scheduler / Summary scenarios
 │   ├── DemoBanner.vue          # Non-blocking banner shown during demo
 │   └── DemoOverlay.vue         # Fixed overlay: cursor, ring, narration card, controls (Prev/Next/Pause/Resume/Exit)
 ├── overlay/
@@ -53,7 +56,6 @@ src/modules/demo/
 - **`src/shared/stores/locale.ts`** — Exported `LOCALE_STORAGE_KEY` for snapshot/restore.
 - **`src/shared/components/AppNav.vue`** — Added `:data-test="\`nav-${item.name}\`"` to nav links.
 - **`src/modules/employees/views/EmployeesView.vue`** — Added `data-test="employee-search"` to search input.
-- **`src/modules/history/views/HistoryView.vue`** — Added `data-test="history-list"` to `<ul>` and `:data-test="\`history-week-${weekKey}\`"` to week buttons.
 - **`src/shared/fixtures/employees.ts`** — Moved from `src/modules/employees/fixtures/employees.ts`; demo imports from here to avoid coupling.
 
 ## Scenario & step schema
@@ -218,10 +220,11 @@ npm run build
 - `demoSession.spec.ts` — snapshot capture, workspace load, UI store resets, navigation, restore on stop.
 - `demo.spec.ts` — store actions (start/stop/pause/resume, cursor/ring, error, restored flag).
 - `engine.spec.ts` — step execution, auto-advance, pause/resume, next/prev, target timeout, reduced motion.
-- `dom.spec.ts` — target resolution, waitForTarget, click/pointerClick/press/fill, reduced motion.
-- `DemoModeButton.spec.ts` — button present, calls startDemo, scenario not found handling.
+- `dom.spec.ts` — target resolution, waitForTarget, click/pointerClick/press/fill (including nested inputs), reduced motion.
+- `DemoModeButton.spec.ts` — picker opens, each option starts its scenario, cancel does not start.
+- `DemoPickerDialog.spec.ts` (covered via `DemoModeButton.spec.ts`) — three translated options.
+- `employeesDemo.spec.ts` / `schedulerDemo.spec.ts` / `summaryDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
 - `DemoOverlay.spec.ts` — conditional render, narration translation, progress, controls, keyboard Exit, restored toast, a11y attrs.
-- `schedulerDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
 
 ### Manual verification
 

@@ -151,9 +151,22 @@ describe('dom utils', () => {
       fillInput(el, 'test value')
 
       expect(el.value).toBe('test value')
-      expect(dispatchSpy).toHaveBeenCalledTimes(2)
+      expect(dispatchSpy).toHaveBeenCalledTimes(3)
       expect(dispatchSpy.mock.calls[0][0].type).toBe('input')
       expect(dispatchSpy.mock.calls[1][0].type).toBe('change')
+      expect(dispatchSpy.mock.calls[2][0].type).toBe('blur')
+    })
+
+    it('sets value on an input nested inside the target element', () => {
+      const wrapper = document.createElement('span')
+      const input = document.createElement('input')
+      wrapper.appendChild(input)
+      const dispatchSpy = vi.spyOn(input, 'dispatchEvent')
+
+      fillInput(wrapper, '42')
+
+      expect(input.value).toBe('42')
+      expect(dispatchSpy).toHaveBeenCalledTimes(3)
     })
 
 it('sets textContent on contenteditable', () => {

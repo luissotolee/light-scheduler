@@ -15,6 +15,7 @@
           autocomplete="off"
           required
           aria-required="true"
+          data-test="employee-name-input"
           :placeholder="t('employees.form.namePlaceholder')"
           :aria-invalid="nameError ? 'true' : undefined"
           :aria-describedby="nameError ? 'employee-name-error' : undefined"
@@ -41,6 +42,7 @@
           option-value="value"
           required
           aria-required="true"
+          data-test="employee-duty-select"
           :aria-invalid="dutyError ? 'true' : undefined"
           :aria-describedby="dutyError ? 'employee-duty-error' : undefined"
         />
@@ -63,6 +65,7 @@
           v-model="form.phone"
           type="tel"
           autocomplete="tel"
+          data-test="employee-phone-input"
           :placeholder="t('employees.form.phonePlaceholder')"
           :aria-invalid="phoneError ? 'true' : undefined"
           :aria-describedby="phoneError ? 'employee-phone-error' : undefined"
@@ -86,6 +89,7 @@
           v-model="form.email"
           type="email"
           autocomplete="email"
+          data-test="employee-email-input"
           :placeholder="t('employees.form.emailPlaceholder')"
           :aria-invalid="emailError ? 'true' : undefined"
           :aria-describedby="emailError ? 'employee-email-error' : undefined"
@@ -113,6 +117,7 @@
           :use-grouping="false"
           required
           aria-required="true"
+          data-test="employee-hours-input"
           :placeholder="t('employees.form.hoursPlaceholder')"
           :aria-invalid="hoursError ? 'true' : undefined"
           :aria-describedby="hoursError ? 'employee-hours-error' : undefined"
@@ -138,6 +143,7 @@
           date-format="yy-mm-dd"
           show-icon
           class="employee-form__date"
+          data-test="employee-start-date"
           :aria-invalid="startDateError ? 'true' : undefined"
           :aria-describedby="startDateError ? 'employee-start-date-error' : undefined"
         />
@@ -156,6 +162,7 @@
         <div
           class="employee-form__radio-group"
           role="radiogroup"
+          data-test="employee-contract-group"
           :aria-label="t('employees.form.contractGroup')"
           aria-required="true"
           :aria-invalid="contractError ? 'true' : undefined"

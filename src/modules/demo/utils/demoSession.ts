@@ -1,7 +1,6 @@
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
-import { useHistoryStore } from '@/modules/history/stores/history'
 import { useCsvStore } from '@/modules/csv/stores/csv'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
 import {
@@ -57,9 +56,6 @@ export async function startDemo(scenarioId: string): Promise<boolean> {
     const schedulerStore = useSchedulerStore()
     schedulerStore.selectWeekday('monday')
     schedulerStore.clearError()
-
-    const historyStore = useHistoryStore()
-    historyStore.selectWeek(null)
 
     const csvStore = useCsvStore()
     csvStore.resetStatus()
@@ -135,12 +131,10 @@ export async function stopDemo(): Promise<void> {
 
   const employeesStore = useEmployeesStore()
   const schedulerStore = useSchedulerStore()
-  const historyStore = useHistoryStore()
   const csvStore = useCsvStore()
 
   employeesStore.resetUi()
   schedulerStore.selectWeekday('monday')
   schedulerStore.clearError()
-  historyStore.selectWeek(null)
   csvStore.resetStatus()
 }

@@ -30,60 +30,6 @@
       >
         <div class="demo-ring__inner" />
       </div>
-
-      <!-- Narration Card -->
-      <div
-        class="demo-narration"
-        role="status"
-        aria-live="polite"
-        :aria-label="t('demo.narrationAria')"
-        data-test="demo-narration"
-      >
-        <div class="demo-narration__progress" :aria-label="progressAria">
-          {{ t('demo.progress', { current: demoStore.stepIndex + 1, total: demoStore.totalSteps }) }}
-        </div>
-        <p class="demo-narration__text">{{ narrationText }}</p>
-
-        <!-- Controls -->
-        <div class="demo-controls" role="group" :aria-label="t('demo.controlsAria')">
-          <button
-            type="button"
-            class="demo-controls__btn"
-            :aria-label="t('demo.previous')"
-            :disabled="demoStore.stepIndex === 0 || demoStore.status === 'paused'"
-            @click="handlePrevious"
-          >
-            {{ t('demo.previous') }}
-          </button>
-
-          <button
-            type="button"
-            class="demo-controls__btn demo-controls__btn--primary"
-            :aria-label="demoStore.status === 'paused' ? t('demo.resume') : t('demo.pause')"
-            @click="handlePauseResume"
-          >
-            {{ demoStore.status === 'paused' ? t('demo.resume') : t('demo.pause') }}
-          </button>
-
-          <button
-            type="button"
-            class="demo-controls__btn"
-            :aria-label="demoStore.stepIndex === demoStore.totalSteps - 1 ? t('demo.finish') : t('demo.next')"
-            @click="handleNext"
-          >
-            {{ demoStore.stepIndex === demoStore.totalSteps - 1 ? t('demo.finish') : t('demo.next') }}
-          </button>
-
-          <button
-            type="button"
-            class="demo-controls__btn demo-controls__btn--exit"
-            :aria-label="t('demo.exitAria')"
-            @click="handleExit"
-          >
-            {{ t('demo.exit') }}
-          </button>
-        </div>
-      </div>
     </template>
 
     <!-- Restored Toast -->
@@ -103,12 +49,6 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
-import {
-  pauseEngine,
-  resumeEngine,
-  nextStep,
-  previousStep,
-} from '@/modules/demo/player/engine'
 import { stopDemo } from '@/modules/demo/utils/demoSession'
 import { prefersReducedMotion } from '@/modules/demo/utils/dom'
 
@@ -138,40 +78,10 @@ const ringStyle = computed(() => {
   }
 })
 
-const narrationText = computed(() => {
-  const step = demoStore.currentStep
-  if (!step) return ''
-  return t(step.narrationKey as import('@/shared/i18n/messages/en').MessageKey)
-})
-
-const progressAria = computed(() => {
-  return `${demoStore.stepIndex + 1} of ${demoStore.totalSteps}`
-})
-
-function handlePrevious(): void {
-  previousStep()
-}
-
-function handleNext(): void {
-  nextStep()
-}
-
-async function handlePauseResume(): Promise<void> {
-  if (demoStore.status === 'paused') {
-    await resumeEngine()
-  } else {
-    await pauseEngine()
-  }
-}
-
-async function handleExit(): Promise<void> {
-  await stopDemo()
-}
-
 function handleKeydownEscape(e: KeyboardEvent): void {
   if (!isActive.value) return
   if (e.key === 'Escape') {
-    handleExit()
+    stopDemo()
   }
 }
 
@@ -263,98 +173,6 @@ onUnmounted(() => {
   }
 }
 
-.demo-narration {
-  position: fixed;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10002;
-  max-width: 90vw;
-  width: 40rem;
-  pointer-events: auto;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-lg);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.demo-narration__progress {
-  margin-bottom: 0.5rem;
-  color: var(--color-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.demo-narration__text {
-  margin: 0 0 1rem;
-}
-
-.demo-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.demo-controls__btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text);
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-
-.demo-controls__btn:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.demo-controls__btn:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.demo-controls__btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.demo-controls__btn--primary {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-}
-
-.demo-controls__btn--primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-  border-color: var(--color-accent);
-  color: var(--color-on-accent);
-}
-
-.demo-controls__btn--exit {
-  margin-left: auto;
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-}
-
-.demo-controls__btn--exit:hover:not(:disabled) {
-  background: var(--color-inactive-bg);
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-}
-
 .demo-restored {
   position: fixed;
   top: 5rem;
@@ -387,31 +205,6 @@ onUnmounted(() => {
   to {
     opacity: 0;
     transform: translateX(-50%) translateY(-1rem);
-  }
-}
-
-@media (max-width: 480px) {
-  .demo-narration {
-    bottom: 1rem;
-    left: 1rem;
-    right: 1rem;
-    width: auto;
-    transform: none;
-  }
-
-  .demo-controls {
-    width: 100%;
-  }
-
-  .demo-controls__btn {
-    flex: 1;
-    text-align: center;
-    padding: 0.5rem;
-  }
-
-  .demo-controls__btn--exit {
-    margin-left: 0;
-    width: 100%;
   }
 }
 

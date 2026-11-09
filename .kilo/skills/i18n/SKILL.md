@@ -35,7 +35,7 @@ Dot-namespaced by area, grouped and alphabetized within each area. Existing name
 - `weekday.*`, `duty.*`, `contract.*`
 - `scheduler.*`, `shiftGrid.*`, `shiftBar.*`, `shiftRow.*`, `weeklyHours.*`, `hours.group.*`
 - `employees.*`, `holidays.*`, `calendar.*`
-- `summary.*`, `history.*`, `csv.*`
+- `summary.*`, `csv.*`
 - `errors.*` — all validation/error messages
 
 Keep keys under the module they belong to; reuse `common.*` keys for shared button/label text.

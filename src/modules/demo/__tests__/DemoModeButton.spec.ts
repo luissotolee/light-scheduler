@@ -1,24 +1,37 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { DOMWrapper, enableAutoUnmount, mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import DemoModeButton from '@/modules/demo/components/DemoModeButton.vue'
 import { startDemo } from '@/modules/demo/utils/demoSession'
-import { getDemoScenario } from '@/modules/demo/scenarios'
 import { en } from '@/shared/i18n/messages/en'
 
 vi.mock('@/modules/demo/utils/demoSession', () => ({
   startDemo: vi.fn(),
 }))
 
-vi.mock('@/modules/demo/scenarios', () => ({
-  getDemoScenario: vi.fn(),
-}))
+enableAutoUnmount(afterEach)
+
+function body(): DOMWrapper<HTMLElement> {
+  return new DOMWrapper(document.body)
+}
 
 describe('DemoModeButton', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   function mountButton(overrides: Partial<ReturnType<typeof useDemoStore>> = {}) {
@@ -29,15 +42,25 @@ describe('DemoModeButton', () => {
       status: 'idle',
       ...overrides,
     })
-    return mount(DemoModeButton, { global: { plugins: [pinia] } })
+    return mount(DemoModeButton, {
+      global: { plugins: [pinia, PrimeVue] },
+      attachTo: document.body,
+    })
   }
 
   it('renders start button with translated label', () => {
     const wrapper = mountButton()
 
     expect(wrapper.find('[data-test="demo-start-button"]').text()).toBe(en['demo.start'])
-    expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-label')).toBe(en['demo.startAria'])
-    expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-pressed')).toBe('false')
+    expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-label')).toBe(
+      en['demo.startAria'],
+    )
+    expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-pressed')).toBe(
+      'false',
+    )
+    expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-expanded')).toBe(
+      'false',
+    )
     expect(wrapper.find('[data-test="demo-start-button"]').attributes('disabled')).toBeUndefined()
   })
 
@@ -46,27 +69,86 @@ describe('DemoModeButton', () => {
     expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-pressed')).toBe('true')
   })
 
-  it('calls startDemo when clicked', async () => {
-    vi.mocked(startDemo).mockResolvedValue(true)
-    vi.mocked(getDemoScenario).mockReturnValue({ id: 'scheduler-demo', steps: [] })
-
+  it('opens the picker with the three demo options', async () => {
     const wrapper = mountButton()
 
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
 
-    expect(getDemoScenario).toHaveBeenCalledWith('scheduler-demo')
+    expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-expanded')).toBe('true')
+    expect(body().find('[data-test="demo-picker"]').exists()).toBe(true)
+    expect(body().find('[data-test="demo-option-employees"]').text()).toContain(
+      en['demo.picker.employees'],
+    )
+    expect(body().find('[data-test="demo-option-scheduler"]').text()).toContain(
+      en['demo.picker.scheduler'],
+    )
+    expect(body().find('[data-test="demo-option-summary"]').text()).toContain(
+      en['demo.picker.summary'],
+    )
+    expect(startDemo).not.toHaveBeenCalled()
+  })
+
+  it('starts the selected scenario when an option is clicked', async () => {
+    vi.mocked(startDemo).mockResolvedValue(true)
+    const wrapper = mountButton()
+
+    await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
+
+    body().find('[data-test="demo-option-employees"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
+
+    expect(startDemo).toHaveBeenCalledWith('employees-demo')
+  })
+
+  it('starts the scheduler scenario from its option', async () => {
+    vi.mocked(startDemo).mockResolvedValue(true)
+    const wrapper = mountButton()
+
+    await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
+
+    body().find('[data-test="demo-option-scheduler"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
+
     expect(startDemo).toHaveBeenCalledWith('scheduler-demo')
   })
 
-  it('does nothing when scenario not found', async () => {
-    vi.mocked(getDemoScenario).mockReturnValueOnce(undefined)
+  it('starts the summary scenario from its option', async () => {
     vi.mocked(startDemo).mockResolvedValue(true)
-
     const wrapper = mountButton()
 
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
+
+    body().find('[data-test="demo-option-summary"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
+
+    expect(startDemo).toHaveBeenCalledWith('summary-demo')
+  })
+
+  it('closes the picker without starting a demo when cancelled', async () => {
+    const wrapper = mountButton()
+
+    await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
+
+    body().find('[data-test="demo-picker-cancel"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
 
     expect(startDemo).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-expanded')).toBe(
+      'false',
+    )
   })
 
   it('disables button during start', async () => {
@@ -75,21 +157,23 @@ describe('DemoModeButton', () => {
       resolveStart = resolve
     })
     vi.mocked(startDemo).mockReturnValue(startPromise)
-    vi.mocked(getDemoScenario).mockReturnValue({ id: 'scheduler-demo', steps: [] })
 
     const wrapper = mountButton()
     const button = wrapper.find('[data-test="demo-start-button"]')
 
-    const clickPromise = button.trigger('click')
-    await Promise.resolve()
-    await wrapper.vm.$nextTick()
+    await button.trigger('click')
+    await nextTick()
+    body().find('[data-test="demo-option-scheduler"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
 
     expect(button.attributes('disabled')).toBeDefined()
 
     resolveStart!(true)
-    await clickPromise
-    await wrapper.vm.$nextTick()
+    await startPromise
+    await nextTick()
 
-    expect(button.attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-test="demo-start-button"]').attributes('disabled')).toBeUndefined()
   })
 })
