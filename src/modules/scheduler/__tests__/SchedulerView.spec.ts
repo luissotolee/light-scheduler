@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
@@ -118,9 +118,9 @@ describe('SchedulerView', () => {
 
     expect(actions.exists()).toBe(true)
     expect(restart.element.tagName).toBe('BUTTON')
-    expect(restart.attributes('aria-label')).toBe('Restart week schedule')
+    expect(restart.attributes('aria-label')).toBe('Clear all')
     expect(restart.text()).toBe('')
-    expect(restart.find('.pi-refresh').exists()).toBe(true)
+    expect(restart.find('.pi-trash').exists()).toBe(true)
   })
 
   it('combines selected day and restart button in the day header', () => {
@@ -434,7 +434,7 @@ describe('SchedulerView', () => {
       'Semana anterior',
     )
     expect(wrapper.find('[data-test="restart-week"]').attributes('aria-label')).toBe(
-      'Reiniciar planificación semanal',
+      'Borrar todo',
     )
     expect(wrapper.find('.weekly-hours__title').text()).toBe('Horas semanales')
   })
@@ -478,103 +478,4 @@ describe('SchedulerView', () => {
     expect(wrapper.text()).not.toContain('12:00–13:00')
   })
 
-  it('renders export and import schedule buttons with icons in the page header', () => {
-    const wrapper = mountView()
-    const actions = wrapper.find('.page-header__actions')
-    const exportButton = actions.find('[data-test="export-schedules"]')
-    const importButton = actions.find('[data-test="import-schedules"]')
-
-    expect(exportButton.exists()).toBe(true)
-    expect(importButton.exists()).toBe(true)
-    expect(exportButton.text()).toContain('Export schedules')
-    expect(importButton.text()).toContain('Import schedules')
-    expect(exportButton.find('.pi-download').exists()).toBe(true)
-    expect(importButton.find('.pi-upload').exists()).toBe(true)
-    expect(exportButton.attributes('disabled')).toBeDefined()
-  })
-
-  it('enables schedule export when any week has shifts and reports the export status', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setCurrentWeekKey('2026-11-02')
-    workspace.setMembers([ada])
-    workspace.setShiftsForWeek('2026-11-02', [mondayShift])
-    const wrapper = mountView()
-    const exportButton = wrapper.find('[data-test="export-schedules"]')
-
-    expect(exportButton.attributes('disabled')).toBeUndefined()
-
-    await exportButton.trigger('click')
-
-    expect(wrapper.find('[data-test="schedule-status"]').text()).toBe('Schedules exported')
-  })
-
-  async function uploadSchedule(
-    wrapper: ReturnType<typeof mountView>,
-    text: string,
-  ): Promise<void> {
-    const input = wrapper.find('[data-test="schedule-file"]')
-    const file = new File([text], 'schedule.csv', { type: 'text/csv' })
-    Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
-    await input.trigger('change')
-    await flushPromises()
-  }
-
-  const scheduleText =
-    'week,emp_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday\r\n' +
-    'Y2026W45,,,,,,,,\r\n' +
-    ',EMP-0001,09:00-17:00,,,,,,'
-
-  it('imports a schedule after confirmation and replaces all schedule data', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setCurrentWeekKey('2026-11-02')
-    workspace.setMembers([ada, bo])
-    workspace.setShiftsForWeek('2026-11-02', [tuesdayShift])
-    const wrapper = mountView()
-
-    await uploadSchedule(wrapper, scheduleText)
-
-    expect(wrapper.find('[data-test="confirm-message"]').text()).toContain(
-      'This replaces all shifts and days off in every week',
-    )
-
-    await wrapper.find('[data-test="confirm-accept"]').trigger('click')
-
-    expect(workspace.schedules['2026-11-02']).toHaveLength(1)
-    expect(workspace.schedules['2026-11-02'][0]).toMatchObject({
-      memberId: 'member-1',
-      weekday: 'monday',
-      startMinute: 540,
-      endMinute: 1020,
-    })
-    expect(wrapper.find('[data-test="schedule-status"]').text()).toBe('Imported 1 shift')
-    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(false)
-  })
-
-  it('cancels a schedule import without changing schedule data', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setCurrentWeekKey('2026-11-02')
-    workspace.setMembers([ada, bo])
-    workspace.setShiftsForWeek('2026-11-02', [tuesdayShift])
-    const wrapper = mountView()
-
-    await uploadSchedule(wrapper, scheduleText)
-    await wrapper.find('[data-test="confirm-cancel"]').trigger('click')
-
-    expect(workspace.schedules['2026-11-02']).toEqual([tuesdayShift])
-    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(false)
-  })
-
-  it('renders Spanish labels for the schedule export and import actions', async () => {
-    const wrapper = mountView()
-
-    useLocaleStore().setLocale('es')
-    await nextTick()
-
-    expect(wrapper.find('[data-test="export-schedules"]').text()).toContain(
-      'Exportar planificaciones',
-    )
-    expect(wrapper.find('[data-test="import-schedules"]').text()).toContain(
-      'Importar planificaciones',
-    )
-  })
 })

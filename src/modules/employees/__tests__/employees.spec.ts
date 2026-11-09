@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
-import { todayIsoDate } from '@/shared/utils/calendar'
+import type { HolidayWeek, NewTeamMember, Shift, TeamMember } from '@/types'
+import { holidayToWeekKey, todayIsoDate } from '@/shared/utils/calendar'
 
 const ada: TeamMember = {
   id: 'member-1',
@@ -398,6 +398,136 @@ describe('employees store', () => {
 
     expect(store.holidayTarget).toBeNull()
     expect(store.status.error).toBeNull()
+  })
+
+  it('removes the member shifts scheduled during the saved holiday weeks', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+
+    const holidayWeekKey = holidayToWeekKey({ year: 2026, week: 10 })
+    const otherWeekKey = '2026-06-01'
+    const adaHolidayShift: Shift = {
+      id: 'shift-1',
+      memberId: ada.id,
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 1020,
+    }
+    const boHolidayShift: Shift = {
+      id: 'shift-2',
+      memberId: bo.id,
+      weekday: 'tuesday',
+      startMinute: 540,
+      endMinute: 1020,
+    }
+    const adaOtherShift: Shift = {
+      id: 'shift-3',
+      memberId: ada.id,
+      weekday: 'friday',
+      startMinute: 600,
+      endMinute: 900,
+    }
+
+    workspace.setShiftsForWeek(holidayWeekKey, [adaHolidayShift, boHolidayShift])
+    workspace.setShiftsForWeek(otherWeekKey, [adaOtherShift])
+
+    store.setHolidays(ada.id, [{ year: 2026, week: 10 }])
+
+    expect(workspace.schedules).toEqual({
+      [holidayWeekKey]: [boHolidayShift],
+      [otherWeekKey]: [adaOtherShift],
+    })
+  })
+
+  it('applies holidays immediately when the member has no shifts that week', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([{ ...ada, holidays: [] }])
+
+    store.requestSetHolidays(ada.id, [{ year: 2026, week: 11 }])
+
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+    expect(workspace.members[0].holidays).toEqual([{ year: 2026, week: 11 }])
+    expect(store.status.error).toBeNull()
+  })
+
+  it('asks for confirmation before removing shifts in a new holiday week', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([{ ...ada, holidays: [] }])
+
+    const weekKey = holidayToWeekKey({ year: 2026, week: 12 })
+    const shift: Shift = {
+      id: 'shift-1',
+      memberId: ada.id,
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 1020,
+    }
+    workspace.setShiftsForWeek(weekKey, [shift])
+
+    store.requestSetHolidays(ada.id, [{ year: 2026, week: 12 }])
+
+    expect(store.confirmVisible).toBe(true)
+    expect(store.pendingAction).toEqual({
+      kind: 'holidays',
+      id: ada.id,
+      holidays: [{ year: 2026, week: 12 }],
+    })
+    expect(workspace.members[0].holidays).toEqual([])
+    expect(workspace.schedules[weekKey]).toEqual([shift])
+
+    store.confirmAction()
+
+    expect(workspace.members[0].holidays).toEqual([{ year: 2026, week: 12 }])
+    expect(workspace.schedules[weekKey]).toBeUndefined()
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+  })
+
+  it('keeps holidays and shifts unchanged when the confirmation is cancelled', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([{ ...ada, holidays: [] }])
+
+    const weekKey = holidayToWeekKey({ year: 2026, week: 12 })
+    const shift: Shift = {
+      id: 'shift-1',
+      memberId: ada.id,
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 1020,
+    }
+    workspace.setShiftsForWeek(weekKey, [shift])
+
+    store.requestSetHolidays(ada.id, [{ year: 2026, week: 12 }])
+    store.cancelAction()
+
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+    expect(workspace.members[0].holidays).toEqual([])
+    expect(workspace.schedules[weekKey]).toEqual([shift])
+  })
+
+  it('rejects invalid holiday requests without asking for confirmation', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.requestSetHolidays(
+      ada.id,
+      Array.from({ length: 7 }, (_, index) => ({ year: 2026, week: index + 1 })),
+    )
+
+    expect(store.status.error).toBe('errors.maxHolidays')
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
+
+    store.requestSetHolidays('missing', [{ year: 2026, week: 1 }])
+    expect(store.confirmVisible).toBe(false)
+    expect(store.pendingAction).toBeNull()
   })
 
   it('opens and closes the create and edit dialogs', () => {

@@ -164,7 +164,7 @@ describe('SummaryView', () => {
     expect(print).not.toHaveBeenCalled()
     expect(createObjectURL).toHaveBeenCalledOnce()
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
-    expect(downloadName).toMatch(/^summary-.*\.pdf$/)
+    expect(downloadName).toBe('2026-11_Schedule_2nd.pdf')
     expect(blobs[0]?.type).toBe('application/pdf')
   })
 

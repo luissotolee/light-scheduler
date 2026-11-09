@@ -54,6 +54,7 @@ describe('buildSummaryPdf', () => {
       buildSummaryPdf({
         rows: [row('Ada'), withShifts('Grace', 'monday', ['09:00–12:00', '14:00–18:00'])],
         days,
+        weekKey,
         weekRangeLabel: 'Nov 2 – Nov 8, 2026',
         locale: 'en',
       }),
@@ -75,6 +76,7 @@ describe('buildSummaryPdf', () => {
       buildSummaryPdf({
         rows: [row('Ada', { isVacation: true })],
         days,
+        weekKey,
         weekRangeLabel: '2 nov – 8 nov, 2026',
         locale: 'es',
       }),
@@ -88,7 +90,13 @@ describe('buildSummaryPdf', () => {
   it('starts a new page when the rows do not fit', () => {
     const rows = Array.from({ length: 80 }, (_, index) => row(`Employee ${index}`))
     const pdf = decode(
-      buildSummaryPdf({ rows, days, weekRangeLabel: 'Nov 2 – Nov 8, 2026', locale: 'en' }),
+      buildSummaryPdf({
+        rows,
+        days,
+        weekKey,
+        weekRangeLabel: 'Nov 2 – Nov 8, 2026',
+        locale: 'en',
+      }),
     )
 
     const pageCount = pdf.match(/\/Type \/Page\b/g)?.length ?? 0
@@ -122,10 +130,11 @@ describe('saveSummaryPdf', () => {
     vi.unstubAllGlobals()
   })
 
-  it('downloads the generated PDF with a timestamped filename', async () => {
+  it('downloads the generated PDF using the week month and first weekday', async () => {
     saveSummaryPdf({
       rows: [row('Ada')],
       days,
+      weekKey,
       weekRangeLabel: 'Nov 2 – Nov 8, 2026',
       locale: 'en',
     })
@@ -133,10 +142,22 @@ describe('saveSummaryPdf', () => {
     expect(createObjectURL).toHaveBeenCalledOnce()
     expect(clickSpy).toHaveBeenCalledOnce()
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
-    expect(downloadName).toMatch(/^summary-.*\.pdf$/)
+    expect(downloadName).toBe('2026-11_Schedule_2nd.pdf')
 
     const blob = blobs[0]
     expect(blob.type).toBe('application/pdf')
     expect(await blob.text()).toContain('%PDF-1.4')
+  })
+
+  it('uses the Spanish file label for Spanish PDFs', () => {
+    saveSummaryPdf({
+      rows: [row('Ada')],
+      days,
+      weekKey,
+      weekRangeLabel: '2 nov – 8 nov, 2026',
+      locale: 'es',
+    })
+
+    expect(downloadName).toBe('2026-11_Horario_2.pdf')
   })
 })

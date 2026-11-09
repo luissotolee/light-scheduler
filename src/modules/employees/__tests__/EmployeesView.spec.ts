@@ -12,7 +12,8 @@ import EmployeesView from '@/modules/employees/views/EmployeesView.vue'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import { todayIsoDate } from '@/shared/utils/calendar'
+import { en } from '@/shared/i18n/messages/en'
+import { holidayToWeekKey, todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
 
 const ada: TeamMember = {
@@ -179,6 +180,35 @@ describe('EmployeesView', () => {
       { year: 2026, week: 10 },
       { year: 2026, week: 12 },
     ])
+  })
+
+  it('asks for confirmation before saving a holiday week that already has shifts', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([{ ...ada, holidays: [] }])
+    const weekKey = holidayToWeekKey({ year: 2026, week: 12 })
+    workspace.setShiftsForWeek(weekKey, [
+      { id: 'shift-1', memberId: ada.id, weekday: 'monday', startMinute: 540, endMinute: 1020 },
+    ])
+    const wrapper = mountView()
+
+    await wrapper.find('[aria-label="Holidays for Ada"]').trigger('click')
+    const holidayDialog = wrapper.findComponent(HolidayWeeksDialog)
+    holidayDialog.vm.$emit('save', [{ year: 2026, week: 12 }])
+    await nextTick()
+
+    const confirm = wrapper.findComponent(ConfirmActionDialog)
+    expect(confirm.props('visible')).toBe(true)
+    expect(confirm.props('header')).toBe(en['employees.confirm.holidaysHeader'])
+    expect(confirm.props('message')).toContain('Ada')
+    expect(workspace.members[0].holidays).toEqual([])
+    expect(workspace.schedules[weekKey]).toHaveLength(1)
+
+    confirm.vm.$emit('confirm')
+    await nextTick()
+
+    expect(workspace.members[0].holidays).toEqual([{ year: 2026, week: 12 }])
+    expect(workspace.schedules[weekKey]).toBeUndefined()
+    expect(confirm.props('visible')).toBe(false)
   })
 
   it('removes an employee only after confirming', async () => {

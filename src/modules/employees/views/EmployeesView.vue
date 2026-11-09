@@ -45,9 +45,7 @@
     <EmptyState
       v-if="filteredMembers.length === 0"
       :title="t(count === 0 ? 'employees.emptyTitle' : 'employees.noMatchTitle')"
-      :description="
-        t(count === 0 ? 'employees.emptyDescription' : 'employees.noMatchDescription')
-      "
+      :description="t(count === 0 ? 'employees.emptyDescription' : 'employees.noMatchDescription')"
     />
 
     <EmployeeTable
@@ -128,22 +126,27 @@ const { t } = useI18n()
 
 const errorMessage = computed(() => (status.value.error ? t(status.value.error) : ''))
 
-const confirmHeader = computed(() =>
-  pendingAction.value?.kind === 'remove'
-    ? t('employees.confirm.removeHeader')
-    : t('employees.confirm.deactivateHeader'),
-)
+const confirmHeader = computed(() => {
+  const kind = pendingAction.value?.kind
+  if (kind === 'remove') return t('employees.confirm.removeHeader')
+  if (kind === 'deactivate') return t('employees.confirm.deactivateHeader')
+  return t('employees.confirm.holidaysHeader')
+})
 
 const confirmMessage = computed(() => {
   const name = pendingMember.value?.name ?? t('employees.thisEmployee')
-  return pendingAction.value?.kind === 'remove'
-    ? t('employees.confirm.removeMessage', { name })
-    : t('employees.confirm.deactivateMessage', { name })
+  const kind = pendingAction.value?.kind
+  if (kind === 'remove') return t('employees.confirm.removeMessage', { name })
+  if (kind === 'deactivate') return t('employees.confirm.deactivateMessage', { name })
+  return t('employees.confirm.holidaysMessage', { name })
 })
 
-const confirmLabel = computed(() =>
-  pendingAction.value?.kind === 'remove' ? t('common.remove') : t('common.deactivate'),
-)
+const confirmLabel = computed(() => {
+  const kind = pendingAction.value?.kind
+  if (kind === 'remove') return t('common.remove')
+  if (kind === 'deactivate') return t('common.deactivate')
+  return t('employees.confirm.removeShifts')
+})
 
 const confirmSeverity = computed(() =>
   pendingAction.value?.kind === 'remove' ? ('danger' as const) : ('warn' as const),
@@ -175,7 +178,7 @@ function handleSubmit(payload: NewTeamMember): void {
 }
 
 function handleSaveHolidays(holidays: HolidayWeek[]): void {
-  if (holidayTarget.value) store.setHolidays(holidayTarget.value.id, holidays)
+  if (holidayTarget.value) store.requestSetHolidays(holidayTarget.value.id, holidays)
 }
 
 onUnmounted(() => {

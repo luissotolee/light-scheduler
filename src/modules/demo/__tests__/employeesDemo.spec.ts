@@ -21,6 +21,7 @@ const knownTargets = [
   'close-details',
   'holidays-emp-mock-02',
   'week-20',
+  'next-year',
   'save-holidays',
   'edit-emp-mock-03',
   'deactivate-emp-mock-02',

@@ -2,8 +2,9 @@ import type { Locale } from '@/shared/i18n'
 import { messages, translate } from '@/shared/i18n'
 import type { MessageKey } from '@/shared/i18n'
 import type { SummaryDayHeader, SummaryRow } from '@/modules/summary/types'
-import { formatOrdinal } from '@/shared/utils/calendar'
-import { downloadBlob, timestampedName } from '@/shared/utils/download'
+import type { WeekKey } from '@/types'
+import { formatOrdinal, isoDateToDate } from '@/shared/utils/calendar'
+import { downloadBlob } from '@/shared/utils/download'
 
 const PAGE_WIDTH = 595.28
 const PAGE_HEIGHT = 841.89
@@ -326,6 +327,7 @@ function drawRow(
 export interface SummaryPdfInput {
   rows: readonly SummaryRow[]
   days: readonly SummaryDayHeader[]
+  weekKey: WeekKey
   weekRangeLabel: string
   locale: Locale
 }
@@ -394,7 +396,15 @@ function assemblePdf(pages: readonly string[][]): Uint8Array<ArrayBuffer> {
   return bytes
 }
 
+function summaryPdfFilename(input: SummaryPdfInput): string {
+  const weekStart = isoDateToDate(input.weekKey)
+  const yearMonth = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}`
+  const day = formatOrdinal(weekStart.getDate(), input.locale)
+  const label = translate(messages[input.locale], 'summary.pdfFileLabel')
+  return `${yearMonth}_${label}_${day}.pdf`
+}
+
 export function saveSummaryPdf(input: SummaryPdfInput): void {
   const bytes = buildSummaryPdf(input)
-  downloadBlob(timestampedName('summary', 'pdf'), new Blob([bytes], { type: 'application/pdf' }))
+  downloadBlob(summaryPdfFilename(input), new Blob([bytes], { type: 'application/pdf' }))
 }

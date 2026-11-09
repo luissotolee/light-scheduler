@@ -11,7 +11,7 @@ export const en = {
 
   'app.navPrimary': 'Primary',
   'app.footer':
-    'Light Scheduler — a frontend-only weekly shift scheduler. We recommend saving your work locally by exporting CSV files.',
+    'Light Scheduler — a frontend-only weekly shift scheduler. We recommend backing up your work locally through Archive.',
 
   'nav.home': 'Home',
   'nav.scheduler': 'Scheduler',
@@ -43,9 +43,7 @@ export const en = {
   'scheduler.previousWeek': 'Previous week',
   'scheduler.nextWeek': 'Next week',
   'scheduler.weekdays': 'Weekdays',
-  'scheduler.restart': 'Restart week schedule',
-  'scheduler.exportSchedules': 'Export schedules',
-  'scheduler.importSchedules': 'Import schedules',
+  'scheduler.clearAll': 'Clear all',
   'scheduler.confirm.restartHeader': 'Restart week schedule',
   'scheduler.confirm.restartMessage':
     'This clears all shifts and days off for the current week. Team members are kept. This cannot be undone.',
@@ -107,6 +105,10 @@ export const en = {
   'employees.confirm.deactivateHeader': 'Deactivate employee',
   'employees.confirm.deactivateMessage':
     'Deactivate {name}? Their end date will be set to today and they will be excluded from schedules.',
+  'employees.confirm.holidaysHeader': 'Remove shifts for holiday weeks',
+  'employees.confirm.holidaysMessage':
+    '{name} already has shifts in the selected holiday weeks. Saving the holiday will remove those shifts.',
+  'employees.confirm.removeShifts': 'Remove shifts and save',
   'employees.column.name': 'Name',
   'employees.column.id': 'ID',
   'employees.column.duty': 'Duty',
@@ -177,6 +179,7 @@ export const en = {
     'Review the week as a printable table. Print it or download it as a PDF file without opening the print dialog.',
   'summary.print': 'Print',
   'summary.savePdf': 'Save as PDF',
+  'summary.pdfFileLabel': 'Schedule',
 
   'archive.title': 'Archive',
   'archive.description':
@@ -303,6 +306,8 @@ export const en = {
   'demo.scenario.employees.closeDetails': 'Close the details to return to the list.',
   'demo.scenario.employees.holidays': 'Open the holiday calendar for an employee.',
   'demo.scenario.employees.holidaysPick': 'Pick the weeks this employee is on holiday.',
+  'demo.scenario.employees.holidaysNextYear':
+    'Move to next year to pick a week with no scheduled shifts.',
   'demo.scenario.employees.holidaysSelected':
     'Selected weeks are highlighted. Save when you are done.',
   'demo.scenario.employees.holidaysSaved': 'The holiday weeks are saved for this employee.',

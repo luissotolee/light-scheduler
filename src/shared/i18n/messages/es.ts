@@ -13,7 +13,7 @@ export const es: Messages = {
 
   'app.navPrimary': 'Principal',
   'app.footer':
-    'Light Scheduler — un planificador semanal de turnos solo de frontend. Recomendamos guardar tu trabajo localmente exportando archivos CSV.',
+    'Light Scheduler — un planificador semanal de turnos solo de frontend. Recomendamos respaldar tu trabajo localmente a través de Archivo.',
 
   'nav.home': 'Inicio',
   'nav.scheduler': 'Planificador',
@@ -47,9 +47,7 @@ export const es: Messages = {
   'scheduler.previousWeek': 'Semana anterior',
   'scheduler.nextWeek': 'Semana siguiente',
   'scheduler.weekdays': 'Días de la semana',
-  'scheduler.restart': 'Reiniciar planificación semanal',
-  'scheduler.exportSchedules': 'Exportar planificaciones',
-  'scheduler.importSchedules': 'Importar planificaciones',
+  'scheduler.clearAll': 'Borrar todo',
   'scheduler.confirm.restartHeader': 'Reiniciar planificación semanal',
   'scheduler.confirm.restartMessage':
     'Esto borra todos los turnos y días libres de la semana actual. Los empleados se conservan. Esta acción no se puede deshacer.',
@@ -113,6 +111,10 @@ export const es: Messages = {
   'employees.confirm.deactivateHeader': 'Desactivar empleado',
   'employees.confirm.deactivateMessage':
     '¿Desactivar a {name}? Su fecha de fin se establecerá a hoy y se excluirá de las planificaciones.',
+  'employees.confirm.holidaysHeader': 'Eliminar turnos por vacaciones',
+  'employees.confirm.holidaysMessage':
+    '{name} ya tiene turnos en las semanas de vacaciones seleccionadas. Guardar las vacaciones eliminará esos turnos.',
+  'employees.confirm.removeShifts': 'Eliminar turnos y guardar',
   'employees.column.name': 'Nombre',
   'employees.column.id': 'ID',
   'employees.column.duty': 'Puesto',
@@ -182,6 +184,7 @@ export const es: Messages = {
     'Revisa la semana en una tabla imprimible. Imprímela o descárgala como archivo PDF sin abrir el diálogo de impresión.',
   'summary.print': 'Imprimir',
   'summary.savePdf': 'Guardar como PDF',
+  'summary.pdfFileLabel': 'Horario',
 
   'archive.title': 'Archivo',
   'archive.description':
@@ -316,6 +319,8 @@ export const es: Messages = {
   'demo.scenario.employees.holidays': 'Abre el calendario de vacaciones de un empleado.',
   'demo.scenario.employees.holidaysPick':
     'Elige las semanas en las que este empleado está de vacaciones.',
+  'demo.scenario.employees.holidaysNextYear':
+    'Avanza al año siguiente para elegir una semana sin turnos planificados.',
   'demo.scenario.employees.holidaysSelected':
     'Las semanas seleccionadas aparecen resaltadas. Guarda cuando termines.',
   'demo.scenario.employees.holidaysSaved':

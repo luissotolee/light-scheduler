@@ -121,6 +121,35 @@ describe('workspace store', () => {
     expect(store.schedules).toEqual({ '2026-10-26': [otherShift] })
   })
 
+  it('removes a member shifts from the given weeks only', () => {
+    const store = useWorkspaceStore()
+    const otherMember: TeamMember = { ...member, id: 'member-2', name: 'Bo' }
+    const otherShift: Shift = { ...shift, id: 'shift-2', memberId: otherMember.id }
+    const secondAdaShift: Shift = { ...shift, id: 'shift-3', weekday: 'tuesday' }
+    const thirdAdaShift: Shift = { ...shift, id: 'shift-4', weekday: 'friday' }
+
+    store.setShiftsForWeek('2026-10-26', [shift, otherShift])
+    store.setShiftsForWeek('2026-11-02', [secondAdaShift])
+    store.setShiftsForWeek('2026-11-09', [thirdAdaShift])
+
+    store.removeMemberShiftsForWeeks(member.id, ['2026-10-26', '2026-11-02'])
+
+    expect(store.schedules).toEqual({
+      '2026-10-26': [otherShift],
+      '2026-11-09': [thirdAdaShift],
+    })
+  })
+
+  it('ignores empty and unrelated week targets when removing member shifts', () => {
+    const store = useWorkspaceStore()
+    store.setShiftsForWeek('2026-10-26', [shift])
+
+    store.removeMemberShiftsForWeeks(member.id, [])
+    store.removeMemberShiftsForWeeks(member.id, ['2026-11-02'])
+
+    expect(store.schedules).toEqual({ '2026-10-26': [shift] })
+  })
+
   it('finds members by id', () => {
     const store = useWorkspaceStore()
     store.setMembers([member])
@@ -189,10 +218,7 @@ describe('workspace store', () => {
     const nextShift: Shift = { ...shift, id: 'shift-9', weekday: 'friday' }
     const nextDayOff: DayOff = { memberId: member.id, weekday: 'sunday' }
 
-    store.replaceScheduleData(
-      { '2026-11-02': [nextShift] },
-      { '2026-11-02': [nextDayOff] },
-    )
+    store.replaceScheduleData({ '2026-11-02': [nextShift] }, { '2026-11-02': [nextDayOff] })
 
     expect(store.schedules).toEqual({ '2026-11-02': [nextShift] })
     expect(store.dayOffs).toEqual({ '2026-11-02': [nextDayOff] })
