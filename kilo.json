@@ -1,4 +1,14 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  "default_agent": "custom-orchestrator"
+  "default_agent": "custom-orchestrator",
+  "permission": {
+    "github_*": "allow"
+  },
+  "mcp": {
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true
+    }
+  }
 }

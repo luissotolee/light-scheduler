@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Review the current git changes (staged, unstaged, and unpushed commits) and generate a commit message in `(type) summary` format. Use when the user wants to commit, write a commit message, or review changes before pushing.
+description: Review the current git changes (staged, unstaged, and unpushed commits) and generate a commit message in `(type) summary` format. Use when the user wants to commit, write a commit message, or review changes before pushing. This skill never stages, commits, pushes, or opens a PR.
 ---
 
 # Commit Skill

@@ -15,3 +15,8 @@ The app ships two languages: **English (`en`)** and **Spanish (`es`)**. Any labe
 ## Verification
 
 `npm run lint` · `npm run typecheck` · `npm test` · `npm run test:coverage` · `npm run build`
+
+- Commit messages use `(type) summary`; see `.kilo/skills/commit/SKILL.md` and `/commit`.
+- Pushing a branch and opening a GitHub PR is a separate step; use `.kilo/skills/pull-request/SKILL.md` and `/pr`.
+- The PR skill requires a clean tracked working tree, pushes the current branch, skips creation when an open PR already exists, and builds the description from `git diff origin/<base>...HEAD`.
+- Use the workspace **GitHub MCP server** for GitHub operations (branches, PRs, issues, reviews, etc.). Do **not** use `gh`. Never print tokens or remote URLs that contain credentials.
