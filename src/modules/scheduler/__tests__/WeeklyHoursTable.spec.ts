@@ -140,7 +140,7 @@ describe('WeeklyHoursTable', () => {
     const wrapper = mountTable([])
 
     expect(wrapper.find('table').exists()).toBe(false)
-    expect(wrapper.text()).toContain('No active employees.')
+    expect(wrapper.text()).toContain('No employees are available this week.')
   })
 
   it('updates when the groups prop changes', async () => {

@@ -7,6 +7,7 @@ import {
   serializeWorkspace,
   WORKSPACE_SCHEMA_VERSION,
   WORKSPACE_STORAGE_KEY,
+  type PersistedWorkspace,
 } from '@/shared/utils/persistence'
 import { readJson, removeStorageValue, writeJson } from '@/shared/utils/storage'
 
@@ -29,14 +30,24 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       Object.keys(dayOffs.value).length > 0,
   )
 
-  function hydrate(): void {
-    const persisted = readJson(WORKSPACE_STORAGE_KEY, parsePersistedWorkspace)
-    if (persisted === null) return
+  function applyPersisted(persisted: PersistedWorkspace | null): void {
+    if (!persisted) {
+      members.value = []
+      schedules.value = {}
+      dayOffs.value = {}
+      currentWeekKey.value = getWeekKey(new Date())
+      return
+    }
 
     members.value = persisted.members
     schedules.value = persisted.schedules
     dayOffs.value = persisted.dayOffs
     currentWeekKey.value = persisted.currentWeekKey
+  }
+
+  function hydrate(): void {
+    const persisted = readJson(WORKSPACE_STORAGE_KEY, parsePersistedWorkspace)
+    applyPersisted(persisted)
   }
 
   hydrate()
@@ -118,6 +129,10 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     removeStorageValue(WORKSPACE_STORAGE_KEY)
   }
 
+  function loadWorkspace(payload: PersistedWorkspace | null): void {
+    applyPersisted(payload)
+  }
+
   function reset(): void {
     members.value = []
     schedules.value = {}
@@ -147,6 +162,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     setDayOffsForWeek,
     setCurrentWeekKey,
     markLoaded,
+    loadWorkspace,
     reset,
   }
 })

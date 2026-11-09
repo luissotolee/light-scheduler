@@ -64,8 +64,8 @@ npm run dev
 
 ```
 src/
-  App.vue                 app shell, brand, nav, and footer
-  main.ts                 application entry point
+  App.vue                 app shell, brand, nav, footer, demo banner/overlay
+  main.ts                 application entry point (boot recovery for interrupted demo)
   types.ts                shared domain types (members, shifts, weeks, results)
   assets/
     main.css              global CSS and design tokens
@@ -100,6 +100,19 @@ src/
     HistoryView.vue       weekly history skeleton
     CsvView.vue           export skeleton with import placeholders
     __tests__/
+  modules/
+    demo/                 in-app real-time guided demo (see .kilo/skills/guided-demo/SKILL.md)
+      types.ts                    DemoScenario, DemoStep, DemoAction, DemoTarget
+      fixtures/demoWorkspace.ts   buildDemoWorkspace(now?) → PersistedWorkspace
+      scenarios/                  step scenarios (v1: scheduler→employees→summary→history→CSV)
+      utils/storageSnapshot.ts    localStorage snapshot/restore/backup/recovery
+      utils/dom.ts                target resolution, click/pointer/press/fill, reduced motion
+      utils/demoSession.ts        startDemo/stopDemo (snapshot → load mock → reset UI → engine)
+      player/engine.ts            cancellable player (AbortController, pause/resume/next/prev)
+      stores/demo.ts              Pinia store (status, stepIndex, cursor, ring, restored flag)
+      components/                 DemoModeButton, DemoBanner, DemoOverlay (lazy)
+      overlay/demo-overlay.css    shared CSS custom properties
+      __tests__/                  storageSnapshot, demoWorkspace, demoSession, demo, engine, dom, components, schedulerDemo
   __tests__/
     App.spec.ts
     routes.spec.ts        lazy route resolution test

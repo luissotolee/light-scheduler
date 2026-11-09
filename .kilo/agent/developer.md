@@ -1,7 +1,9 @@
 ---
 description: Implements a task or approved plan end-to-end, editing files, running tests, and running commands until everything is done. Route here after planning or for simple tasks.
 mode: subagent
-model: deepseek/deepseek-flash
+model: kilo/Cohere: North Mini Code (free)
+variant: thinking
+steps: 30
 color: "#10B981"
 ---
 

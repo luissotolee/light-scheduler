@@ -9,12 +9,13 @@
     />
 
     <div v-else class="history__weeks">
-      <ul class="history__list">
+      <ul class="history__list" data-test="history-list">
         <li v-for="weekKey in availableWeeks" :key="weekKey">
           <button
             type="button"
             class="history__week"
             :aria-pressed="selectedWeekKey === weekKey"
+            :data-test="`history-week-${weekKey}`"
             @click="store.selectWeek(weekKey)"
           >
             {{ formatWeekRange(weekKey, locale) }}

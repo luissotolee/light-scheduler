@@ -1,13 +1,23 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import App from '@/App.vue'
 import { useLocaleStore } from '@/shared/stores/locale'
+import { useDemoStore } from '@/modules/demo/stores/demo'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 import { NAV_ITEMS } from '@/router/nav'
+
+vi.mock('@/modules/demo/player/engine', () => ({
+  startEngine: vi.fn().mockResolvedValue(undefined),
+  stopEngine: vi.fn().mockResolvedValue(undefined),
+  pauseEngine: vi.fn().mockResolvedValue(undefined),
+  resumeEngine: vi.fn().mockResolvedValue(undefined),
+  nextStep: vi.fn().mockResolvedValue(undefined),
+  previousStep: vi.fn().mockResolvedValue(undefined),
+}))
 
 const routes = NAV_ITEMS.map((item) => ({
   path: item.path,
@@ -71,5 +81,60 @@ describe('App', () => {
     expect(wrapper.find('.app-nav__link').text()).toBe(es['nav.home'])
     expect(wrapper.find('.app__footer').text()).toBe(es['app.footer'])
     expect(document.documentElement.lang).toBe('es')
+  })
+
+  it('renders demo start button when demo is idle', async () => {
+    const wrapper = await mountApp('/')
+
+    expect(wrapper.find('[data-test="demo-start-button"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="demo-start-button"]').text()).toBe(en['demo.start'])
+  })
+
+  it('does not render demo overlay when demo is idle', async () => {
+    const wrapper = await mountApp('/')
+
+    expect(wrapper.find('[data-test="demo-overlay"]').exists()).toBe(false)
+  })
+
+  it('does not render demo banner when demo is idle', async () => {
+    const wrapper = await mountApp('/')
+
+    expect(wrapper.find('[data-test="demo-banner"]').exists()).toBe(false)
+  })
+
+  it('renders demo banner when demo is running', async () => {
+    const wrapper = await mountApp('/')
+    const demoStore = useDemoStore()
+    demoStore.status = 'running'
+
+    await nextTick()
+
+    expect(wrapper.find('[data-test="demo-banner"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="demo-banner"]').text()).toContain(en['demo.banner'])
+  })
+
+  it('does not start demo engine on refresh when idle', async () => {
+    const { startEngine } = await import('@/modules/demo/player/engine')
+
+    const wrapper = await mountApp('/')
+
+    expect(startEngine).not.toHaveBeenCalled()
+    const demoStore = useDemoStore()
+    expect(demoStore.status).toBe('idle')
+    expect(wrapper.find('[data-test="demo-start-button"]').exists()).toBe(true)
+  })
+
+  it('mounts demo overlay when demo status is running', async () => {
+    const wrapper = await mountApp('/')
+    const demoStore = useDemoStore()
+    demoStore.status = 'running'
+    demoStore.totalSteps = 1
+    demoStore.currentStep = { id: '1', action: 'spotlight', target: { testId: 'test' }, narrationKey: 'demo.scenario.scheduler.intro' }
+
+    await nextTick()
+    await nextTick()
+    await vi.dynamicImportSettled()
+
+    expect(wrapper.find('[data-test="demo-overlay"]').exists()).toBe(true)
   })
 })

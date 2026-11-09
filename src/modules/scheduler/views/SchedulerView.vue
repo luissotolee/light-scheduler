@@ -6,69 +6,74 @@
       description-tooltip
     />
 
-    <div class="scheduler__toolbar">
-      <Button
-        type="button"
-        icon="pi pi-chevron-left"
-        size="small"
-        text
-        rounded
-        :aria-label="t('scheduler.previousWeek')"
-        data-test="previous-week"
-        @click="store.goToPreviousWeek"
-      />
+    <div class="scheduler__toolbar-wrapper">
+      <div class="scheduler__toolbar">
+        <Button
+          type="button"
+          icon="pi pi-chevron-left"
+          size="small"
+          text
+          rounded
+          :aria-label="t('scheduler.previousWeek')"
+          data-test="previous-week"
+          @click="store.goToPreviousWeek"
+        />
 
-      <div class="scheduler__week">
-        <strong>{{ weekRangeLabel }}</strong>
+        <div class="scheduler__week">
+          <strong>{{ weekRangeLabel }}</strong>
+        </div>
+
+        <Button
+          type="button"
+          icon="pi pi-chevron-right"
+          size="small"
+          text
+          rounded
+          :aria-label="t('scheduler.nextWeek')"
+          data-test="next-week"
+          @click="store.goToNextWeek"
+        />
       </div>
-
-      <Button
-        type="button"
-        icon="pi pi-chevron-right"
-        size="small"
-        text
-        rounded
-        :aria-label="t('scheduler.nextWeek')"
-        data-test="next-week"
-        @click="store.goToNextWeek"
-      />
     </div>
-
-    <h2 class="scheduler__selected-day" data-test="scheduler-selected-day">
-      {{ selectedDayLabel }}
-    </h2>
 
     <p v-if="errorMessage" class="scheduler__error" role="alert">{{ errorMessage }}</p>
 
-    <div class="scheduler__actions">
-      <Button
-        type="button"
-        icon="pi pi-refresh"
-        size="small"
-        text
-        rounded
-        severity="danger"
-        :aria-label="t('scheduler.restart')"
-        data-test="restart-week"
-        @click="openRestartConfirm"
-      />
-    </div>
+    <div class="scheduler__content">
+      <div class="scheduler__day-header" data-test="scheduler-day-header">
+        <h2 class="scheduler__selected-day" data-test="scheduler-selected-day">
+          {{ selectedDayLabel }}
+        </h2>
+        <div class="scheduler__actions">
+          <Button
+            type="button"
+            icon="pi pi-refresh"
+            size="small"
+            text
+            rounded
+            severity="danger"
+            :aria-label="t('scheduler.restart')"
+            data-test="restart-week"
+            @click="openRestartConfirm"
+          />
+        </div>
+      </div>
 
-    <div class="scheduler__layout">
-      <WeekdayTabs
-        :model-value="selectedWeekday"
-        :weekdays="weekdayOptions"
-        @update:model-value="store.selectWeekday"
-      />
+      <div class="scheduler__layout">
+        <WeekdayTabs
+          :model-value="selectedWeekday"
+          :weekdays="weekdayOptions"
+          @update:model-value="store.selectWeekday"
+        />
 
-      <ShiftGrid
-        :rows="dayRows"
-        :slots="slots"
-        @create="handleCreate"
-        @resize="handleResize"
-        @remove="handleRemove"
-        @toggle-off="store.toggleDayOff"
-      />
+        <ShiftGrid
+          :rows="dayRows"
+          :slots="slots"
+          @create="handleCreate"
+          @resize="handleResize"
+          @remove="handleRemove"
+          @toggle-off="store.toggleDayOff"
+        />
+      </div>
     </div>
 
     <WeeklyHoursTable :groups="weeklyHoursGroups" />
@@ -160,33 +165,25 @@ function handleRemove(id: string): void {
 .scheduler {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
+}
+
+.scheduler__toolbar-wrapper {
+  display: flex;
+  justify-content: center;
 }
 
 .scheduler__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  align-self: center;
-  justify-content: center;
-  gap: 0.75rem;
-  max-width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+  gap: 0.5rem;
 }
 
 .scheduler__week {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  text-align: center;
-}
-
-.scheduler__selected-day {
-  margin: 0;
-  font-size: 1.1rem;
   text-align: center;
 }
 
@@ -199,10 +196,35 @@ function handleRemove(id: string): void {
   color: var(--color-danger);
 }
 
+.scheduler__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.scheduler__day-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0 0.25rem;
+}
+
+.scheduler__selected-day {
+  grid-column: 2;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .scheduler__actions {
+  grid-column: 3;
   display: flex;
   justify-content: flex-end;
-  padding: 0 0.25rem;
 }
 
 .scheduler__layout {

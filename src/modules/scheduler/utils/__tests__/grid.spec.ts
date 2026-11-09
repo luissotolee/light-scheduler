@@ -5,7 +5,9 @@ import {
   minuteDeltaFromPixels,
   minuteToPercent,
   offsetXToMinute,
+  rangeGap,
   rangeToPercentWidth,
+  closestShiftIndex,
 } from '@/modules/scheduler/utils/grid'
 
 function bar(startMinute: number, endMinute: number): Shift {
@@ -70,5 +72,70 @@ describe('firstFreeStartMinute', () => {
 
   it('returns the day end when every slot is occupied', () => {
     expect(firstFreeStartMinute([bar(540, 1500)])).toBe(1500)
+  })
+})
+
+describe('rangeGap', () => {
+  it('returns 0 for overlapping ranges', () => {
+    expect(rangeGap({ startMinute: 540, endMinute: 600 }, { startMinute: 570, endMinute: 630 })).toBe(0)
+    expect(rangeGap({ startMinute: 570, endMinute: 630 }, { startMinute: 540, endMinute: 600 })).toBe(0)
+  })
+
+  it('returns 0 for touching ranges', () => {
+    expect(rangeGap({ startMinute: 540, endMinute: 600 }, { startMinute: 600, endMinute: 660 })).toBe(0)
+    expect(rangeGap({ startMinute: 600, endMinute: 660 }, { startMinute: 540, endMinute: 600 })).toBe(0)
+  })
+
+  it('returns exact gap for disjoint ranges', () => {
+    expect(rangeGap({ startMinute: 540, endMinute: 600 }, { startMinute: 630, endMinute: 690 })).toBe(30)
+    expect(rangeGap({ startMinute: 630, endMinute: 690 }, { startMinute: 540, endMinute: 600 })).toBe(30)
+  })
+
+  it('handles cross-midnight touching', () => {
+    expect(rangeGap({ startMinute: 1440, endMinute: 1500 }, { startMinute: 1500, endMinute: 1560 })).toBe(0)
+    expect(rangeGap({ startMinute: 1500, endMinute: 1560 }, { startMinute: 1440, endMinute: 1500 })).toBe(0)
+  })
+
+  it('handles cross-midnight gap', () => {
+    expect(rangeGap({ startMinute: 1440, endMinute: 1500 }, { startMinute: 1530, endMinute: 1590 })).toBe(30)
+    expect(rangeGap({ startMinute: 1530, endMinute: 1590 }, { startMinute: 1440, endMinute: 1500 })).toBe(30)
+  })
+})
+
+describe('closestShiftIndex', () => {
+  it('returns -1 for empty array', () => {
+    expect(closestShiftIndex({ startMinute: 540, endMinute: 600 }, [])).toBe(-1)
+  })
+
+  it('picks touching or overlapping shift (gap 0)', () => {
+    const shifts = [bar(540, 600), bar(720, 780)]
+    expect(closestShiftIndex({ startMinute: 600, endMinute: 660 }, shifts)).toBe(0)
+    expect(closestShiftIndex({ startMinute: 570, endMinute: 630 }, shifts)).toBe(0)
+  })
+
+  it('picks nearer disjoint shift', () => {
+    const shifts = [bar(540, 600), bar(720, 780)]
+    expect(closestShiftIndex({ startMinute: 660, endMinute: 720 }, shifts)).toBe(1)
+  })
+
+  it('equidistant picks earlier start even if later in array', () => {
+    const shifts = [bar(720, 780), bar(540, 600)]
+    expect(closestShiftIndex({ startMinute: 630, endMinute: 690 }, shifts)).toBe(1)
+  })
+
+  it('tie on start picks earlier end', () => {
+    const shifts = [bar(540, 600), bar(540, 660)]
+    expect(closestShiftIndex({ startMinute: 720, endMinute: 780 }, shifts)).toBe(1)
+  })
+
+  it('exact duplicates keep earlier array entry (stable)', () => {
+    const shifts = [bar(540, 600), bar(540, 600)]
+    expect(closestShiftIndex({ startMinute: 630, endMinute: 690 }, shifts)).toBe(0)
+  })
+
+  it('cross-midnight target picks nearest', () => {
+    const shifts = [bar(1440, 1500), bar(540, 600)]
+    expect(closestShiftIndex({ startMinute: 1500, endMinute: 1560 }, shifts)).toBe(0)
+    expect(closestShiftIndex({ startMinute: 1530, endMinute: 1590 }, shifts)).toBe(0)
   })
 })
