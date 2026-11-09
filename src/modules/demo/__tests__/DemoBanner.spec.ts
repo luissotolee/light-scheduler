@@ -4,18 +4,10 @@ import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import DemoBanner from '@/modules/demo/components/DemoBanner.vue'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { useLocaleStore } from '@/shared/stores/locale'
-import { previousStep, nextStep, pauseEngine, resumeEngine } from '@/modules/demo/player/engine'
 import { stopDemo } from '@/modules/demo/utils/demoSession'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 import type { DemoStep } from '@/modules/demo/types'
-
-vi.mock('@/modules/demo/player/engine', () => ({
-  previousStep: vi.fn(),
-  nextStep: vi.fn(),
-  pauseEngine: vi.fn(),
-  resumeEngine: vi.fn(),
-}))
 
 vi.mock('@/modules/demo/utils/demoSession', () => ({
   stopDemo: vi.fn(),
@@ -85,70 +77,14 @@ describe('DemoBanner', () => {
     expect(wrapper.find('[data-test="demo-narration"]').exists()).toBe(false)
   })
 
-  it('uses chevron icons for previous and next', () => {
-    const wrapper = mountBanner()
-    expect(wrapper.find('[data-test="demo-previous"] .pi-chevron-left').exists()).toBe(true)
-    expect(wrapper.find('[data-test="demo-next"] .pi-chevron-right').exists()).toBe(true)
-  })
-
-  it('switches pause/resume icon and aria-label', () => {
-    const running = mountBanner()
-    const runningBtn = running.find('[data-test="demo-pause"]')
-    expect(runningBtn.find('.pi-pause').exists()).toBe(true)
-    expect(runningBtn.attributes('aria-label')).toBe(en['demo.pause'])
-
-    const paused = mountBanner({ status: 'paused' })
-    const pausedBtn = paused.find('[data-test="demo-pause"]')
-    expect(pausedBtn.find('.pi-play').exists()).toBe(true)
-    expect(pausedBtn.attributes('aria-label')).toBe(en['demo.resume'])
-  })
-
-  it('disables previous on the first step and while paused', () => {
-    const first = mountBanner({ stepIndex: 0 })
-    expect(first.find('[data-test="demo-previous"]').attributes('disabled')).toBeDefined()
-
-    const paused = mountBanner({ status: 'paused', stepIndex: 1 })
-    expect(paused.find('[data-test="demo-previous"]').attributes('disabled')).toBeDefined()
-
-    const middle = mountBanner({ stepIndex: 1 })
-    expect(middle.find('[data-test="demo-previous"]').attributes('disabled')).toBeUndefined()
-  })
-
-  it('uses the finish label for next on the last step', () => {
-    const last = mountBanner({ stepIndex: 1, totalSteps: 2 })
-    expect(last.find('[data-test="demo-next"]').attributes('aria-label')).toBe(en['demo.finish'])
-
-    const notLast = mountBanner({ stepIndex: 0, totalSteps: 3 })
-    expect(notLast.find('[data-test="demo-next"]').attributes('aria-label')).toBe(en['demo.next'])
-  })
-
-  it('calls the player actions on click', async () => {
+  it('renders only the exit control', async () => {
     const wrapper = mountBanner({ stepIndex: 1 })
-
-    await wrapper.find('[data-test="demo-previous"]').trigger('click')
-    expect(previousStep).toHaveBeenCalled()
-
-    await wrapper.find('[data-test="demo-next"]').trigger('click')
-    expect(nextStep).toHaveBeenCalled()
-
-    await wrapper.find('[data-test="demo-pause"]').trigger('click')
-    expect(pauseEngine).toHaveBeenCalled()
+    expect(wrapper.find('[data-test="demo-previous"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="demo-pause"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="demo-next"]').exists()).toBe(false)
 
     await wrapper.find('[data-test="demo-exit"]').trigger('click')
     expect(stopDemo).toHaveBeenCalled()
-  })
-
-  it('calls resume when paused and the pause control is activated', async () => {
-    const wrapper = mountBanner({ status: 'paused' })
-    await wrapper.find('[data-test="demo-pause"]').trigger('click')
-    expect(resumeEngine).toHaveBeenCalled()
-  })
-
-  it('exposes accessibility semantics for controls', () => {
-    const wrapper = mountBanner()
-    const controls = wrapper.find('.demo-banner__controls')
-    expect(controls.attributes('role')).toBe('group')
-    expect(controls.attributes('aria-label')).toBe(en['demo.controlsAria'])
   })
 
   it('shows a translated alert and keeps exit on error', () => {
@@ -159,7 +95,7 @@ describe('DemoBanner', () => {
     expect(alert.text()).toBe(en['demo.error.start'])
     expect(wrapper.find('[data-test="demo-narration"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="demo-progress"]').exists()).toBe(false)
-    expect(wrapper.find('.demo-banner__controls').exists()).toBe(false)
+    expect(wrapper.find('[data-test="demo-pause"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="demo-exit"]').exists()).toBe(true)
   })
 
@@ -167,7 +103,7 @@ describe('DemoBanner', () => {
     const wrapper = mountBanner({ status: 'finishing' })
     expect(wrapper.find('[data-test="demo-narration"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="demo-progress"]').exists()).toBe(false)
-    expect(wrapper.find('.demo-banner__controls').exists()).toBe(false)
+    expect(wrapper.find('[data-test="demo-pause"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="demo-exit"]').exists()).toBe(true)
   })
 

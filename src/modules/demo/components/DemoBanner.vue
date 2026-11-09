@@ -26,44 +26,6 @@
     </p>
 
     <div class="demo-banner__footer">
-      <div
-        v-if="showStepInfo"
-        class="demo-banner__controls"
-        role="group"
-        :aria-label="t('demo.controlsAria')"
-      >
-        <button
-          type="button"
-          class="demo-banner__btn"
-          :aria-label="t('demo.previous')"
-          :disabled="isPrevDisabled"
-          data-test="demo-previous"
-          @click="previousStep"
-        >
-          <i class="pi pi-chevron-left" aria-hidden="true" />
-        </button>
-
-        <button
-          type="button"
-          class="demo-banner__btn"
-          :aria-label="isPaused ? t('demo.resume') : t('demo.pause')"
-          data-test="demo-pause"
-          @click="togglePause"
-        >
-          <i class="pi" :class="isPaused ? 'pi-play' : 'pi-pause'" aria-hidden="true" />
-        </button>
-
-        <button
-          type="button"
-          class="demo-banner__btn"
-          :aria-label="isLastStep ? t('demo.finish') : t('demo.next')"
-          data-test="demo-next"
-          @click="nextStep"
-        >
-          <i class="pi pi-chevron-right" aria-hidden="true" />
-        </button>
-      </div>
-
       <button
         type="button"
         class="demo-banner__exit"
@@ -83,20 +45,12 @@ import { useI18n } from '@/shared/i18n'
 import type { MessageKey } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { stopDemo } from '@/modules/demo/utils/demoSession'
-import { previousStep, nextStep, pauseEngine, resumeEngine } from '@/modules/demo/player/engine'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
 
 const isActive = computed(
   () => demoStore.status === 'running' || demoStore.status === 'paused',
-)
-const isPaused = computed(() => demoStore.status === 'paused')
-const isLastStep = computed(
-  () => demoStore.totalSteps > 0 && demoStore.stepIndex === demoStore.totalSteps - 1,
-)
-const isPrevDisabled = computed(
-  () => demoStore.stepIndex === 0 || demoStore.status === 'paused',
 )
 const showStepInfo = computed(
   () => isActive.value && demoStore.currentStep !== null && demoStore.totalSteps > 0,
@@ -114,14 +68,6 @@ const errorMessage = computed(() =>
     ? t(demoStore.errorKey as MessageKey)
     : '',
 )
-
-function togglePause(): void {
-  if (isPaused.value) {
-    resumeEngine()
-  } else {
-    pauseEngine()
-  }
-}
 </script>
 
 <style scoped>
@@ -180,43 +126,6 @@ function togglePause(): void {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.demo-banner__controls {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.demo-banner__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--color-accent);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.demo-banner__btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-}
-
-.demo-banner__btn:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.demo-banner__btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
 }
 
 .demo-banner__exit {
