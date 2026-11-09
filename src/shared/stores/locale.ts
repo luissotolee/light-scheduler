@@ -5,6 +5,8 @@ import type { Locale } from '@/shared/i18n/types'
 
 const STORAGE_KEY = 'light-scheduler.locale'
 
+export const LOCALE_STORAGE_KEY = STORAGE_KEY
+
 export function isLocale(value: unknown): value is Locale {
   return (
     typeof value === 'string' && (AVAILABLE_LOCALES as readonly string[]).includes(value)

@@ -15,10 +15,12 @@ import {
 import {
   buildWeeklyHoursGroups,
   compareMembersByDuty,
+  isMemberInWeek,
   minutesToHours,
   sumShiftMinutes,
 } from '@/modules/scheduler/utils/hours'
 import { countDaysOffByMember } from '@/modules/scheduler/utils/off'
+import { closestShiftIndex, MAX_SHIFTS_PER_ROW } from '@/modules/scheduler/utils/grid'
 
 function dateFromWeekKey(weekKey: WeekKey): Date {
   const [year, month, day] = weekKey.split('-').map(Number)
@@ -43,6 +45,12 @@ export const useSchedulerStore = defineStore('scheduler', () => {
 
   const selectedWeekdayDate = computed(() =>
     weekdayIsoDate(currentWeekKey.value, selectedWeekday.value),
+  )
+  const weekEndDate = computed(() => weekdayIsoDate(currentWeekKey.value, 'sunday'))
+  const weekMembers = computed(() =>
+    workspace().activeMembers.filter((member) =>
+      isMemberInWeek(member, currentWeekKey.value, weekEndDate.value),
+    ),
   )
   const dayMembers = computed(() =>
     workspace().members.filter(
@@ -70,7 +78,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       .sort((a, b) => compareMembersByDuty(a.member, b.member)),
   )
   const weeklyHoursGroups = computed(() =>
-    buildWeeklyHoursGroups(workspace().activeMembers, currentWeekShifts.value),
+    buildWeeklyHoursGroups(weekMembers.value, currentWeekShifts.value),
   )
 
   function selectWeekday(weekday: Weekday): void {
@@ -106,6 +114,20 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const { range, mergedIndexes } = mergeOverlappingRanges(candidate, others)
     const absorbedIds = new Set(mergedIndexes.map((index) => others[index].id))
     const survivor: Shift = { ...candidate, ...range }
+
+    if (mode === 'create' && mergedIndexes.length === 0 && others.length >= MAX_SHIFTS_PER_ROW) {
+      const closestIndex = closestShiftIndex(range, others)
+      if (closestIndex !== -1) {
+        const closest = others[closestIndex]
+        const relocated: Shift = { ...closest, startMinute: range.startMinute, endMinute: range.endMinute }
+        workspace().setShiftsForWeek(
+          currentWeekKey.value,
+          currentWeekShifts.value.map((s) => (s.id === closest.id ? relocated : s)),
+        )
+        error.value = null
+        return relocated
+      }
+    }
 
     const next =
       mode === 'create'
@@ -261,6 +283,8 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     dayOffCounts,
     members,
     selectedWeekdayDate,
+    weekEndDate,
+    weekMembers,
     dayMembers,
     selectedWeekdayShifts,
     dayRows,

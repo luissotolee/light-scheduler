@@ -5,25 +5,41 @@
       <div class="app__controls">
         <AppNav :items="NAV_ITEMS" />
         <LanguageSwitcher />
+        <DemoModeButton v-if="demoStore.status === 'idle'" />
       </div>
     </header>
 
     <main class="app__main">
+      <DemoBanner />
       <RouterView />
     </main>
 
     <footer class="app__footer">{{ t('app.footer') }}</footer>
+
+    <DemoOverlay v-if="demoStore.status !== 'idle' || demoStore.showRestoredFlag" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
+import { defineAsyncComponent } from 'vue'
 import AppNav from '@/shared/components/AppNav.vue'
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
+import DemoModeButton from '@/modules/demo/components/DemoModeButton.vue'
+import DemoBanner from '@/modules/demo/components/DemoBanner.vue'
 import { useI18n } from '@/shared/i18n'
+import { useDemoStore } from '@/modules/demo/stores/demo'
 import { NAV_ITEMS } from '@/router/nav'
 
 const { t } = useI18n()
+const demoStore = useDemoStore()
+
+onMounted(() => {
+  demoStore.checkRecovery()
+})
+
+const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components/DemoOverlay.vue'))
 </script>
 
 <style scoped>
@@ -68,7 +84,7 @@ const { t } = useI18n()
   width: 100%;
   max-width: var(--layout-max-width);
   margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 3rem) var(--space-page-x);
+  padding: clamp(0.75rem, 2vw, 1.5rem) var(--space-page-x) clamp(1.5rem, 4vw, 3rem);
 }
 
 .app__footer {

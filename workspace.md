@@ -19,7 +19,8 @@ Lightweight feature-module / vertical-slice layout:
 - `summary/` — read-only weekly summary (`summary` store).
 - `history/` — past-week browser (`history` store).
 - `csv/` — employee/schedule import/export wiring (`csv` store).
-- `shared/` — `workspace` store (source of truth for `members` + `schedules`); utils `calendar`/`shifts`/`employee`/`csv`/`download`/`id`; components `AppNav`/`PageHeader`/`EmptyState`/`ConfirmActionDialog`/`LanguageSwitcher`/`LocaleFlag`.
+- `demo/` — in-app real-time guided demo (mock data, localStorage snapshot/restore, step scenarios, visual cursor/ring/ripple, narration overlay). Vertical slice: `scenarios/`, `fixtures/`, `utils/`, `player/`, `stores/`, `components/`. See `.kilo/skills/guided-demo/SKILL.md`.
+- `shared/` — `workspace` store (source of truth for `members` + `schedules`); utils `calendar`/`shifts`/`employee`/`csv`/`download`/`id`; components `AppNav`/`PageHeader`/`EmptyState`/`ConfirmActionDialog`/`LanguageSwitcher`/`LocaleFlag`; `fixtures/employees.ts` (mock data reused by demo).
 - `shared/i18n/` — localization: `messages/en.ts` + `messages/es.ts` (two languages, both must stay in sync), `index.ts` (`useI18n`, `t`, `tc`), `types.ts` (`Locale`/`LOCALE_META`), `primevue.ts` (PrimeVue locale options); plus the `locale` store in `shared/stores/locale.ts`.
 
 ## Where to find each kind of file

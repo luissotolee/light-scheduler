@@ -1,4 +1,4 @@
-import type { Duty, Shift, TeamMember } from '@/types'
+import type { Duty, Shift, TeamMember, WeekKey } from '@/types'
 
 export const WEEKLY_HOURS_GROUP_ORDER: readonly Duty[] = [
   'head_manager',
@@ -65,6 +65,16 @@ export function formatDiff(hours: number): string {
   const rounded = Math.round(hours * 10) / 10
   if (rounded === 0) return '0.0'
   return rounded > 0 ? `+${rounded.toFixed(1)}` : `-${Math.abs(rounded).toFixed(1)}`
+}
+
+export function isMemberInWeek(
+  member: Pick<TeamMember, 'startDate' | 'endDate'>,
+  weekStart: WeekKey,
+  weekEnd: WeekKey,
+): boolean {
+  if (member.startDate > weekEnd) return false
+  if (member.endDate !== undefined && member.endDate < weekStart) return false
+  return true
 }
 
 export function buildWeeklyHoursGroups(

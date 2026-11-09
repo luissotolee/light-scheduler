@@ -121,6 +121,20 @@ describe('SchedulerView', () => {
     expect(restart.find('.pi-refresh').exists()).toBe(true)
   })
 
+  it('combines selected day and restart button in the day header', () => {
+    const wrapper = mountView()
+    const dayHeader = wrapper.find('[data-test="scheduler-day-header"]')
+    const selectedDay = dayHeader.find('[data-test="scheduler-selected-day"]')
+    const restart = dayHeader.find('[data-test="restart-week"]')
+    const content = wrapper.find('.scheduler__content')
+
+    expect(dayHeader.exists()).toBe(true)
+    expect(selectedDay.exists()).toBe(true)
+    expect(restart.exists()).toBe(true)
+    expect(content.element.firstElementChild).toBe(dayHeader.element)
+    expect(wrapper.find('.scheduler__selected-day-wrapper').exists()).toBe(false)
+  })
+
   it('clears the current week after confirming the restart dialog', async () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')
@@ -389,6 +403,19 @@ describe('SchedulerView', () => {
     expect(wrapper.find('[data-test="weekly-hours-row-member-2-diff"]').text()).toBe('-19.0')
   })
 
+  it('omits future-start employee from weekly hours table', () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([
+      ada,
+      { ...bo, id: 'member-3', name: 'Cy', startDate: '2026-11-09' },
+    ])
+    const wrapper = mountView()
+
+    expect(wrapper.find('[data-test="weekly-hours-row-member-1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="weekly-hours-row-member-3"]').exists()).toBe(false)
+  })
+
   it('renders Spanish weekday labels and dates live', async () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')
@@ -424,5 +451,28 @@ describe('SchedulerView', () => {
 
     expect(wrapper.find('[data-test="weekly-hours-row-member-1-current"]').text()).toBe('2.0')
     expect(wrapper.find('[data-test="weekly-hours-row-member-1-diff"]').text()).toBe('-38.0')
+  })
+
+  it('create on capped row relocates nearest shift (integration)', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    const adaWithId: TeamMember = { ...ada, id: 'member-1' }
+    workspace.setMembers([adaWithId])
+    const shift1: Shift = { id: 'shift-1', memberId: 'member-1', weekday: 'monday', startMinute: 540, endMinute: 600 }
+    const shift2: Shift = { id: 'shift-2', memberId: 'member-1', weekday: 'monday', startMinute: 720, endMinute: 780 }
+    workspace.setShiftsForWeek('2026-11-02', [shift1, shift2])
+    const wrapper = mountView()
+    const grid = wrapper.findComponent(ShiftGrid)
+
+    grid.vm.$emit('create', { memberId: 'member-1', startMinute: 900, endMinute: 960 })
+    await nextTick()
+
+    expect(workspace.currentWeekShifts).toHaveLength(2)
+    const moved = workspace.currentWeekShifts.find((s) => s.id === 'shift-2')
+    expect(moved).toMatchObject({ startMinute: 900, endMinute: 960 })
+    const unchanged = workspace.currentWeekShifts.find((s) => s.id === 'shift-1')
+    expect(unchanged).toMatchObject({ startMinute: 540, endMinute: 600 })
+    expect(wrapper.text()).toContain('15:00–16:00')
+    expect(wrapper.text()).not.toContain('12:00–13:00')
   })
 })

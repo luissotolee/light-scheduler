@@ -1,6 +1,12 @@
 <template>
   <nav class="app-nav" :aria-label="t('app.navPrimary')">
-    <RouterLink v-for="item in items" :key="item.name" class="app-nav__link" :to="item.path">
+    <RouterLink
+      v-for="item in items"
+      :key="item.name"
+      class="app-nav__link"
+      :to="item.path"
+      :data-test="`nav-${item.name}`"
+    >
       {{ t(item.labelKey) }}
     </RouterLink>
   </nav>

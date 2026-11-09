@@ -8,8 +8,11 @@ import App from './App.vue'
 import { router } from './router'
 import { primevueLocales } from './shared/i18n/primevue'
 import { readInitialLocale, useLocaleStore } from './shared/stores/locale'
+import { recoverInterruptedDemo } from '@/modules/demo/utils/storageSnapshot'
 import './assets/main.css'
 import 'primeicons/primeicons.css'
+
+recoverInterruptedDemo()
 
 const app = createApp(App)
 const pinia = createPinia()

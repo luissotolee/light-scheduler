@@ -1,6 +1,10 @@
 <template>
   <section class="employees">
-    <PageHeader :title="t('employees.title')" :description="t('employees.description')">
+    <PageHeader
+      :title="t('employees.title')"
+      :description="t('employees.description')"
+      description-tooltip
+    >
       <template #actions>
         <button
           type="button"
@@ -23,6 +27,7 @@
         type="search"
         :placeholder="t('employees.searchPlaceholder')"
         :value="search"
+        data-test="employee-search"
         @input="handleSearch"
       />
       <span class="employees__count">{{ t('employees.count', { count }) }}</span>

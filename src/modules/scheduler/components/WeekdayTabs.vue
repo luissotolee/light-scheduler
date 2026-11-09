@@ -4,6 +4,7 @@
     :aria-label="t('scheduler.weekdays')"
     role="tablist"
     aria-orientation="vertical"
+    data-test="weekday-tabs"
   >
     <button
       v-for="weekday in weekdays"
@@ -44,17 +45,17 @@ const { t, locale } = useI18n()
 .weekday-tabs {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.1875rem;
   min-width: 8.5rem;
-  padding: 0.5rem;
+  padding: 0.375rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
 }
 
 .weekday-tabs__tab {
-  padding: 0.55rem 0.75rem;
-  padding-left: calc(0.75rem - 2px);
+  padding: 0.4rem 0.6rem;
+  padding-left: calc(0.6rem - 2px);
   border: 1px solid transparent;
   border-left: 3px solid transparent;
   border-radius: var(--radius-sm);

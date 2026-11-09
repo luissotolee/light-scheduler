@@ -433,6 +433,152 @@ describe('scheduler weekday grid', () => {
   })
 })
 
+describe('scheduler max shifts per row (create relocates nearest)', () => {
+  let store: ReturnType<typeof useSchedulerStore>
+  let workspace: ReturnType<typeof useWorkspaceStore>
+
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+    store = useSchedulerStore()
+    workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([
+      makeMember({ id: 'ada', name: 'Ada', duty: 'manager' }),
+      makeMember({ id: 'bo', name: 'Bo', duty: 'employee' }),
+    ])
+  })
+
+  it('moves nearest shift instead of creating 3rd via addShiftRange', () => {
+    const s1 = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
+    const s2 = store.addShiftRange({ memberId: 'ada', startMinute: 720, endMinute: 780 })
+    expect(store.currentWeekShifts).toHaveLength(2)
+
+    const moved = store.addShiftRange({ memberId: 'ada', startMinute: 900, endMinute: 960 })
+
+    expect(store.currentWeekShifts).toHaveLength(2)
+    expect(moved).not.toBeNull()
+    expect(moved!.id).toBe(s2!.id)
+    expect(moved).toMatchObject({ startMinute: 900, endMinute: 960 })
+    const remaining = store.currentWeekShifts.find((s) => s.id === s1!.id)
+    expect(remaining).toMatchObject({ startMinute: 540, endMinute: 600 })
+    expect(store.error).toBeNull()
+  })
+
+  it('moves nearest shift instead of creating 3rd via addShift string path', () => {
+    const s1 = store.addShift({ memberId: 'ada', weekday: 'monday', start: '09:00', end: '10:00' })
+    const s2 = store.addShift({ memberId: 'ada', weekday: 'monday', start: '12:00', end: '13:00' })
+    expect(store.currentWeekShifts).toHaveLength(2)
+
+    const moved = store.addShift({ memberId: 'ada', weekday: 'monday', start: '15:00', end: '16:00' })
+
+    expect(store.currentWeekShifts).toHaveLength(2)
+    expect(moved).not.toBeNull()
+    expect(moved!.id).toBe(s2!.id)
+    expect(moved).toMatchObject({ startMinute: 900, endMinute: 960 })
+    const remaining = store.currentWeekShifts.find((s) => s.id === s1!.id)
+    expect(remaining).toMatchObject({ startMinute: 540, endMinute: 600 })
+    expect(store.error).toBeNull()
+  })
+
+  it('equidistant: earlier start wins even if later in array', () => {
+    const s1 = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
+    const s2 = store.addShiftRange({ memberId: 'ada', startMinute: 720, endMinute: 780 })
+    expect(store.currentWeekShifts).toHaveLength(2)
+
+    const moved = store.addShiftRange({ memberId: 'ada', startMinute: 630, endMinute: 690 })
+
+    expect(store.currentWeekShifts).toHaveLength(2)
+    expect(moved).not.toBeNull()
+    expect(moved!.id).toBe(s1!.id)
+    expect(moved).toMatchObject({ startMinute: 630, endMinute: 690 })
+    const remaining = store.currentWeekShifts.find((s) => s.id === s2!.id)
+    expect(remaining).toMatchObject({ startMinute: 720, endMinute: 780 })
+    expect(store.error).toBeNull()
+  })
+
+  it('touching selection counts as closest (gap 0), no 3rd shift', () => {
+    const s1 = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
+    const s2 = store.addShiftRange({ memberId: 'ada', startMinute: 720, endMinute: 780 })
+    expect(store.currentWeekShifts).toHaveLength(2)
+
+    const moved = store.addShiftRange({ memberId: 'ada', startMinute: 600, endMinute: 660 })
+
+    expect(store.currentWeekShifts).toHaveLength(2)
+    expect(moved).not.toBeNull()
+    expect(moved!.id).toBe(s1!.id)
+    expect(moved).toMatchObject({ startMinute: 600, endMinute: 660 })
+    const remaining = store.currentWeekShifts.find((s) => s.id === s2!.id)
+    expect(remaining).toMatchObject({ startMinute: 720, endMinute: 780 })
+    expect(store.error).toBeNull()
+  })
+
+  it('overlapping 3rd selection still merges (length stays 2)', () => {
+    const s1 = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
+    const s2 = store.addShiftRange({ memberId: 'ada', startMinute: 720, endMinute: 780 })
+    expect(store.currentWeekShifts).toHaveLength(2)
+
+    const merged = store.addShiftRange({ memberId: 'ada', startMinute: 570, endMinute: 630 })
+
+    expect(store.currentWeekShifts).toHaveLength(2)
+    expect(merged).not.toBeNull()
+    expect(merged).toMatchObject({ startMinute: 540, endMinute: 630 })
+    expect(merged!.id).not.toBe(s1!.id)
+    expect(merged!.id).not.toBe(s2!.id)
+    const remaining = store.currentWeekShifts.find((s) => s.id === s2!.id)
+    expect(remaining).toMatchObject({ startMinute: 720, endMinute: 780 })
+    expect(store.error).toBeNull()
+  })
+
+  it('cap is per member and weekday (member 2 Monday and member 1 Tuesday succeed independently)', () => {
+    store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
+    store.addShiftRange({ memberId: 'ada', startMinute: 720, endMinute: 780 })
+    store.addShiftRange({ memberId: 'bo', startMinute: 540, endMinute: 600 })
+    store.addShiftRange({ memberId: 'bo', startMinute: 720, endMinute: 780 })
+
+    store.selectWeekday('tuesday')
+    const s3 = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
+    const s4 = store.addShiftRange({ memberId: 'ada', startMinute: 720, endMinute: 780 })
+    expect(store.currentWeekShifts).toHaveLength(6)
+    expect(s3).not.toBeNull()
+    expect(s4).not.toBeNull()
+  })
+
+  it('legacy over-cap row (>2 seeded): 4th non-overlapping create relocates nearest, total stays same', () => {
+    const shifts: Shift[] = [
+      { id: 's1', memberId: 'ada', weekday: 'monday', startMinute: 540, endMinute: 600 },
+      { id: 's2', memberId: 'ada', weekday: 'monday', startMinute: 720, endMinute: 780 },
+      { id: 's3', memberId: 'ada', weekday: 'monday', startMinute: 900, endMinute: 960 },
+    ]
+    workspace.setShiftsForWeek('2026-11-02', shifts)
+    expect(store.currentWeekShifts).toHaveLength(3)
+
+    const moved = store.addShiftRange({ memberId: 'ada', startMinute: 1020, endMinute: 1080 })
+
+    expect(store.currentWeekShifts).toHaveLength(3)
+    expect(moved).not.toBeNull()
+    expect(moved!.id).toBe('s3')
+    expect(moved).toMatchObject({ startMinute: 1020, endMinute: 1080 })
+    expect(store.error).toBeNull()
+  })
+
+  it('removing a shift re-opens normal creation', () => {
+    const s1 = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
+    const s2 = store.addShiftRange({ memberId: 'ada', startMinute: 720, endMinute: 780 })
+    expect(store.currentWeekShifts).toHaveLength(2)
+
+    store.removeShift(s2!.id)
+    expect(store.currentWeekShifts).toHaveLength(1)
+
+    const added = store.addShiftRange({ memberId: 'ada', startMinute: 900, endMinute: 960 })
+    expect(store.currentWeekShifts).toHaveLength(2)
+    expect(added).not.toBeNull()
+    expect(added!.id).not.toBe(s1!.id)
+    expect(added).toMatchObject({ startMinute: 900, endMinute: 960 })
+    expect(store.error).toBeNull()
+  })
+})
+
 describe('scheduler days off', () => {
   let store: ReturnType<typeof useSchedulerStore>
   let workspace: ReturnType<typeof useWorkspaceStore>
@@ -775,5 +921,53 @@ describe('scheduler weekly hours groups', () => {
       currentHours: 2,
       diffHours: -38,
     })
+  })
+
+  it('excludes future-start employees', () => {
+    workspace.setMembers([
+      makeMember({ id: 'current', name: 'Current Employee', startDate: '2026-01-01' }),
+      makeMember({ id: 'future', name: 'Future Employee', startDate: '2026-11-09' }),
+    ])
+
+    expect(store.weekMembers.map((m) => m.id)).toEqual(['current'])
+    expect(store.weeklyHoursGroups).toHaveLength(1)
+    expect(store.weeklyHoursGroups[0].rows.map((row) => row.memberId)).toEqual(['current'])
+  })
+
+  it('includes partial-week starter with full contract hours but current 0', () => {
+    workspace.setMembers([
+      makeMember({ id: 'wednesday', name: 'Mid-week Starter', startDate: '2026-11-04', weeklyHours: 40 }),
+    ])
+
+    expect(store.weekMembers.map((m) => m.id)).toEqual(['wednesday'])
+    expect(store.weeklyHoursGroups[0].rows[0]).toMatchObject({
+      memberId: 'wednesday',
+      contractHours: 40,
+      currentHours: 0,
+      diffHours: -40,
+    })
+  })
+
+  it('reacts to goToNextWeek and includes previously future employee', () => {
+    workspace.setMembers([
+      makeMember({ id: 'current', name: 'Current Employee', startDate: '2026-01-01' }),
+      makeMember({ id: 'future', name: 'Future Employee', startDate: '2026-11-09' }),
+    ])
+
+    expect(store.weeklyHoursGroups.map((g) => g.rows.map((r) => r.memberId))).toEqual([['current']])
+
+    store.goToNextWeek()
+
+    expect(store.currentWeekKey).toBe('2026-11-09')
+    expect(store.weeklyHoursGroups.map((g) => g.rows.map((r) => r.memberId))).toEqual([['current', 'future']])
+  })
+
+  it('excludes active member with endDate before the week', () => {
+    workspace.setMembers([
+      makeMember({ id: 'current', name: 'Current Employee', startDate: '2026-01-01' }),
+      makeMember({ id: 'ended', name: 'Ended Employee', startDate: '2026-01-01', endDate: '2026-10-30' }),
+    ])
+
+    expect(store.weeklyHoursGroups.map((g) => g.rows.map((r) => r.memberId))).toEqual([['current']])
   })
 })
