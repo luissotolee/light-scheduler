@@ -5,9 +5,10 @@ import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
 import ArchiveView from '@/modules/archive/views/ArchiveView.vue'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import { buildBackup, gzipJson } from '@/shared/utils/archiveBackup'
+import { buildBackup, gzipJson, type BackupSettings } from '@/shared/utils/archiveBackup'
 import type { TeamMember } from '@/types'
 
 const ada: TeamMember = {
@@ -75,7 +76,7 @@ describe('ArchiveView', () => {
     await flushPromises()
   }
 
-  async function makeBackupFile(): Promise<File> {
+  async function makeBackupFile(settings?: BackupSettings): Promise<File> {
     const backup = buildBackup(
       [ada],
       {
@@ -93,6 +94,7 @@ describe('ArchiveView', () => {
         '2026-11-02': [{ memberId: 'member-1', weekday: 'tuesday' }],
       },
       '2026-11-02',
+      settings,
     )
 
     return new File([await gzipJson(backup)], 'backup.json.gz', {
@@ -186,6 +188,35 @@ describe('ArchiveView', () => {
     expect(workspace.dayOffs).toEqual({
       '2026-11-02': [{ memberId: workspace.members[0].id, weekday: 'tuesday' }],
     })
+  })
+
+  it('restores language and scheduler settings from a backup', async () => {
+    seedWorkspace()
+    const wrapper = mountView()
+
+    await upload(
+      wrapper,
+      await makeBackupFile({
+        locale: 'es',
+        scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+      }),
+    )
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-test="confirm-accept"]').exists()).toBe(true)
+    })
+    await wrapper.find('[data-test="confirm-accept"]').trigger('click')
+    await nextTick()
+
+    expect(useLocaleStore().locale).toBe('es')
+    expect(useSchedulerSettingsStore().settings).toEqual({
+      startTime: '08:00',
+      endTime: '16:00',
+      slotMinutes: 15,
+    })
+    expect(wrapper.find('[data-test="status"]').text()).toBe(
+      'Copia de seguridad restaurada',
+    )
+    expect(wrapper.text()).toContain('Descargar copia')
   })
 
   it('cancels a backup restore without changing data', async () => {

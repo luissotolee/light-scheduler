@@ -184,6 +184,32 @@ describe('buildBackup', () => {
     expect(backup.schedules).toEqual({})
     expect(backup.dayOffs).toEqual({})
   })
+
+  it('includes user settings when provided', () => {
+    const backup = buildBackup(
+      [ada],
+      {},
+      {},
+      '2026-11-02',
+      {
+        locale: 'es',
+        scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+      },
+      new Date('2026-11-09T20:57:00.000Z'),
+    )
+
+    expect(backup.settings).toEqual({
+      locale: 'es',
+      scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+    })
+    expect(backup.exportedAt).toBe('2026-11-09T20:57:00.000Z')
+  })
+
+  it('omits empty settings', () => {
+    const backup = buildBackup([ada], {}, {}, '2026-11-02', {})
+
+    expect(backup.settings).toBeUndefined()
+  })
 })
 
 describe('parseBackup', () => {
@@ -255,6 +281,66 @@ describe('parseBackup', () => {
     expect(parsed.data.schedules).toEqual({})
     expect(parsed.data.dayOffs).toEqual({})
     expect(parsed.data.currentWeekKey).toBeUndefined()
+    expect(parsed.data.settings).toBeUndefined()
+  })
+
+  it('round-trips user settings', () => {
+    const parsed = parseBackup(
+      backupRecord({
+        settings: {
+          locale: 'es',
+          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+        },
+      }),
+    )
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.settings).toEqual({
+      locale: 'es',
+      scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+    })
+  })
+
+  it('accepts partial user settings', () => {
+    const localeOnly = parseBackup(backupRecord({ settings: { locale: 'es' } }))
+    expect(localeOnly.ok).toBe(true)
+    if (!localeOnly.ok) return
+    expect(localeOnly.data.settings).toEqual({ locale: 'es' })
+
+    const schedulerOnly = parseBackup(
+      backupRecord({
+        settings: {
+          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+        },
+      }),
+    )
+    expect(schedulerOnly.ok).toBe(true)
+    if (!schedulerOnly.ok) return
+    expect(schedulerOnly.data.settings).toEqual({
+      scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+    })
+  })
+
+  it('validates user settings', () => {
+    expect(parseBackup(backupRecord({ settings: 'nope' }))).toEqual({
+      ok: false,
+      error: 'archive.invalidBackup',
+    })
+    expect(parseBackup(backupRecord({ settings: { locale: 'fr' } }))).toEqual({
+      ok: false,
+      error: 'archive.invalidBackup',
+    })
+    expect(
+      parseBackup(
+        backupRecord({
+          settings: { scheduler: { startTime: '09:00', endTime: '09:00', slotMinutes: 30 } },
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'archive.invalidBackup' })
+    expect(
+      parseBackup(backupRecord({ settings: { scheduler: { slotMinutes: 15 } } })),
+    ).toEqual({ ok: false, error: 'archive.invalidBackup' })
   })
 
   it('rejects malformed files', () => {

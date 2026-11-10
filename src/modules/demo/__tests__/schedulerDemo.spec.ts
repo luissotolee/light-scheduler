@@ -15,6 +15,10 @@ const knownTargets = [
   'shift-row-name-toggle',
   'day-off-count',
   'weekly-hours',
+  'scheduler-settings',
+  'scheduler-settings-form',
+  'settings-rate-15',
+  'settings-save',
   'restart-week',
   'confirm-message',
   'confirm-accept',
@@ -67,6 +71,9 @@ describe('schedulerDemo scenario', () => {
       if ('target' in step && step.target?.testId) {
         expect(knownTargets).toContain(step.target.testId)
       }
+      if (step.action === 'wait') {
+        expect(knownTargets).toContain(step.waitFor)
+      }
     })
   })
 
@@ -76,6 +83,16 @@ describe('schedulerDemo scenario', () => {
       if (step.action === 'navigate') {
         expect(knownRoutes).toContain(step.route)
       }
+    })
+  })
+
+  it('gives every click in every scenario at least 1.5 seconds before advancing', () => {
+    listDemoScenarios().forEach((scenario) => {
+      scenario.steps.forEach((step) => {
+        if (step.action === 'click' || step.action === 'pointerClick') {
+          expect(step.pauseMs ?? step.durationMs ?? 1500).toBeGreaterThanOrEqual(1500)
+        }
+      })
     })
   })
 })

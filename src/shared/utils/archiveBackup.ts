@@ -3,12 +3,16 @@ import type {
   DayOff,
   Duty,
   HolidayWeek,
+  SchedulerSettings,
   Shift,
   TeamMember,
   Weekday,
   WeekKey,
 } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
+import { isLocale } from '@/shared/i18n/types'
+import type { Locale } from '@/shared/i18n/types'
+import { parseSchedulerSettings } from '@/shared/utils/schedulerSettings'
 import {
   WEEKDAY_ORDER,
   getIsoWeek,
@@ -59,11 +63,17 @@ export type BackupSchedules = Record<string, Record<string, Record<string, Backu
 
 export type BackupDayOffs = Record<string, Record<string, Record<string, Weekday[]>>>
 
+export interface BackupSettings {
+  locale?: Locale
+  scheduler?: SchedulerSettings
+}
+
 export interface BackupFile {
   format: typeof BACKUP_FORMAT
   version: typeof BACKUP_VERSION
   exportedAt: string
   currentWeekKey?: WeekKey
+  settings?: BackupSettings
   employees: BackupEmployee[]
   schedules: BackupSchedules
   dayOffs?: BackupDayOffs
@@ -74,6 +84,7 @@ export interface BackupData {
   schedules: Record<WeekKey, Shift[]>
   dayOffs: Record<WeekKey, DayOff[]>
   currentWeekKey?: WeekKey
+  settings?: BackupSettings
 }
 
 export type BackupParseResult = { ok: true; data: BackupData } | { ok: false; error: MessageKey }
@@ -190,6 +201,29 @@ function parseBackupEmployee(value: unknown): Parsed<BackupEmployee> {
       startDate,
       ...(endDate ? { endDate } : {}),
     },
+  }
+}
+
+function parseBackupSettings(value: unknown): Parsed<BackupSettings | undefined> {
+  if (value === undefined) return { ok: true, value: undefined }
+  if (!isRecord(value)) return { ok: false, error: 'archive.invalidBackup' }
+
+  const settings: BackupSettings = {}
+
+  if (value.locale !== undefined) {
+    if (!isLocale(value.locale)) return { ok: false, error: 'archive.invalidBackup' }
+    settings.locale = value.locale
+  }
+
+  if (value.scheduler !== undefined) {
+    const scheduler = parseSchedulerSettings(value.scheduler)
+    if (!scheduler) return { ok: false, error: 'archive.invalidBackup' }
+    settings.scheduler = scheduler
+  }
+
+  return {
+    ok: true,
+    value: settings.locale === undefined && settings.scheduler === undefined ? undefined : settings,
   }
 }
 
@@ -330,13 +364,32 @@ function compareBackupShifts(a: BackupShift, b: BackupShift): number {
   return a.endMinute - b.endMinute
 }
 
+function normalizeBuildArguments(
+  settingsOrNow: BackupSettings | Date,
+  nowOrSettings: Date | BackupSettings,
+): { settings: BackupSettings | undefined; now: Date } {
+  if (settingsOrNow instanceof Date) {
+    return {
+      settings: nowOrSettings instanceof Date ? undefined : nowOrSettings,
+      now: settingsOrNow,
+    }
+  }
+
+  return {
+    settings: settingsOrNow,
+    now: nowOrSettings instanceof Date ? nowOrSettings : new Date(),
+  }
+}
+
 export function buildBackup(
   members: readonly TeamMember[],
   schedules: Readonly<Record<WeekKey, Shift[]>>,
   dayOffs: Readonly<Record<WeekKey, DayOff[]>>,
   currentWeekKey: WeekKey,
-  now: Date = new Date(),
+  settingsOrNow: BackupSettings | Date = {},
+  nowOrSettings: Date | BackupSettings = new Date(),
 ): BackupFile {
+  const { settings, now } = normalizeBuildArguments(settingsOrNow, nowOrSettings)
   const memberById = new Map(members.map((member) => [member.id, member]))
   const scheduleBuckets: BackupSchedules = {}
   const dayOffBuckets: BackupDayOffs = {}
@@ -399,6 +452,9 @@ export function buildBackup(
     version: BACKUP_VERSION,
     exportedAt: now.toISOString(),
     currentWeekKey,
+    ...(settings && (settings.locale !== undefined || settings.scheduler !== undefined)
+      ? { settings: { ...settings } }
+      : {}),
     employees: members.map(toBackupEmployee),
     schedules: scheduleBuckets,
     dayOffs: dayOffBuckets,
@@ -455,6 +511,9 @@ export function parseBackup(value: unknown): BackupParseResult {
   const dayOffs = parseBackupDayOffs(value.dayOffs, membersByEmpId)
   if (!dayOffs.ok) return dayOffs
 
+  const settings = parseBackupSettings(value.settings)
+  if (!settings.ok) return settings
+
   let currentWeekKey: WeekKey | undefined
   if (value.currentWeekKey !== undefined) {
     const parsedWeekKey = parseIsoDate(value.currentWeekKey)
@@ -469,6 +528,7 @@ export function parseBackup(value: unknown): BackupParseResult {
       schedules: schedules.value,
       dayOffs: dayOffs.value,
       ...(currentWeekKey ? { currentWeekKey } : {}),
+      ...(settings.value ? { settings: settings.value } : {}),
     },
   }
 }

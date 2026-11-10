@@ -5,6 +5,14 @@ export type Weekday =
 
 export type WeekKey = string
 
+export type SlotMinutes = 15 | 30
+
+export interface SchedulerSettings {
+  startTime: string
+  endTime: string
+  slotMinutes: SlotMinutes
+}
+
 export type Duty = 'manager' | 'employee' | 'assistant' | 'head_manager'
 
 export type Contract = 'fulltime' | 'part_time' | 'weekends'

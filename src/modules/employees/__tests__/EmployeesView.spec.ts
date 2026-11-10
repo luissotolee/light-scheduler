@@ -274,7 +274,7 @@ describe('EmployeesView', () => {
 
     const banner = wrapper.find('[data-test="employees-error"]')
     expect(banner.exists()).toBe(true)
-    expect(banner.text()).toBe('At most 6 holiday weeks are allowed')
+    expect(banner.text()).toBe('At most 6 holiday weeks per year are allowed')
   })
 
   it('keeps the confirm message when the target is filtered out of the list', async () => {

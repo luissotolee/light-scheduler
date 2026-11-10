@@ -90,6 +90,18 @@ describe('SchedulerSettingsDialog', () => {
     expect(pickers()[1].props('modelValue')).toBe('12:30')
   })
 
+  it('exposes a data-test hook on each rate option', async () => {
+    const wrapper = await mountDialog()
+
+    expect(wrapper.find('[data-test="settings-rate-30"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="settings-rate-15"]').exists()).toBe(true)
+
+    await wrapper.find('[data-test="settings-rate-15"]').trigger('click')
+    await nextTick()
+
+    expect(wrapper.findComponent(SelectButton).props('modelValue')).toBe(15)
+  })
+
   it('emits update:visible false when cancelled', async () => {
     const wrapper = await mountDialog()
 

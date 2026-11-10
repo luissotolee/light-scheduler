@@ -174,7 +174,7 @@ export const en = {
   'holidays.title': 'Holiday weeks — {name}',
   'holidays.previousYear': 'Previous year',
   'holidays.nextYear': 'Next year',
-  'holidays.counter': '{count} of {max} selected',
+  'holidays.counter': '{count} of {max} selected in {year}',
   'holidays.group': 'ISO weeks',
   'calendar.weekLabel': 'Week {week} — {range}',
 
@@ -199,15 +199,15 @@ export const en = {
 
   'archive.title': 'Archive',
   'archive.description':
-    'Download a compressed backup of every employee, shift, and day off, or restore a backup to replace your current workspace.',
+    'Download a compressed backup of every employee, shift, and day off, along with your language and scheduler settings, or restore a backup to replace your current workspace.',
   'archive.exportHeading': 'Backup',
   'archive.exportCopy':
-    'Download a gzip-compressed JSON file with every employee and schedule. It keeps the employee IDs needed to link shifts back to people.',
+    'Download a gzip-compressed JSON file with every employee and schedule, plus your language and scheduler settings. It keeps the employee IDs needed to link shifts back to people.',
   'archive.exportEmployees': 'Export Employees',
   'archive.exportSchedule': 'Export Schedule',
   'archive.importHeading': 'Restore',
   'archive.importCopy':
-    'Upload a backup file to replace all employees, shifts, and days off. Restoring a backup replaces every week in the workspace.',
+    'Upload a backup file to replace all employees, shifts, days off, and user settings. Restoring a backup replaces every week in the workspace.',
   'archive.uploadEmployees': 'Upload Employees',
   'archive.uploadSchedule': 'Upload Schedule',
   'archive.noEmployees': 'No employees to export',
@@ -233,7 +233,7 @@ export const en = {
   'archive.compressionUnsupported': 'This browser cannot read compressed backups',
   'archive.confirm.backupHeader': 'Restore backup',
   'archive.confirm.backupMessage':
-    'This replaces all employees, shifts, and days off with the contents of the backup. This cannot be undone.',
+    'This replaces all employees, shifts, and days off, including your language and scheduler settings, with the contents of the backup. This cannot be undone.',
   'archive.confirm.backupLabel': 'Restore',
   'archive.importedOne': 'Imported {count} employee',
   'archive.importedMany': 'Imported {count} employees',
@@ -251,7 +251,7 @@ export const en = {
   'errors.invalidEmail': 'Email is invalid',
   'errors.invalidPhone': 'Phone is invalid',
   'errors.invalidComment': 'Comment is invalid',
-  'errors.maxHolidays': 'At most 6 holiday weeks are allowed',
+  'errors.maxHolidays': 'At most 6 holiday weeks per year are allowed',
   'errors.invalidStartDate': 'Start date is invalid',
   'errors.invalidEndDate': 'End date is invalid',
   'errors.endBeforeStart': 'End date cannot be before start date',
@@ -373,6 +373,14 @@ export const en = {
   'demo.scenario.scheduler.dayOffRestored': 'Select the name again to restore the day.',
   'demo.scenario.scheduler.hours':
     'The weekly hours table compares scheduled hours with contract hours.',
+  'demo.scenario.scheduler.settingsOpen':
+    'Open the schedule settings to change the time window and slot size shown in the grid.',
+  'demo.scenario.scheduler.settingsWindow':
+    'Set the start and end times. An end time before the start time keeps the schedule open past midnight.',
+  'demo.scenario.scheduler.settingsSlot':
+    'Switch the time slot between 30 and 15 minutes to change the grid detail.',
+  'demo.scenario.scheduler.settingsSaved':
+    'Save to apply the new window and slot size to the scheduler.',
   'demo.scenario.scheduler.restart':
     'Use Clear all to remove every shift and day off from the current week.',
   'demo.scenario.scheduler.confirmRestart':

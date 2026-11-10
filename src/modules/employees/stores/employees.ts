@@ -5,8 +5,8 @@ import type { MessageKey } from '@/shared/i18n/messages/en'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { holidayToWeekKey, todayIsoDate } from '@/shared/utils/calendar'
 import {
-  MAX_HOLIDAY_WEEKS,
   createEmpId,
+  exceedsHolidayLimit,
   normalizeHolidays,
   validateEmployeeForm,
 } from '@/shared/utils/employee'
@@ -167,7 +167,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     if (!member) return
 
     const normalized = normalizeHolidays(holidays)
-    if (normalized.length > MAX_HOLIDAY_WEEKS) {
+    if (exceedsHolidayLimit(normalized)) {
       setError('errors.maxHolidays')
       return
     }
@@ -185,7 +185,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     if (!member) return
 
     const normalized = normalizeHolidays(holidays)
-    if (normalized.length > MAX_HOLIDAY_WEEKS) {
+    if (exceedsHolidayLimit(normalized)) {
       setError('errors.maxHolidays')
       return
     }

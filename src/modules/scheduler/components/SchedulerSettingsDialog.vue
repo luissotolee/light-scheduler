@@ -45,7 +45,11 @@
           :aria-label="t('scheduler.settings.rate')"
           data-test="settings-rate"
           @update:model-value="handleRateChange"
-        />
+        >
+          <template #option="{ option }">
+            <span :data-test="`settings-rate-${option.value}`">{{ option.label }}</span>
+          </template>
+        </SelectButton>
       </div>
 
       <p class="scheduler-settings__hint">{{ t('scheduler.settings.outsideWindow') }}</p>
