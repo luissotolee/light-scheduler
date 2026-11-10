@@ -3,6 +3,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
+import { DEFAULT_SCHEDULER_SETTINGS } from '@/modules/scheduler/utils/settings'
+import { USER_SETTINGS_STORAGE_KEY } from '@/shared/utils/userSettings'
 import { useArchiveStore } from '@/modules/archive/stores/archive'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { useLocaleStore } from '@/shared/stores/locale'
@@ -83,7 +86,10 @@ describe('demoSession', () => {
   })
 
   it('restores snapshot on stopDemo', async () => {
-    localStorage.setItem('light-scheduler.workspace', '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}')
+    localStorage.setItem(
+      'light-scheduler.workspace',
+      '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}',
+    )
     localStorage.setItem('light-scheduler.locale', 'en')
 
     mockedStartEngine.mockResolvedValue(undefined)
@@ -95,13 +101,18 @@ describe('demoSession', () => {
 
     await stopDemo()
 
-    expect(localStorage.getItem('light-scheduler.workspace')).toBe('{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}')
+    expect(localStorage.getItem('light-scheduler.workspace')).toBe(
+      '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}',
+    )
     expect(localStorage.getItem('light-scheduler.locale')).toBe('en')
     expect(readDemoBackup()).toBeNull()
   })
 
   it('restores locale and workspace stores in memory on stopDemo', async () => {
-    localStorage.setItem('light-scheduler.workspace', '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}')
+    localStorage.setItem(
+      'light-scheduler.workspace',
+      '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}',
+    )
     localStorage.setItem('light-scheduler.locale', 'es')
 
     mockedStartEngine.mockResolvedValue(undefined)
@@ -141,7 +152,10 @@ describe('demoSession', () => {
   })
 
   it('shows restored flag on demo store', async () => {
-    localStorage.setItem('light-scheduler.workspace', '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-W45"}')
+    localStorage.setItem(
+      'light-scheduler.workspace',
+      '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-W45"}',
+    )
 
     let completionCallback: (() => void) | undefined
     mockedStartEngine.mockImplementation((_scenario, onComplete) => {
@@ -215,7 +229,10 @@ describe('demoSession', () => {
     expect(mockedStartEngine).toHaveBeenCalledTimes(1)
 
     // Verify scenario was passed to startEngine
-    const [passedScenario] = mockedStartEngine.mock.calls[0] as [{ id: string; steps: unknown[] }, (() => void) | undefined]
+    const [passedScenario] = mockedStartEngine.mock.calls[0] as [
+      { id: string; steps: unknown[] },
+      (() => void) | undefined,
+    ]
     expect(passedScenario.id).toBe('scheduler-demo')
     expect(passedScenario.steps.length).toBeGreaterThan(0)
 
@@ -225,7 +242,10 @@ describe('demoSession', () => {
   })
 
   it('restores user data when engine invokes completion callback', async () => {
-    localStorage.setItem('light-scheduler.workspace', '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}')
+    localStorage.setItem(
+      'light-scheduler.workspace',
+      '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}',
+    )
     localStorage.setItem('light-scheduler.locale', 'en')
 
     let completionCallback: (() => void) | undefined
@@ -239,9 +259,50 @@ describe('demoSession', () => {
     completionCallback?.()
     await stopDemo()
 
-    expect(localStorage.getItem('light-scheduler.workspace')).toBe('{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}')
+    expect(localStorage.getItem('light-scheduler.workspace')).toBe(
+      '{"version":1,"members":[],"schedules":{},"dayOffs":{},"currentWeekKey":"2026-11-02"}',
+    )
     expect(readDemoBackup()).toBeNull()
     const demoStore = useDemoStore()
     expect(demoStore.showRestoredFlag).toBe(true)
+  })
+})
+describe('demoSession scheduler settings', () => {
+  const customSettings = { startTime: '08:00', endTime: '16:00', slotMinutes: 15 as const }
+
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('resets scheduler settings for the demo and restores the user values on stop', async () => {
+    const settingsStore = useSchedulerSettingsStore()
+    settingsStore.applySettings(customSettings)
+    const saved = localStorage.getItem(USER_SETTINGS_STORAGE_KEY)
+
+    mockedStartEngine.mockResolvedValue(undefined)
+
+    await startDemo('scheduler-demo')
+
+    expect(settingsStore.settings).toEqual(DEFAULT_SCHEDULER_SETTINGS)
+
+    await stopDemo()
+
+    expect(settingsStore.settings).toEqual(customSettings)
+    expect(localStorage.getItem(USER_SETTINGS_STORAGE_KEY)).toBe(saved)
+  })
+
+  it('removes the demo settings key when the user had no saved settings', async () => {
+    mockedStartEngine.mockResolvedValue(undefined)
+
+    await startDemo('scheduler-demo')
+
+    expect(localStorage.getItem(USER_SETTINGS_STORAGE_KEY)).not.toBeNull()
+
+    await stopDemo()
+
+    expect(useSchedulerSettingsStore().settings).toEqual(DEFAULT_SCHEDULER_SETTINGS)
+    expect(localStorage.getItem(USER_SETTINGS_STORAGE_KEY)).toBeNull()
   })
 })

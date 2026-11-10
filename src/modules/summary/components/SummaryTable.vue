@@ -35,7 +35,17 @@
           :class="{ 'summary-table__row--vacation': row.isVacation }"
           :data-test="`summary-row-${row.memberId}`"
         >
-          <th scope="row" class="summary-table__employee">{{ row.name }}</th>
+          <th scope="row" class="summary-table__employee">
+            <button
+              type="button"
+              class="summary-table__name-button"
+              :data-test="`summary-details-${row.memberId}`"
+              :aria-label="t('employees.detailsFor', { name: row.name })"
+              @click="emit('details', row.memberId)"
+            >
+              {{ row.name }}
+            </button>
+          </th>
 
           <template v-if="row.isVacation">
             <td
@@ -78,6 +88,10 @@ defineProps<{
   rows: SummaryRow[]
   days: SummaryDayHeader[]
   weekRangeLabel: string
+}>()
+
+const emit = defineEmits<{
+  details: [memberId: string]
 }>()
 
 const { t } = useI18n()
@@ -132,6 +146,26 @@ const localeStore = useLocaleStore()
   background: var(--color-summary-employee-bg);
 }
 
+.summary-table__name-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.summary-table__name-button:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.summary-table__name-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .summary-table__day-header {
   font-weight: 600;
 }
@@ -174,6 +208,21 @@ const localeStore = useLocaleStore()
   border: 0;
 }
 
+@media screen and (max-height: 899px) {
+  .summary-table {
+    font-size: 0.8rem;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    padding: 0.2rem 0.3rem;
+  }
+
+  .summary-table__date {
+    font-size: 0.68rem;
+  }
+}
+
 @media print {
   .summary-table-wrapper {
     overflow: visible;
@@ -213,6 +262,11 @@ const localeStore = useLocaleStore()
 
   .summary-table__employee {
     background: var(--color-sheet-employee-bg);
+  }
+
+  .summary-table__name-button {
+    color: #000;
+    cursor: default;
   }
 
   .summary-table__cell--off {

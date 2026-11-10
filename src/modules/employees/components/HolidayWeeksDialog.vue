@@ -194,7 +194,7 @@ function save(): void {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
-  max-height: 28rem;
+  max-height: min(28rem, calc(100dvh - 15rem));
   overflow-y: auto;
 }
 

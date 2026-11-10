@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
 import SummaryView from '@/modules/summary/views/SummaryView.vue'
+import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { Shift, TeamMember } from '@/types'
@@ -43,6 +44,11 @@ describe('SummaryView', () => {
     document.documentElement.lang = 'en'
     pinia = createPinia()
     setActivePinia(pinia)
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
   })
 
   afterEach(() => {
@@ -62,7 +68,9 @@ describe('SummaryView', () => {
   }
 
   function mountView() {
-    return mount(SummaryView, { global: { plugins: [pinia, PrimeVue] } })
+    return mount(SummaryView, {
+      global: { plugins: [pinia, PrimeVue], stubs: { teleport: true } },
+    })
   }
 
   it('renders the week range and navigation controls', () => {
@@ -142,6 +150,22 @@ describe('SummaryView', () => {
     await wrapper.get('[data-test="summary-next-week"]').trigger('click')
     await wrapper.get('[data-test="summary-this-week"]').trigger('click')
     expect(workspace.currentWeekKey).toBe(getWeekKey(new Date()))
+  })
+
+  it('opens the employee details dialog from the summary name', async () => {
+    seed()
+    const wrapper = mountView()
+
+    await wrapper.get('[data-test="summary-details-member-1"]').trigger('click')
+
+    const dialog = wrapper.findComponent(EmployeeDetailsDialog)
+    expect(dialog.props('visible')).toBe(true)
+    expect(dialog.props('member')).toMatchObject({ id: 'member-1', name: 'Ada' })
+
+    dialog.vm.$emit('update:visible', false)
+    await nextTick()
+
+    expect(dialog.props('visible')).toBe(false)
   })
 
   it('opens the browser print dialog', async () => {

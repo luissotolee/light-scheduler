@@ -112,7 +112,7 @@ function diffClass(hours: number): string[] {
 
 .weekly-hours__title {
   margin: 0 0 0.75rem;
-  font-size: 1.05rem;
+  font-size: var(--font-size-section-title);
 }
 
 .weekly-hours__scroll {
@@ -189,5 +189,38 @@ function diffClass(hours: number): string[] {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media screen and (max-height: 899px) {
+  .weekly-hours {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .weekly-hours__title {
+    margin-bottom: 0.4rem;
+  }
+
+  .weekly-hours__table {
+    font-size: 0.8rem;
+  }
+
+  .weekly-hours__table th,
+  .weekly-hours__table td {
+    padding: 0.2rem 0.4rem;
+  }
+
+  .weekly-hours__table thead th {
+    font-size: 0.65rem;
+  }
+
+  .weekly-hours__col {
+    min-width: 3.25rem;
+  }
+
+  .weekly-hours__corner,
+  .weekly-hours__metric {
+    min-width: 4rem;
+    font-size: 0.65rem;
+  }
 }
 </style>

@@ -95,6 +95,12 @@ const { t } = useI18n()
 <style scoped>
 .demo-picker {
   width: min(32rem, 92vw);
+  max-height: calc(100dvh - 2rem);
+}
+
+.demo-picker :deep(.p-dialog-content) {
+  max-height: calc(100dvh - 10rem);
+  overflow-y: auto;
 }
 
 .demo-picker__description {
@@ -160,5 +166,15 @@ const { t } = useI18n()
   display: flex;
   justify-content: flex-end;
   margin-top: 1.25rem;
+}
+
+@media screen and (max-height: 899px) {
+  .demo-picker__option {
+    padding: 0.65rem;
+  }
+
+  .demo-picker__option-description {
+    font-size: 0.8rem;
+  }
 }
 </style>

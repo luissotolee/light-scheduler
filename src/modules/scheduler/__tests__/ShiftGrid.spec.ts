@@ -132,4 +132,24 @@ describe('ShiftGrid', () => {
     expect(wrapper.emitted('remove')).toEqual([['shift-1']])
     expect(wrapper.emitted('toggleOff')).toEqual([['member-1']])
   })
+
+  it('renders hour groups and minute cells for custom 15-minute slots', () => {
+    const wrapper = mount(ShiftGrid, {
+      props: {
+        rows,
+        slots: buildDaySlots({ startMinute: 540, endMinute: 780, slotMinutes: 15 }),
+      },
+    })
+    const hourCells = wrapper.findAll('.shift-grid__time-row:first-child .shift-grid__time-cell')
+    const minuteCells = wrapper.findAll('.shift-grid__time-row:last-child .shift-grid__time-cell')
+
+    expect(hourCells).toHaveLength(4)
+    expect(minuteCells).toHaveLength(16)
+    expect(minuteCells.map((cell) => cell.text()).slice(0, 4)).toEqual([
+      '00',
+      '15',
+      '30',
+      '45',
+    ])
+  })
 })

@@ -50,7 +50,7 @@ defineProps<{
 
 .page-header__title {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: var(--font-size-page-title);
 }
 
 .page-header__info {
@@ -82,6 +82,21 @@ defineProps<{
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+@media screen and (max-height: 899px) {
+  .page-header {
+    margin-bottom: 0.25rem;
+    gap: 0.5rem;
+  }
+
+  .page-header__title-row {
+    margin-bottom: 0.2rem;
+  }
+
+  .page-header__actions {
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {

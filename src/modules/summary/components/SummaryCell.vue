@@ -66,6 +66,16 @@ const { t } = useI18n()
   text-transform: uppercase;
 }
 
+@media screen and (max-height: 899px) {
+  .summary-cell {
+    padding: 0.05rem 0.15rem;
+  }
+
+  .summary-cell--off {
+    min-width: 2rem;
+  }
+}
+
 @media print {
   .summary-cell {
     padding: 0;

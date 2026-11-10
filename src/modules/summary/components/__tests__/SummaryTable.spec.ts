@@ -67,6 +67,18 @@ describe('SummaryTable', () => {
     ])
   })
 
+  it('emits the member id when the employee name is clicked', async () => {
+    const wrapper = mountTable([row()])
+    const button = wrapper.get('[data-test="summary-details-member-1"]')
+
+    expect(button.text()).toBe('Ada')
+    expect(button.attributes('aria-label')).toBe('View details for Ada')
+
+    await button.trigger('click')
+
+    expect(wrapper.emitted('details')).toEqual([['member-1']])
+  })
+
   it('renders two shifts inside the same weekday cell', () => {
     const wrapper = mountTable([row()])
     const cell = wrapper.get('[data-test="summary-cell-member-1-monday"]')

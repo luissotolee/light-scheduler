@@ -37,10 +37,11 @@ export function readJson<T>(key: string, validate: (value: unknown) => T | null)
   }
 }
 
-export function writeJson(key: string, value: unknown): void {
+export function writeJson(key: string, value: unknown): boolean {
   try {
-    writeStorageValue(key, JSON.stringify(value))
+    return writeStorageValue(key, JSON.stringify(value))
   } catch {
     // Persistence is best effort; serialization failures never surface.
+    return false
   }
 }

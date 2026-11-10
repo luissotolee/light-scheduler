@@ -59,7 +59,7 @@ const features = [
 .home {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-stack);
 }
 
 .home__intro {
@@ -119,5 +119,24 @@ const features = [
 .home__cta:hover,
 .home__cta:focus-visible {
   background: var(--color-surface-alt);
+}
+
+@media screen and (max-height: 899px) {
+  .home__intro {
+    font-size: 0.9rem;
+  }
+
+  .home__features {
+    gap: var(--space-stack);
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  }
+
+  .home__feature {
+    padding: 0.8rem;
+  }
+
+  .home__cta {
+    padding: 0.45rem 0.9rem;
+  }
 }
 </style>

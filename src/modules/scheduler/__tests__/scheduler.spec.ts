@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { DayOff, NewShift, Shift, TeamMember } from '@/types'
 
@@ -118,7 +119,7 @@ describe('scheduler store', () => {
     expect(store.addShift({ ...baseShift, start: '9:00' })).toBeNull()
     expect(store.addShift({ ...baseShift, start: '12:00', end: '09:00' })).toBeNull()
     expect(store.currentWeekShifts).toHaveLength(0)
-    expect(store.error).toBe('errors.shiftTimes')
+    expect(store.error).toMatchObject({ key: 'errors.shiftTimes' })
   })
 
   it('merges overlapping shifts for the same member and weekday into one survivor', () => {
@@ -188,7 +189,7 @@ describe('scheduler store', () => {
     store.updateShift(shift!.id, { start: '13:00', end: '12:00' })
 
     expect(store.currentWeekShifts[0]).toMatchObject({ startMinute: 540, endMinute: 720 })
-    expect(store.error).toBe('errors.shiftTimes')
+    expect(store.error).toMatchObject({ key: 'errors.shiftTimes' })
   })
 
   it('merges an update overlap into the edited shift and drops the absorbed shift', () => {
@@ -349,7 +350,10 @@ describe('scheduler weekday grid', () => {
 
   it('rejects too-short ranges but merges overlapping ones', () => {
     expect(store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 550 })).toBeNull()
-    expect(store.error).toBe('errors.shiftRange')
+    expect(store.error).toMatchObject({
+      key: 'errors.shiftRange',
+      params: { min: 30, start: '09:00', end: '01:00' },
+    })
 
     store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })
 
@@ -418,7 +422,10 @@ describe('scheduler weekday grid', () => {
     const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })
 
     expect(store.updateShiftRange({ id: shift!.id, startMinute: 540, endMinute: 550 })).toBeNull()
-    expect(store.error).toBe('errors.shiftRange')
+    expect(store.error).toMatchObject({
+      key: 'errors.shiftRange',
+      params: { min: 30, start: '09:00', end: '01:00' },
+    })
 
     expect(store.updateShiftRange({ id: 'missing', startMinute: 540, endMinute: 600 })).toBeNull()
     expect(store.currentWeekShifts[0]).toMatchObject({ startMinute: 540, endMinute: 720 })
@@ -434,6 +441,51 @@ describe('scheduler weekday grid', () => {
     })
 
     expect(updated).toMatchObject({ startMinute: 1440, endMinute: 1500 })
+  })
+
+  it('accepts quarter-hour ranges when the slot rate is 15 minutes', () => {
+    useSchedulerSettingsStore().applySettings({
+      startTime: '09:00',
+      endTime: '01:00',
+      slotMinutes: 15,
+    })
+
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 615, endMinute: 795 })
+
+    expect(shift).toMatchObject({ startMinute: 615, endMinute: 795 })
+    expect(store.error).toBeNull()
+  })
+
+  it('rejects ranges shorter than the 15 minute slot rate', () => {
+    useSchedulerSettingsStore().applySettings({
+      startTime: '09:00',
+      endTime: '01:00',
+      slotMinutes: 15,
+    })
+
+    expect(store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 547 })).toBeNull()
+    expect(store.error).toMatchObject({
+      key: 'errors.shiftRange',
+      params: { min: 15, start: '09:00', end: '01:00' },
+    })
+  })
+
+  it('clamps grid ranges to a custom window and reports it in the error', () => {
+    useSchedulerSettingsStore().applySettings({
+      startTime: '09:00',
+      endTime: '12:00',
+      slotMinutes: 30,
+    })
+
+    expect(
+      store.addShiftRange({ memberId: 'ada', startMinute: 600, endMinute: 800 }),
+    ).toMatchObject({ startMinute: 600, endMinute: 720 })
+
+    expect(store.addShiftRange({ memberId: 'ada', startMinute: 400, endMinute: 500 })).toBeNull()
+    expect(store.error).toMatchObject({
+      key: 'errors.shiftRange',
+      params: { min: 30, start: '09:00', end: '12:00' },
+    })
   })
 })
 
@@ -773,7 +825,7 @@ describe('scheduler reset current week', () => {
 
     expect(store.currentWeekShifts).toHaveLength(1)
     expect(store.currentWeekDayOffs).toHaveLength(1)
-    expect(store.error).toBe('errors.shiftTimes')
+    expect(store.error).toMatchObject({ key: 'errors.shiftTimes' })
 
     store.resetCurrentWeek()
 

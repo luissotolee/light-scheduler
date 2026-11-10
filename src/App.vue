@@ -47,6 +47,7 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app__header {
@@ -56,7 +57,7 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   justify-content: space-between;
   gap: 0.75rem;
   min-height: var(--header-height);
-  padding: 0.65rem var(--space-page-x);
+  padding: var(--header-padding-y) var(--space-page-x);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -76,7 +77,7 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--nav-gap);
 }
 
 .app__main {
@@ -84,14 +85,14 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   width: 100%;
   max-width: var(--layout-max-width);
   margin: 0 auto;
-  padding: clamp(0.75rem, 2vw, 1.5rem) var(--space-page-x) clamp(1.5rem, 4vw, 3rem);
+  padding: var(--space-page-y-top) var(--space-page-x) var(--space-page-y-bottom);
 }
 
 .app__footer {
-  padding: 1.25rem var(--space-page-x);
+  padding: var(--footer-padding-y) var(--space-page-x);
   border-top: 1px solid var(--color-border);
   color: var(--color-muted);
-  font-size: 0.85rem;
+  font-size: var(--footer-font-size);
   text-align: center;
 }
 

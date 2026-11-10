@@ -44,16 +44,13 @@
 import { computed, ref } from 'vue'
 import type { Duty, Shift } from '@/types'
 import type { ShiftResizeInput } from '@/modules/scheduler/types'
+import type { MinuteRange, SchedulingWindow } from '@/shared/utils/shifts'
 import {
-  DAY_END_MINUTE,
-  DAY_START_MINUTE,
-  MIN_SHIFT_MINUTES,
-  SLOT_MINUTES,
+  DEFAULT_SCHEDULING_WINDOW,
   clampToDayWindow,
   formatExtendedMinutes,
   snapToSlot,
 } from '@/shared/utils/shifts'
-import type { MinuteRange } from '@/shared/utils/shifts'
 import { useI18n } from '@/shared/i18n'
 import { dutyModifier } from '@/shared/utils/employee'
 import {
@@ -67,10 +64,14 @@ const props = withDefaults(
     shift: Shift
     memberName: string
     duty: Duty
+    limits?: SchedulingWindow
     selected?: boolean
     disabled?: boolean
   }>(),
-  { disabled: false },
+  {
+    disabled: false,
+    limits: () => ({ ...DEFAULT_SCHEDULING_WINDOW }),
+  },
 )
 
 const emit = defineEmits<{
@@ -102,8 +103,12 @@ const displayedRange = computed<MinuteRange>(() => ({
 }))
 
 const barStyle = computed(() => ({
-  left: `${minuteToPercent(displayedRange.value.startMinute)}%`,
-  width: `${rangeToPercentWidth(displayedRange.value.startMinute, displayedRange.value.endMinute)}%`,
+  left: `${minuteToPercent(displayedRange.value.startMinute, props.limits)}%`,
+  width: `${rangeToPercentWidth(
+    displayedRange.value.startMinute,
+    displayedRange.value.endMinute,
+    props.limits,
+  )}%`,
 }))
 
 const ariaLabel = computed(() =>
@@ -145,25 +150,41 @@ function updateDrag(event: PointerEvent): void {
   const trackWidth = state.trackElement?.getBoundingClientRect().width ?? 0
   if (!trackWidth) return
 
-  const deltaMinutes = minuteDeltaFromPixels(event.clientX - state.startClientX, trackWidth)
+  const deltaMinutes = minuteDeltaFromPixels(
+    event.clientX - state.startClientX,
+    trackWidth,
+    props.limits,
+  )
   const duration = state.originEndMinute - state.originStartMinute
+  const slot = props.limits.slotMinutes
 
   if (state.mode === 'move') {
-    const rawStart = snapToSlot(state.originStartMinute + deltaMinutes)
-    const startMinute = Math.min(Math.max(rawStart, DAY_START_MINUTE), DAY_END_MINUTE - duration)
+    const rawStart = snapToSlot(state.originStartMinute + deltaMinutes, slot)
+    const maxStart = Math.max(props.limits.startMinute, props.limits.endMinute - duration)
+    const startMinute = Math.min(Math.max(rawStart, props.limits.startMinute), maxStart)
     draftRange.value = { startMinute, endMinute: startMinute + duration }
     return
   }
 
   if (state.mode === 'resize-start') {
-    const rawStart = clampToDayWindow(snapToSlot(state.originStartMinute + deltaMinutes))
-    const startMinute = Math.min(rawStart, state.originEndMinute - MIN_SHIFT_MINUTES)
+    const rawStart = clampToDayWindow(
+      snapToSlot(state.originStartMinute + deltaMinutes, slot),
+      props.limits,
+    )
+    const startMinute = Math.max(
+      Math.min(rawStart, state.originEndMinute - slot),
+      props.limits.startMinute,
+    )
+    if (startMinute >= state.originEndMinute) return
     draftRange.value = { startMinute, endMinute: state.originEndMinute }
     return
   }
 
-  const rawEnd = clampToDayWindow(snapToSlot(state.originEndMinute + deltaMinutes))
-  const endMinute = Math.max(rawEnd, state.originStartMinute + MIN_SHIFT_MINUTES)
+  const rawEnd = clampToDayWindow(
+    snapToSlot(state.originEndMinute + deltaMinutes, slot),
+    props.limits,
+  )
+  const endMinute = Math.max(rawEnd, state.originStartMinute + slot)
   draftRange.value = { startMinute: state.originStartMinute, endMinute }
 }
 
@@ -201,26 +222,31 @@ function handleKeydown(event: KeyboardEvent): void {
   }
 
   const duration = props.shift.endMinute - props.shift.startMinute
+  const slot = props.limits.slotMinutes
   let range: MinuteRange | null = null
 
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-    const delta = event.key === 'ArrowLeft' ? -SLOT_MINUTES : SLOT_MINUTES
+    const delta = event.key === 'ArrowLeft' ? -slot : slot
 
     if (event.shiftKey) {
       const endMinute = Math.max(
-        props.shift.startMinute + MIN_SHIFT_MINUTES,
-        clampToDayWindow(snapToSlot(props.shift.endMinute + delta)),
+        props.shift.startMinute + slot,
+        clampToDayWindow(snapToSlot(props.shift.endMinute + delta, slot), props.limits),
       )
       range = { startMinute: props.shift.startMinute, endMinute }
     } else {
+      const maxStart = Math.max(props.limits.startMinute, props.limits.endMinute - duration)
       const startMinute = Math.min(
-        Math.max(snapToSlot(props.shift.startMinute + delta), DAY_START_MINUTE),
-        DAY_END_MINUTE - duration,
+        Math.max(snapToSlot(props.shift.startMinute + delta, slot), props.limits.startMinute),
+        maxStart,
       )
       range = { startMinute, endMinute: startMinute + duration }
     }
   } else if (event.key === 'Home' || event.key === 'End') {
-    const startMinute = event.key === 'Home' ? DAY_START_MINUTE : DAY_END_MINUTE - duration
+    const startMinute =
+      event.key === 'Home'
+        ? props.limits.startMinute
+        : Math.max(props.limits.startMinute, props.limits.endMinute - duration)
     range = { startMinute, endMinute: startMinute + duration }
   }
 
@@ -292,6 +318,9 @@ function handleKeydown(event: KeyboardEvent): void {
 }
 
 .shift-bar__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
 
@@ -310,5 +339,17 @@ function handleKeydown(event: KeyboardEvent): void {
 
 .shift-bar__handle--end {
   right: 0;
+}
+
+@media screen and (max-height: 899px) {
+  .shift-bar {
+    padding: 0 0.35rem;
+    border-left-width: 3px;
+    font-size: 0.68rem;
+  }
+
+  .shift-bar__handle {
+    width: 0.4rem;
+  }
 }
 </style>

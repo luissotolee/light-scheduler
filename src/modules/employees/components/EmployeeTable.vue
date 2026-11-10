@@ -2,6 +2,7 @@
   <DataTable
     :value="members"
     :row-class="rowClass"
+    size="small"
     data-test="employee-table"
     class="employee-table"
   >
@@ -278,5 +279,12 @@ function contractModifier(value: unknown): string {
 
 .employee-table__chip--weekends {
   color: var(--color-contract-weekends);
+}
+
+@media screen and (max-height: 899px) {
+  .employee-table :deep(.p-datatable-thead > tr > th),
+  .employee-table :deep(.p-datatable-tbody > tr > td) {
+    padding-block: 0.3rem;
+  }
 }
 </style>

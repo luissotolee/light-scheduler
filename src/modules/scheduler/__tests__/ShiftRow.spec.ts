@@ -396,4 +396,29 @@ describe('ShiftRow', () => {
     ])
     expect(wrapper.emitted('remove')).toEqual([['shift-1']])
   })
+
+  it('uses a custom 15-minute window for selection and snapping', async () => {
+    const wrapper = mount(ShiftRow, {
+      props: {
+        row: makeRow([bar]),
+        slots: buildDaySlots({ startMinute: 540, endMinute: 720, slotMinutes: 15 }),
+      },
+    })
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    expect(wrapper.findAll('.shift-row__grid-slot')).toHaveLength(12)
+    expect(wrapper.findComponent(ShiftBar).props('limits')).toEqual({
+      startMinute: 540,
+      endMinute: 720,
+      slotMinutes: 15,
+    })
+
+    await pointer(track.element, 'pointerdown', { clientX: 0 })
+    await pointer(track.element, 'pointermove', { clientX: 144 })
+    await pointer(track.element, 'pointerup', { clientX: 144 })
+
+    expect(wrapper.emitted('create')).toEqual([
+      [{ memberId: 'member-1', startMinute: 540, endMinute: 555 }],
+    ])
+  })
 })

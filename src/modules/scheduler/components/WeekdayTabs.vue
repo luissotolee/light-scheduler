@@ -93,4 +93,17 @@ const { t, locale } = useI18n()
   color: var(--color-muted);
   font-weight: 400;
 }
+
+@media screen and (max-height: 899px) {
+  .weekday-tabs {
+    min-width: 7.5rem;
+    gap: 0.125rem;
+    padding: 0.25rem;
+  }
+
+  .weekday-tabs__tab {
+    padding: 0.28rem 0.5rem;
+    padding-left: calc(0.5rem - 2px);
+  }
+}
 </style>

@@ -15,11 +15,11 @@ Lightweight feature-module / vertical-slice layout:
 
 - `home/` — landing page (store-free).
 - `scheduler/` — weekly shift view + shift actions (`scheduler` store: `addShift`, `removeShift`, `updateShift`, week navigation).
-- `employees/` — employee CRUD + holiday dialogs (`employees` store + `EmployeeTable`/`EmployeeFormDialog`/`EmployeeDetailsDialog`/`HolidayWeeksDialog`). The domain entity is `TeamMember` (see `src/types.ts`).
+- `employees/` — employee CRUD + holiday dialogs (`employees` store + `EmployeeTable`/`EmployeeFormDialog`/`HolidayWeeksDialog`). The domain entity is `TeamMember` (see `src/types.ts`).
 - `summary/` — read-only weekly summary (`summary` store).
 - `archive/` — `.json.gz` backup export/restore plus weekly schedule CSV wiring (`archive` store). Backup format helpers live in `shared/utils/archiveBackup.ts`; backups key schedules by ISO year → week → `empId` and omit empty weeks.
 - `demo/` — in-app real-time guided demo (mock data, localStorage snapshot/restore, step scenarios, visual cursor/ring/ripple, narration overlay). Vertical slice: `scenarios/`, `fixtures/`, `utils/`, `player/`, `stores/`, `components/`. See `.kilo/skills/guided-demo/SKILL.md`.
-- `shared/` — `workspace` store (source of truth for `members` + `schedules` + `dayOffs`); utils `calendar`/`shifts`/`employee`/`csv`/`csvFile`/`scheduleCsv`/`archiveBackup`/`download`/`id`; components `AppNav`/`PageHeader`/`EmptyState`/`ConfirmActionDialog`/`LanguageSwitcher`/`LocaleFlag`; `fixtures/employees.ts` (mock data reused by demo).
+- `shared/` — `workspace` store (source of truth for `members` + `schedules` + `dayOffs`); utils `calendar`/`shifts`/`employee`/`csv`/`csvFile`/`scheduleCsv`/`archiveBackup`/`download`/`id`/`userSettings` (single versioned `light-scheduler.user-settings` entry for locale + scheduler settings, with legacy-key migration); components `AppNav`/`PageHeader`/`EmptyState`/`ConfirmActionDialog`/`EmployeeDetailsDialog`/`LanguageSwitcher`/`LocaleFlag`; `fixtures/employees.ts` (mock data reused by demo).
 - `shared/i18n/` — localization: `messages/en.ts` + `messages/es.ts` (two languages, both must stay in sync), `index.ts` (`useI18n`, `t`, `tc`), `types.ts` (`Locale`/`LOCALE_META`), `primevue.ts` (PrimeVue locale options); plus the `locale` store in `shared/stores/locale.ts`.
 
 ## Where to find each kind of file

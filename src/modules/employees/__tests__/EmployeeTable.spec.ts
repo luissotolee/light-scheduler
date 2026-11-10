@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import DataTable from 'primevue/datatable'
 import Tooltip from 'primevue/tooltip'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
 import type { TeamMember } from '@/types'
@@ -65,6 +66,12 @@ describe('EmployeeTable', () => {
     expect(wrapper.text()).toContain('Bo')
     expect(wrapper.text()).toContain('Assistant')
     expect(wrapper.text()).toContain('Weekends')
+  })
+
+  it('uses a compact table density', () => {
+    const wrapper = mountTable()
+
+    expect(wrapper.findComponent(DataTable).props('size')).toBe('small')
   })
 
   it('adds duty and contract modifier classes to chips', () => {

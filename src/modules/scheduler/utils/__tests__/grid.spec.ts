@@ -8,6 +8,7 @@ import {
   rangeGap,
   rangeToPercentWidth,
   closestShiftIndex,
+  windowFromSlots,
 } from '@/modules/scheduler/utils/grid'
 
 function bar(startMinute: number, endMinute: number): Shift {
@@ -137,5 +138,43 @@ describe('closestShiftIndex', () => {
     const shifts = [bar(1440, 1500), bar(540, 600)]
     expect(closestShiftIndex({ startMinute: 1500, endMinute: 1560 }, shifts)).toBe(0)
     expect(closestShiftIndex({ startMinute: 1530, endMinute: 1590 }, shifts)).toBe(0)
+  })
+})
+
+describe('custom scheduling window', () => {
+  const window = { startMinute: 540, endMinute: 720, slotMinutes: 15 }
+
+  it('converts minutes and ranges relative to the custom window', () => {
+    expect(minuteToPercent(540, window)).toBe(0)
+    expect(minuteToPercent(630, window)).toBe(50)
+    expect(minuteToPercent(720, window)).toBe(100)
+    expect(rangeToPercentWidth(540, 585, window)).toBeCloseTo(25)
+  })
+
+  it('converts pixel offsets and deltas with the custom span', () => {
+    expect(offsetXToMinute(0, 960, window)).toBe(540)
+    expect(offsetXToMinute(480, 960, window)).toBe(630)
+    expect(offsetXToMinute(960, 960, window)).toBe(720)
+    expect(minuteDeltaFromPixels(48, 960, window)).toBe(9)
+  })
+
+  it('finds the first free start minute with a custom slot size', () => {
+    expect(firstFreeStartMinute([], window)).toBe(540)
+    expect(firstFreeStartMinute([bar(540, 555)], window)).toBe(555)
+    expect(firstFreeStartMinute([bar(540, 720)], window)).toBe(720)
+  })
+
+  it('derives the window from slots', () => {
+    expect(windowFromSlots([])).toEqual({
+      startMinute: 540,
+      endMinute: 1500,
+      slotMinutes: 30,
+    })
+    expect(
+      windowFromSlots([
+        { index: 0, startMinute: 540, endMinute: 555, label: '09:00', hourLabel: '09', minuteLabel: '00', isNextDay: false },
+        { index: 1, startMinute: 555, endMinute: 570, label: '09:15', hourLabel: '09', minuteLabel: '15', isNextDay: false },
+      ]),
+    ).toEqual({ startMinute: 540, endMinute: 570, slotMinutes: 15 })
   })
 })

@@ -131,6 +131,11 @@ const contractLabel = computed(() =>
 </script>
 
 <style scoped>
+.employee-details :deep(.p-dialog-content) {
+  max-height: calc(100dvh - 10rem);
+  overflow-y: auto;
+}
+
 .employee-details__body {
   display: flex;
   flex-direction: column;
@@ -194,6 +199,16 @@ const contractLabel = computed(() =>
 @media (max-width: 36rem) {
   .employee-details__list {
     grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-height: 899px) {
+  .employee-details__body {
+    gap: 0.75rem;
+  }
+
+  .employee-details__list {
+    gap: 0.5rem 1rem;
   }
 }
 </style>

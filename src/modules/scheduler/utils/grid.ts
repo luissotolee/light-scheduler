@@ -1,43 +1,78 @@
 import type { Shift } from '@/types'
-import type { MinuteRange } from '@/shared/utils/shifts'
-import {
-  DAY_END_MINUTE,
-  DAY_START_MINUTE,
-  SLOT_MINUTES,
-  shiftsOverlap,
-} from '@/shared/utils/shifts'
-
-const DAY_SPAN_MINUTES = DAY_END_MINUTE - DAY_START_MINUTE
+import type { DaySlot, MinuteRange, SchedulingWindow } from '@/shared/utils/shifts'
+import { DEFAULT_SCHEDULING_WINDOW, shiftsOverlap } from '@/shared/utils/shifts'
 
 export const MAX_SHIFTS_PER_ROW = 2
 
-export function minuteToPercent(minute: number): number {
-  return ((minute - DAY_START_MINUTE) / DAY_SPAN_MINUTES) * 100
+function windowSpan(window: SchedulingWindow): number {
+  return window.endMinute - window.startMinute
 }
 
-export function rangeToPercentWidth(start: number, end: number): number {
-  return ((end - start) / DAY_SPAN_MINUTES) * 100
+export function windowFromSlots(slots: readonly DaySlot[]): SchedulingWindow {
+  if (slots.length === 0) return { ...DEFAULT_SCHEDULING_WINDOW }
+
+  const first = slots[0]
+  const last = slots[slots.length - 1]
+  const slotMinutes = first.endMinute - first.startMinute
+  if (slotMinutes <= 0) return { ...DEFAULT_SCHEDULING_WINDOW }
+
+  return {
+    startMinute: first.startMinute,
+    endMinute: last.endMinute,
+    slotMinutes,
+  }
 }
 
-export function offsetXToMinute(offsetX: number, trackWidth: number): number {
-  return DAY_START_MINUTE + (offsetX / trackWidth) * DAY_SPAN_MINUTES
+export function minuteToPercent(
+  minute: number,
+  window: SchedulingWindow = DEFAULT_SCHEDULING_WINDOW,
+): number {
+  const span = windowSpan(window)
+  if (span <= 0) return 0
+  return ((minute - window.startMinute) / span) * 100
 }
 
-export function minuteDeltaFromPixels(deltaPx: number, trackWidth: number): number {
-  return (deltaPx / trackWidth) * DAY_SPAN_MINUTES
+export function rangeToPercentWidth(
+  start: number,
+  end: number,
+  window: SchedulingWindow = DEFAULT_SCHEDULING_WINDOW,
+): number {
+  const span = windowSpan(window)
+  if (span <= 0) return 0
+  return ((end - start) / span) * 100
 }
 
-export function firstFreeStartMinute(bars: Shift[]): number {
-  for (
-    let start = DAY_START_MINUTE;
-    start + SLOT_MINUTES <= DAY_END_MINUTE;
-    start += SLOT_MINUTES
-  ) {
-    const slot = { startMinute: start, endMinute: start + SLOT_MINUTES }
+export function offsetXToMinute(
+  offsetX: number,
+  trackWidth: number,
+  window: SchedulingWindow = DEFAULT_SCHEDULING_WINDOW,
+): number {
+  if (trackWidth <= 0) return window.startMinute
+  return window.startMinute + (offsetX / trackWidth) * windowSpan(window)
+}
+
+export function minuteDeltaFromPixels(
+  deltaPx: number,
+  trackWidth: number,
+  window: SchedulingWindow = DEFAULT_SCHEDULING_WINDOW,
+): number {
+  if (trackWidth <= 0) return 0
+  return (deltaPx / trackWidth) * windowSpan(window)
+}
+
+export function firstFreeStartMinute(
+  bars: readonly Shift[],
+  window: SchedulingWindow = DEFAULT_SCHEDULING_WINDOW,
+): number {
+  const step = window.slotMinutes
+  if (step <= 0) return window.startMinute
+
+  for (let start = window.startMinute; start + step <= window.endMinute; start += step) {
+    const slot = { startMinute: start, endMinute: start + step }
     if (!bars.some((bar) => shiftsOverlap(bar, slot))) return start
   }
 
-  return DAY_END_MINUTE
+  return window.endMinute
 }
 
 export function rangeGap(a: MinuteRange, b: MinuteRange): number {

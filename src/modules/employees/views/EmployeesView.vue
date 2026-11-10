@@ -96,7 +96,7 @@
 import { computed, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
-import EmployeeDetailsDialog from '@/modules/employees/components/EmployeeDetailsDialog.vue'
+import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
@@ -190,7 +190,7 @@ onUnmounted(() => {
 .employees {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-stack);
 }
 
 .employees__toolbar {
@@ -262,5 +262,20 @@ onUnmounted(() => {
 .employees__button:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+@media screen and (max-height: 899px) {
+  .employees__toolbar {
+    padding: 0.5rem 0.65rem;
+    gap: 0.5rem;
+  }
+
+  .employees__search {
+    padding: 0.35rem 0.6rem;
+  }
+
+  .employees__error {
+    padding: 0.5rem 0.75rem;
+  }
 }
 </style>
