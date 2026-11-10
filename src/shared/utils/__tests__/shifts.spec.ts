@@ -240,3 +240,55 @@ describe('isNextDayMinute', () => {
     expect(isNextDayMinute(1500)).toBe(true)
   })
 })
+
+describe('scheduling window variants', () => {
+  it('builds 15-minute slots over the default window', () => {
+    const slots = buildDaySlots({ startMinute: 540, endMinute: 1500, slotMinutes: 15 })
+
+    expect(slots).toHaveLength(64)
+    expect(slots[0]).toMatchObject({ startMinute: 540, minuteLabel: '00' })
+    expect(slots[1]).toMatchObject({ startMinute: 555, minuteLabel: '15' })
+    expect(slots[62]).toMatchObject({ startMinute: 1470, minuteLabel: '30' })
+    expect(slots[63]).toMatchObject({ startMinute: 1485, endMinute: 1500, minuteLabel: '45' })
+  })
+
+  it('builds a short custom window at both slot rates', () => {
+    expect(
+      buildDaySlots({ startMinute: 540, endMinute: 720, slotMinutes: 30 }),
+    ).toHaveLength(6)
+    expect(
+      buildDaySlots({ startMinute: 540, endMinute: 720, slotMinutes: 15 }),
+    ).toHaveLength(12)
+  })
+
+  it('returns no slots for an invalid window', () => {
+    expect(buildDaySlots({ startMinute: 720, endMinute: 720, slotMinutes: 30 })).toEqual([])
+    expect(buildDaySlots({ startMinute: 540, endMinute: 720, slotMinutes: 0 })).toEqual([])
+  })
+
+  it('snaps to a custom slot size', () => {
+    expect(snapToSlot(547, 15)).toBe(540)
+    expect(snapToSlot(553, 15)).toBe(555)
+  })
+
+  it('clamps and normalizes with a custom window', () => {
+    const window = { startMinute: 540, endMinute: 720, slotMinutes: 15 }
+
+    expect(clampToDayWindow(0, window)).toBe(540)
+    expect(clampToDayWindow(900, window)).toBe(720)
+    expect(normalizeGridRange(548, 562, window)).toBeNull()
+    expect(normalizeGridRange(548, 563, window)).toEqual({
+      startMinute: 555,
+      endMinute: 570,
+    })
+    expect(normalizeGridRange(545, 575, window)).toEqual({
+      startMinute: 540,
+      endMinute: 570,
+    })
+    expect(normalizeGridRange(540, 547, window)).toBeNull()
+    expect(normalizeGridRange(0, 900, window)).toEqual({
+      startMinute: 540,
+      endMinute: 720,
+    })
+  })
+})

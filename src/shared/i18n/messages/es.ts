@@ -48,6 +48,20 @@ export const es: Messages = {
   'scheduler.nextWeek': 'Semana siguiente',
   'scheduler.weekdays': 'Días de la semana',
   'scheduler.clearAll': 'Borrar todo',
+  'scheduler.settings': 'Configuración del horario',
+  'scheduler.settings.title': 'Configuración del horario',
+  'scheduler.settings.description':
+    'Elige los límites de tiempo visibles y la franja horaria que usa la tabla.',
+  'scheduler.settings.start': 'Hora de inicio',
+  'scheduler.settings.end': 'Hora de fin',
+  'scheduler.settings.nextDay': 'Termina al día siguiente',
+  'scheduler.settings.rate': 'Franja horaria',
+  'scheduler.settings.rate30': '30 min',
+  'scheduler.settings.rate15': '15 min',
+  'scheduler.settings.hour': 'Hora',
+  'scheduler.settings.minutes': 'Minutos',
+  'scheduler.settings.outsideWindow':
+    'Los turnos fuera de estos límites se guardan pero no se muestran en la tabla.',
   'scheduler.confirm.restartHeader': 'Reiniciar planificación semanal',
   'scheduler.confirm.restartMessage':
     'Esto borra todos los turnos y días libres de la semana actual. Los empleados se conservan. Esta acción no se puede deshacer.',
@@ -166,7 +180,7 @@ export const es: Messages = {
   'holidays.title': 'Semanas de vacaciones — {name}',
   'holidays.previousYear': 'Año anterior',
   'holidays.nextYear': 'Año siguiente',
-  'holidays.counter': '{count} de {max} seleccionadas',
+  'holidays.counter': '{count} de {max} seleccionadas en {year}',
   'holidays.group': 'Semanas ISO',
   'calendar.weekLabel': 'Semana {week} — {range}',
 
@@ -190,15 +204,15 @@ export const es: Messages = {
 
   'archive.title': 'Archivo',
   'archive.description':
-    'Descarga una copia comprimida de todos los empleados, turnos y días libres, o restaura una copia para reemplazar el espacio de trabajo actual.',
+    'Descarga una copia comprimida de todos los empleados, turnos y días libres, junto con el idioma y los ajustes del planificador, o restaura una copia para reemplazar el espacio de trabajo actual.',
   'archive.exportHeading': 'Copia de seguridad',
   'archive.exportCopy':
-    'Descarga un archivo JSON comprimido con gzip con todos los empleados y planificaciones. Conserva los ID de empleado necesarios para vincular los turnos con las personas.',
+    'Descarga un archivo JSON comprimido con gzip con todos los empleados y planificaciones, además del idioma y los ajustes del planificador. Conserva los ID de empleado necesarios para vincular los turnos con las personas.',
   'archive.exportEmployees': 'Exportar empleados',
   'archive.exportSchedule': 'Exportar planificación',
   'archive.importHeading': 'Restaurar',
   'archive.importCopy':
-    'Sube un archivo de copia de seguridad para reemplazar todos los empleados, turnos y días libres. Restaurar una copia reemplaza todas las semanas del espacio de trabajo.',
+    'Sube un archivo de copia de seguridad para reemplazar todos los empleados, turnos, días libres y ajustes de usuario. Restaurar una copia reemplaza todas las semanas del espacio de trabajo.',
   'archive.uploadEmployees': 'Subir empleados',
   'archive.uploadSchedule': 'Subir planificación',
   'archive.noEmployees': 'No hay empleados para exportar',
@@ -224,7 +238,7 @@ export const es: Messages = {
   'archive.compressionUnsupported': 'Este navegador no puede leer copias de seguridad comprimidas',
   'archive.confirm.backupHeader': 'Restaurar copia de seguridad',
   'archive.confirm.backupMessage':
-    'Esto reemplaza todos los empleados, turnos y días libres con el contenido de la copia de seguridad. Esta acción no se puede deshacer.',
+    'Esto reemplaza todos los empleados, turnos y días libres, incluidos el idioma y los ajustes del planificador, con el contenido de la copia de seguridad. Esta acción no se puede deshacer.',
   'archive.confirm.backupLabel': 'Restaurar',
   'archive.importedOne': 'Se importó {count} empleado',
   'archive.importedMany': 'Se importaron {count} empleados',
@@ -242,7 +256,7 @@ export const es: Messages = {
   'errors.invalidEmail': 'El correo electrónico no es válido',
   'errors.invalidPhone': 'El teléfono no es válido',
   'errors.invalidComment': 'El comentario no es válido',
-  'errors.maxHolidays': 'Se permiten como máximo 6 semanas de vacaciones',
+  'errors.maxHolidays': 'Se permiten como máximo 6 semanas de vacaciones por año',
   'errors.invalidStartDate': 'La fecha de inicio no es válida',
   'errors.invalidEndDate': 'La fecha de fin no es válida',
   'errors.endBeforeStart': 'La fecha de fin no puede ser anterior a la fecha de inicio',
@@ -260,7 +274,14 @@ export const es: Messages = {
   'errors.invalidShiftCell': 'La celda de turno no es válida',
   'errors.duplicateScheduleRow': 'Fila de empleado duplicada para esta semana',
   'errors.shiftTimes': 'Las horas del turno deben ser válidas y la de inicio anterior a la de fin',
-  'errors.shiftRange': 'El turno debe durar al menos 30 minutos dentro de 09:00–01:00',
+  'errors.shiftRange': 'El turno debe durar al menos {min} minutos dentro de {start}–{end}',
+  'errors.settingsStartTime': 'La hora de inicio no es válida',
+  'errors.settingsEndTime': 'La hora de fin no es válida',
+  'errors.settingsSlot': 'La franja horaria no es válida',
+  'errors.settingsAligned': 'Las horas deben coincidir con la franja horaria seleccionada',
+  'errors.settingsSameTimes': 'Las horas de inicio y fin deben ser diferentes',
+  'errors.settingsWindow': 'El horario debe cubrir al menos una franja horaria',
+  'errors.settingsMaxEnd': 'El horario no puede extenderse más allá de la 01:00 del día siguiente',
 
   'demo.start': 'Demo',
   'demo.startAria': 'Iniciar la demostración guiada',
@@ -312,12 +333,16 @@ export const es: Messages = {
   'demo.scenario.employees.formHours': 'Define las horas semanales. Este campo es obligatorio.',
   'demo.scenario.employees.formStartDate':
     'Elige la fecha de inicio que decide cuándo se puede planificar al empleado.',
+  'demo.scenario.employees.formComment':
+    'Añade un comentario opcional para notas como disponibilidad o preferencias de turno.',
   'demo.scenario.employees.save': 'Guarda el empleado para añadirlo al equipo.',
   'demo.scenario.employees.saved': 'El nuevo empleado ya aparece en la lista.',
   'demo.scenario.employees.details':
     'Selecciona un nombre para abrir los detalles del empleado y sus semanas de vacaciones.',
   'demo.scenario.employees.detailsDialog':
-    'El diálogo de detalles resume rol, contrato, horas, contacto y vacaciones.',
+    'El diálogo de detalles resume rol, contrato, horas, contacto, comentarios y vacaciones.',
+  'demo.scenario.employees.detailsComment':
+    'Los comentarios guardados del empleado aparecen al final de los detalles.',
   'demo.scenario.employees.closeDetails': 'Cierra los detalles para volver a la lista.',
   'demo.scenario.employees.holidays': 'Abre el calendario de vacaciones de un empleado.',
   'demo.scenario.employees.holidaysPick':
@@ -367,8 +392,16 @@ export const es: Messages = {
   'demo.scenario.scheduler.dayOffRestored': 'Selecciona el nombre de nuevo para restaurar el día.',
   'demo.scenario.scheduler.hours':
     'La tabla de horas semanales compara las horas planificadas con las del contrato.',
+  'demo.scenario.scheduler.settingsOpen':
+    'Abre la configuración del horario para cambiar la franja visible y el tamaño del tramo de la cuadrícula.',
+  'demo.scenario.scheduler.settingsWindow':
+    'Define la hora de inicio y de fin. Si la hora de fin es anterior al inicio, el horario continúa pasada la medianoche.',
+  'demo.scenario.scheduler.settingsSlot':
+    'Cambia la franja entre 30 y 15 minutos para modificar el detalle de la cuadrícula.',
+  'demo.scenario.scheduler.settingsSaved':
+    'Guarda para aplicar la nueva franja y el tamaño del tramo al planificador.',
   'demo.scenario.scheduler.restart':
-    'Usa reiniciar semana para borrar los turnos y días libres de la semana actual.',
+    'Usa Borrar todo para eliminar todos los turnos y días libres de la semana actual.',
   'demo.scenario.scheduler.confirmRestart':
     'Confirma para vaciar la semana. Solo afecta a los datos de la demostración.',
   'demo.scenario.scheduler.restarted': 'La semana actual ya está vacía.',

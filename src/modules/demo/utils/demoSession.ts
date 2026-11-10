@@ -1,6 +1,7 @@
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useArchiveStore } from '@/modules/archive/stores/archive'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
 import {
@@ -13,13 +14,27 @@ import {
   type AppStorageSnapshot,
 } from '@/modules/demo/utils/storageSnapshot'
 import { useDemoStore } from '@/modules/demo/stores/demo'
-import { useLocaleStore, isLocale, LOCALE_STORAGE_KEY } from '@/shared/stores/locale'
+import { useLocaleStore, isLocale } from '@/shared/stores/locale'
+import type { Locale } from '@/shared/i18n/types'
 import { parsePersistedWorkspace, WORKSPACE_STORAGE_KEY } from '@/shared/utils/persistence'
+import {
+  LEGACY_LOCALE_STORAGE_KEY,
+  parseUserSettingsEntry,
+  USER_SETTINGS_STORAGE_KEY,
+} from '@/shared/utils/userSettings'
 import { router } from '@/router'
 import { startEngine, stopEngine } from '@/modules/demo/player/engine'
 import { getDemoScenario } from '@/modules/demo/scenarios'
 
 let appSnapshot: AppStorageSnapshot | null = null
+
+function readSnapshotLocale(entries: Record<string, string | null>): Locale | null {
+  const settings = parseUserSettingsEntry(entries[USER_SETTINGS_STORAGE_KEY] ?? null)
+  if (settings?.locale) return settings.locale
+
+  const legacy = entries[LEGACY_LOCALE_STORAGE_KEY] ?? null
+  return isLocale(legacy) ? legacy : null
+}
 
 export async function startDemo(scenarioId: string): Promise<boolean> {
   const demoStore = useDemoStore()
@@ -56,6 +71,9 @@ export async function startDemo(scenarioId: string): Promise<boolean> {
     const schedulerStore = useSchedulerStore()
     schedulerStore.selectWeekday('monday')
     schedulerStore.clearError()
+
+    const schedulerSettingsStore = useSchedulerSettingsStore()
+    schedulerSettingsStore.resetSettings()
 
     const archiveStore = useArchiveStore()
     archiveStore.resetStatus()
@@ -97,8 +115,8 @@ export async function stopDemo(): Promise<void> {
     try {
       const entries = appSnapshot.entries
 
-      const localeValue = entries[LOCALE_STORAGE_KEY] ?? null
-      if (localeValue !== null && isLocale(localeValue)) {
+      const localeValue = readSnapshotLocale(entries)
+      if (localeValue !== null) {
         localeStore.setLocale(localeValue)
       }
 
@@ -115,6 +133,7 @@ export async function stopDemo(): Promise<void> {
       workspaceStore.loadWorkspace(restoredWorkspace)
 
       restoreAppStorage(appSnapshot)
+      useSchedulerSettingsStore().hydrate()
       restoreSucceeded = true
     } catch {
       demoStore.reportError('demo.error.restore')

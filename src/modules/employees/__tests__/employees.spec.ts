@@ -437,6 +437,22 @@ describe('employees store', () => {
     ])
   })
 
+  it('allows six holiday weeks per year across multiple years', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    const holidays: HolidayWeek[] = [
+      ...Array.from({ length: 6 }, (_, index) => ({ year: 2025, week: index + 1 })),
+      ...Array.from({ length: 6 }, (_, index) => ({ year: 2026, week: index + 1 })),
+    ]
+
+    store.setHolidays(ada.id, holidays)
+
+    expect(store.status.error).toBeNull()
+    expect(store.filteredMembers[0].holidays).toEqual(holidays)
+  })
+
   it('ignores holiday updates for unknown ids', () => {
     const store = useEmployeesStore()
 

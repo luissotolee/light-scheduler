@@ -13,7 +13,7 @@ import type {
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import { getIsoWeeksInYear, parseIsoDate } from '@/shared/utils/calendar'
 
-export const MAX_HOLIDAY_WEEKS = 6
+export const MAX_HOLIDAY_WEEKS_PER_YEAR = 6
 
 export const DUTIES: readonly Duty[] = ['manager', 'employee', 'assistant', 'head_manager']
 
@@ -166,7 +166,7 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
   const comment = input.comment.trim()
 
   const holidays = normalizeHolidays(input.holidays ?? [])
-  if (holidays.length > MAX_HOLIDAY_WEEKS) {
+  if (exceedsHolidayLimit(holidays)) {
     errors.holidays = 'errors.maxHolidays'
   }
 
@@ -237,6 +237,24 @@ export function normalizeHolidays(holidays: HolidayWeek[]): HolidayWeek[] {
   return [...unique.values()].sort((a, b) => a.year - b.year || a.week - b.week)
 }
 
+export function countHolidaysInYear(holidays: HolidayWeek[], year: number): number {
+  let count = 0
+  for (const holiday of holidays) {
+    if (holiday.year === year) count += 1
+  }
+  return count
+}
+
+export function exceedsHolidayLimit(holidays: HolidayWeek[]): boolean {
+  const counts = new Map<number, number>()
+  for (const holiday of holidays) {
+    const count = (counts.get(holiday.year) ?? 0) + 1
+    if (count > MAX_HOLIDAY_WEEKS_PER_YEAR) return true
+    counts.set(holiday.year, count)
+  }
+  return false
+}
+
 export const EMPLOYEE_HEADERS: readonly string[] = [
   'emp_id',
   'name',
@@ -304,7 +322,7 @@ export function validateEmployees(
     }
 
     const holidays = parsedHolidays ? normalizeHolidays(parsedHolidays) : []
-    if (holidays.length > MAX_HOLIDAY_WEEKS) {
+    if (exceedsHolidayLimit(holidays)) {
       rowErrors.push({ row: rowNumber, message: 'errors.maxHolidays' })
     }
 

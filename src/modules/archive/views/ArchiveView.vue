@@ -140,7 +140,7 @@ function handleBackupImportVisibility(visible: boolean): void {
 .archive {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-stack);
 }
 
 .archive__panel {
@@ -155,7 +155,7 @@ function handleBackupImportVisibility(visible: boolean): void {
 
 .archive__heading {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--font-size-section-title);
 }
 
 .archive__copy {
@@ -231,5 +231,20 @@ function handleBackupImportVisibility(visible: boolean): void {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media screen and (max-height: 899px) {
+  .archive__panel {
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .archive__actions {
+    gap: 0.5rem;
+  }
+
+  .archive__button {
+    padding: 0.35rem 0.75rem;
+  }
 }
 </style>

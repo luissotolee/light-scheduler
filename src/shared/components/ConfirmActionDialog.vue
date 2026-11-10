@@ -60,4 +60,10 @@ const { t } = useI18n()
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+@media screen and (max-height: 899px) {
+  .confirm-dialog__message {
+    margin-bottom: 0.75rem;
+  }
+}
 </style>

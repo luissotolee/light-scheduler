@@ -5,7 +5,7 @@ import {
   DUTIES,
   DUTY_SORT_ORDER,
   EMPLOYEE_HEADERS,
-  MAX_HOLIDAY_WEEKS,
+  MAX_HOLIDAY_WEEKS_PER_YEAR,
   PHONE_PREFIX_MAX_DIGITS,
   PHONE_PREFIX_MIN_DIGITS,
   SPANISH_PHONE_DIGITS,
@@ -69,7 +69,7 @@ describe('employee constants', () => {
   it('exposes every duty, contract, and canonical header', () => {
     expect(DUTIES).toEqual(['manager', 'employee', 'assistant', 'head_manager'])
     expect(CONTRACTS).toEqual(['fulltime', 'part_time', 'weekends'])
-    expect(MAX_HOLIDAY_WEEKS).toBe(6)
+    expect(MAX_HOLIDAY_WEEKS_PER_YEAR).toBe(6)
     expect(EMPLOYEE_HEADERS).toEqual([
       'emp_id',
       'name',
@@ -390,7 +390,7 @@ describe('validateEmployeeForm', () => {
     })
   })
 
-  it('rejects more than six holiday weeks', () => {
+  it('rejects more than six holiday weeks in the same year', () => {
     const holidays: HolidayWeek[] = Array.from({ length: 7 }, (_, index) => ({
       year: 2026,
       week: index + 1,
@@ -401,6 +401,20 @@ describe('validateEmployeeForm', () => {
       errors: { holidays: 'errors.maxHolidays' },
       message: 'errors.maxHolidays',
     })
+  })
+
+  it('accepts six holiday weeks per year across multiple years', () => {
+    const holidays: HolidayWeek[] = [
+      ...Array.from({ length: 6 }, (_, index) => ({ year: 2026, week: index + 1 })),
+      ...Array.from({ length: 6 }, (_, index) => ({ year: 2027, week: index + 1 })),
+    ]
+
+    const result = validateEmployeeForm({ ...validInput, holidays })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value.holidays).toEqual(holidays)
+    }
   })
 
   it('reports the first error in field order', () => {
@@ -632,7 +646,7 @@ describe('validateEmployees', () => {
     })
   })
 
-  it('rejects rows with more than six holiday weeks', () => {
+  it('rejects rows with more than six holiday weeks in the same year', () => {
     const result = validateEmployees(headers, [
       [
         'Ada',
@@ -648,6 +662,24 @@ describe('validateEmployees', () => {
       ok: false,
       errors: [{ row: 2, message: 'errors.maxHolidays' }],
     })
+  })
+
+  it('accepts rows with six holiday weeks per year across multiple years', () => {
+    const result = validateEmployees(headers, [
+      [
+        'Ada',
+        'manager',
+        'fulltime',
+        '40',
+        '2026-W1;2026-W2;2026-W3;2026-W4;2026-W5;2026-W6;2027-W1;2027-W2;2027-W3;2027-W4;2027-W5;2027-W6',
+        '',
+      ],
+    ])
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data[0].holidays).toHaveLength(12)
+    }
   })
 
   it('rejects a holiday week that does not exist in its ISO year', () => {

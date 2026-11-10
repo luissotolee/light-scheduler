@@ -70,6 +70,7 @@
         :rows="rows"
         :days="dayHeaders"
         :week-range-label="weekRangeLabel"
+        @details="openDetails"
       />
       <EmptyState
         v-else
@@ -77,22 +78,46 @@
         :description="t('summary.emptyDescription')"
       />
     </div>
+
+    <EmployeeDetailsDialog
+      :visible="detailsVisible"
+      :member="detailsTarget"
+      @update:visible="handleDetailsVisibility"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import Button from 'primevue/button'
+import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import SummaryTable from '@/modules/summary/components/SummaryTable.vue'
 import { useSummaryStore } from '@/modules/summary/stores/summary'
 import { saveSummaryPdf } from '@/modules/summary/utils/pdf'
 import { useI18n } from '@/shared/i18n'
+import { useWorkspaceStore } from '@/shared/stores/workspace'
 
 const store = useSummaryStore()
+const workspaceStore = useWorkspaceStore()
 const { rows, dayHeaders, weekRangeLabel, printZoom, currentWeekKey } = storeToRefs(store)
 const { t, locale } = useI18n()
+
+const detailsTargetId = ref<string | null>(null)
+const detailsTarget = computed(() =>
+  detailsTargetId.value ? (workspaceStore.findMember(detailsTargetId.value) ?? null) : null,
+)
+const detailsVisible = computed(() => detailsTarget.value !== null)
+
+function openDetails(memberId: string): void {
+  detailsTargetId.value = memberId
+}
+
+function handleDetailsVisibility(visible: boolean): void {
+  if (!visible) detailsTargetId.value = null
+}
 
 function printSummary(): void {
   window.print()
@@ -113,7 +138,7 @@ function savePdf(): void {
 .summary {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-stack);
 }
 
 .summary__toolbar {
@@ -140,6 +165,17 @@ function savePdf(): void {
 
 .summary__sheet-header {
   display: none;
+}
+
+@media screen and (max-height: 899px) {
+  .summary__sheet {
+    padding: 0.5rem;
+  }
+
+  .summary__week {
+    min-width: 12rem;
+    font-size: 0.95rem;
+  }
 }
 
 @media print {

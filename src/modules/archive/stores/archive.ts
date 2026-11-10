@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { TeamMember } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
+import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import {
   BACKUP_EXTENSION,
@@ -10,6 +12,7 @@ import {
   parseBackup,
   readBackupFile,
   type BackupData,
+  type BackupSettings,
 } from '@/shared/utils/archiveBackup'
 import { todayIsoDate } from '@/shared/utils/calendar'
 import { parseCsv, toCsv } from '@/shared/utils/csv'
@@ -204,6 +207,12 @@ export const useArchiveStore = defineStore('archive', () => {
     status.value = { state: 'error', message: { kind: 'simple', code: message } }
   }
 
+  function applyBackupSettings(settings: BackupSettings | undefined): void {
+    if (!settings) return
+    if (settings.locale) useLocaleStore().setLocale(settings.locale)
+    if (settings.scheduler) useSchedulerSettingsStore().applySettings(settings.scheduler)
+  }
+
   function exportSchedule(): void {
     const rows = buildScheduleCsvRows(
       workspace().members,
@@ -243,6 +252,10 @@ export const useArchiveStore = defineStore('archive', () => {
         workspaceStore.schedules,
         workspaceStore.dayOffs,
         workspaceStore.currentWeekKey,
+        {
+          locale: useLocaleStore().locale,
+          scheduler: { ...useSchedulerSettingsStore().settings },
+        },
       )
       const blob = await gzipJson(backup)
       downloadBlob(timestampedName('backup', BACKUP_EXTENSION), blob)
@@ -293,6 +306,8 @@ export const useArchiveStore = defineStore('archive', () => {
         workspaceStore.setCurrentWeekKey(weekKeys[0])
       }
     }
+
+    applyBackupSettings(data.settings)
 
     status.value = {
       state: 'success',

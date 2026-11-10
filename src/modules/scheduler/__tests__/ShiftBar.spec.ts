@@ -315,4 +315,25 @@ describe('ShiftBar', () => {
     expect(wrapper.emitted('remove')).toBeUndefined()
     expect(event.defaultPrevented).toBe(true)
   })
+
+  it('uses a custom window and slot size for positioning and keyboard movement', async () => {
+    const wrapper = mount(ShiftBar, {
+      props: {
+        shift,
+        memberName: 'Ada',
+        duty: 'employee',
+        limits: { startMinute: 540, endMinute: 660, slotMinutes: 15 },
+      },
+    })
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    expect(bar.attributes('style')).toContain('left: 0%')
+    expect(bar.attributes('style')).toContain('width: 50%')
+
+    await bar.trigger('keydown', { key: 'ArrowRight' })
+
+    expect(wrapper.emitted('resize')).toEqual([
+      [{ id: 'shift-1', startMinute: 555, endMinute: 615 }],
+    ])
+  })
 })

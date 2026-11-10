@@ -202,4 +202,19 @@ const hourLabels = computed<HourGroup[]>(() => {
   padding: 1.25rem;
   color: var(--color-muted);
 }
+
+@media screen and (max-height: 899px) {
+  .shift-grid__corner,
+  .shift-grid__hours {
+    font-size: 0.65rem;
+  }
+
+  .shift-grid__time-cell {
+    font-size: 0.6rem;
+  }
+
+  .shift-grid__empty {
+    padding: 0.75rem;
+  }
+}
 </style>

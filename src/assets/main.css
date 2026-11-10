@@ -6,6 +6,7 @@
   --color-text: #e2e8f0;
   --color-muted: #94a3b8;
   --color-accent: #38bdf8;
+  --color-demo-cursor: #fbbf24;
   --color-danger: #f87171;
   --color-inactive-bg: rgba(148, 163, 184, 0.08);
   --color-vacation-bg: rgba(251, 191, 36, 0.16);
@@ -45,14 +46,22 @@
   --radius-md: 10px;
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --layout-max-width: 96rem;
-  --grid-name-width: 168px;
+  --grid-name-width: 10.5rem;
   --grid-hours-width: 4rem;
   --grid-header-height: 1.75rem;
   --grid-row-height: 1.875rem;
   --grid-bar-inset: 0.125rem;
   --header-height: 3.5rem;
+  --header-padding-y: 0.65rem;
   --nav-gap: 1rem;
+  --footer-padding-y: 1.25rem;
+  --footer-font-size: 0.85rem;
   --space-page-x: clamp(1rem, 4vw, 2.5rem);
+  --space-page-y-top: clamp(0.75rem, 2vw, 1.5rem);
+  --space-page-y-bottom: clamp(1.5rem, 4vw, 3rem);
+  --space-stack: 1rem;
+  --font-size-page-title: 1.75rem;
+  --font-size-section-title: 1.1rem;
 
   color-scheme: dark;
   color: var(--color-text);
@@ -61,6 +70,32 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+@media screen and (min-width: 1024px) {
+  html {
+    /* 14px at 1280px wide, scaling fluidly to 16px at 1920px wide. */
+    font-size: clamp(14px, calc(10px + 0.3125vw), 16px);
+  }
+}
+
+/* HD Ready / short-screen density. Does not apply at 1920x1080. */
+@media screen and (max-height: 899px) {
+  :root {
+    --header-height: 3rem;
+    --header-padding-y: 0.4rem;
+    --nav-gap: 0.75rem;
+    --footer-padding-y: 0.5rem;
+    --footer-font-size: 0.75rem;
+    --space-page-y-top: 0.5rem;
+    --space-page-y-bottom: 0.75rem;
+    --space-stack: 0.75rem;
+    --font-size-page-title: 1.4rem;
+    --font-size-section-title: 0.95rem;
+    --grid-header-height: 1.5rem;
+    --grid-row-height: 1.75rem;
+    --grid-bar-inset: 0.0625rem;
+  }
 }
 
 *,

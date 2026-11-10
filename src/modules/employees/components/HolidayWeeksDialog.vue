@@ -34,7 +34,7 @@
       </div>
 
       <p class="holiday-dialog__counter" data-test="counter">
-        {{ t('holidays.counter', { count, max: MAX_HOLIDAY_WEEKS }) }}
+        {{ t('holidays.counter', { count, max: MAX_HOLIDAY_WEEKS_PER_YEAR, year }) }}
       </p>
 
       <div class="holiday-dialog__grid" role="group" :aria-label="t('holidays.group')">
@@ -74,7 +74,7 @@ import Dialog from 'primevue/dialog'
 import type { HolidayWeek, HolidayWeekOption } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { getIsoWeek, getIsoWeeksForYear } from '@/shared/utils/calendar'
-import { MAX_HOLIDAY_WEEKS, holidayKey, normalizeHolidays } from '@/shared/utils/employee'
+import { MAX_HOLIDAY_WEEKS_PER_YEAR, countHolidaysInYear, holidayKey, normalizeHolidays } from '@/shared/utils/employee'
 
 const props = defineProps<{
   visible: boolean
@@ -94,7 +94,9 @@ const year = ref(getIsoWeek(new Date()).year)
 const selectedKeys = ref<Set<string>>(new Set())
 
 const weeks = computed(() => getIsoWeeksForYear(year.value, locale.value))
-const count = computed(() => selectedKeys.value.size)
+const count = computed(() =>
+  countHolidaysInYear([...selectedKeys.value].map(parseKey), year.value),
+)
 const title = computed(() => t('holidays.title', { name: props.memberName }))
 
 function reset(): void {
@@ -115,7 +117,7 @@ function isSelected(option: HolidayWeekOption): boolean {
 }
 
 function isDisabled(option: HolidayWeekOption): boolean {
-  return !isSelected(option) && count.value >= MAX_HOLIDAY_WEEKS
+  return !isSelected(option) && count.value >= MAX_HOLIDAY_WEEKS_PER_YEAR
 }
 
 function toggle(option: HolidayWeekOption): void {
@@ -124,7 +126,7 @@ function toggle(option: HolidayWeekOption): void {
 
   if (next.has(key)) {
     next.delete(key)
-  } else if (next.size < MAX_HOLIDAY_WEEKS) {
+  } else if (count.value < MAX_HOLIDAY_WEEKS_PER_YEAR) {
     next.add(key)
   }
 
@@ -194,7 +196,7 @@ function save(): void {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
-  max-height: 28rem;
+  max-height: min(28rem, calc(100dvh - 15rem));
   overflow-y: auto;
 }
 

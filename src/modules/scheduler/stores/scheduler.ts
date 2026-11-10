@@ -2,11 +2,18 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { NewShift, Shift, Weekday, WeekKey } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
-import type { DayRow, ShiftRangeInput, ShiftResizeInput } from '@/modules/scheduler/types'
+import type {
+  DayRow,
+  SchedulerError,
+  ShiftRangeInput,
+  ShiftResizeInput,
+} from '@/modules/scheduler/types'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { addWeeks, getWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
 import { createId } from '@/shared/utils/id'
 import {
+  formatExtendedMinutes,
   formatMinutesToHhmm,
   mergeOverlappingRanges,
   normalizeGridRange,
@@ -28,11 +35,30 @@ function dateFromWeekKey(weekKey: WeekKey): Date {
 
 export const useSchedulerStore = defineStore('scheduler', () => {
   const draft = ref<NewShift | null>(null)
-  const error = ref<MessageKey | null>(null)
+  const error = ref<SchedulerError | null>(null)
   const selectedWeekday = ref<Weekday>('monday')
 
   function workspace() {
     return useWorkspaceStore()
+  }
+
+  function schedulerSettings() {
+    return useSchedulerSettingsStore()
+  }
+
+  const schedulingWindow = computed(() => schedulerSettings().schedulingWindow)
+
+  function setError(key: MessageKey, params?: Record<string, string | number>): void {
+    error.value = { key, params }
+  }
+
+  function setShiftRangeError(): void {
+    const window = schedulingWindow.value
+    setError('errors.shiftRange', {
+      min: window.slotMinutes,
+      start: formatExtendedMinutes(window.startMinute),
+      end: formatExtendedMinutes(window.endMinute),
+    })
   }
 
   const currentWeekKey = computed(() => workspace().currentWeekKey)
@@ -151,7 +177,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   function addShift(payload: NewShift): Shift | null {
     const range = toShiftMinutes(payload.start, payload.end)
     if (!range) {
-      error.value = 'errors.shiftTimes'
+      setError('errors.shiftTimes')
       return null
     }
 
@@ -166,9 +192,13 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   }
 
   function addShiftRange(input: ShiftRangeInput): Shift | null {
-    const range = normalizeGridRange(input.startMinute, input.endMinute)
+    const range = normalizeGridRange(
+      input.startMinute,
+      input.endMinute,
+      schedulingWindow.value,
+    )
     if (!range) {
-      error.value = 'errors.shiftRange'
+      setShiftRangeError()
       return null
     }
 
@@ -186,9 +216,13 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const existing = currentWeekShifts.value.find((shift) => shift.id === input.id)
     if (!existing) return null
 
-    const range = normalizeGridRange(input.startMinute, input.endMinute)
+    const range = normalizeGridRange(
+      input.startMinute,
+      input.endMinute,
+      schedulingWindow.value,
+    )
     if (!range) {
-      error.value = 'errors.shiftRange'
+      setShiftRangeError()
       return null
     }
 
@@ -218,7 +252,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const end = patch.end ?? formatMinutesToHhmm(existing.endMinute)
     const range = toShiftMinutes(start, end)
     if (!range) {
-      error.value = 'errors.shiftTimes'
+      setError('errors.shiftTimes')
       return
     }
 

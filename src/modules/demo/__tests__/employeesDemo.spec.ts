@@ -15,9 +15,11 @@ const knownTargets = [
   'employee-contract-group',
   'employee-hours-input',
   'employee-start-date',
+  'employee-comment-input',
   'submit',
   'details-emp-mock-02',
   'details-duty',
+  'details-comment',
   'close-details',
   'holidays-emp-mock-02',
   'week-20',
@@ -90,6 +92,8 @@ describe('employeesDemo scenario', () => {
     expect(actions).toContain('click')
     expect(targets).toContain('employee-search')
     expect(targets).toContain('add-employee')
+    expect(targets).toContain('employee-comment-input')
+    expect(targets).toContain('details-comment')
     expect(targets).toContain('edit-emp-mock-03')
     expect(targets).toContain('deactivate-emp-mock-02')
     expect(targets).toContain('reactivate-emp-mock-02')

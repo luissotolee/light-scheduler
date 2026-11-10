@@ -3,7 +3,7 @@ import { DOMWrapper, enableAutoUnmount, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import EmployeeDetailsDialog from '@/modules/employees/components/EmployeeDetailsDialog.vue'
+import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import type { TeamMember } from '@/types'
 
 enableAutoUnmount(afterEach)

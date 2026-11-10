@@ -77,4 +77,11 @@ async function handleSelect(scenarioId: string): Promise<void> {
   cursor: not-allowed;
   opacity: 0.55;
 }
+
+@media screen and (max-height: 899px) {
+  .demo-mode-button {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
 </style>

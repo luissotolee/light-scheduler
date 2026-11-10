@@ -1,26 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import { AVAILABLE_LOCALES } from '@/shared/i18n/types'
+import { isLocale } from '@/shared/i18n/types'
 import type { Locale } from '@/shared/i18n/types'
+import { readUserSettings, writeUserSettingsLocale } from '@/shared/utils/userSettings'
 
-const STORAGE_KEY = 'light-scheduler.locale'
-
-export const LOCALE_STORAGE_KEY = STORAGE_KEY
-
-export function isLocale(value: unknown): value is Locale {
-  return (
-    typeof value === 'string' && (AVAILABLE_LOCALES as readonly string[]).includes(value)
-  )
-}
+export { isLocale }
 
 export function readInitialLocale(): Locale {
-  try {
-    if (typeof localStorage === 'undefined') return 'en'
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return isLocale(stored) ? stored : 'en'
-  } catch {
-    return 'en'
-  }
+  return readUserSettings().locale ?? 'en'
 }
 
 export const useLocaleStore = defineStore('locale', () => {
@@ -39,13 +26,7 @@ export const useLocaleStore = defineStore('locale', () => {
   function setLocale(next: Locale): void {
     if (!isLocale(next)) return
     locale.value = next
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, next)
-      }
-    } catch {
-      // Persistence is best effort; the in-memory locale still changes.
-    }
+    writeUserSettingsLocale(next)
   }
 
   return { locale, setLocale }

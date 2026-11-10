@@ -280,7 +280,7 @@ describe('EmployeeFormDialog', () => {
     await dialogBody().find('form').trigger('submit')
 
     expect(dialogBody().find('[data-test="holidays-error"]').text()).toBe(
-      'At most 6 holiday weeks are allowed',
+      'At most 6 holiday weeks per year are allowed',
     )
     expect(wrapper.emitted('submit')).toBeUndefined()
   })

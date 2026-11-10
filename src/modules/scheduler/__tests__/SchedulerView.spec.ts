@@ -7,6 +7,7 @@ import Tooltip from 'primevue/tooltip'
 import SchedulerView from '@/modules/scheduler/views/SchedulerView.vue'
 import ShiftGrid from '@/modules/scheduler/components/ShiftGrid.vue'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { Shift, TeamMember } from '@/types'
@@ -121,6 +122,45 @@ describe('SchedulerView', () => {
     expect(restart.attributes('aria-label')).toBe('Clear all')
     expect(restart.text()).toBe('')
     expect(restart.find('.pi-trash').exists()).toBe(true)
+  })
+
+  it('groups a settings button before clear all and opens the settings dialog', async () => {
+    const wrapper = mountView()
+    const actions = wrapper.find('.scheduler__actions')
+    const settings = actions.find('[data-test="scheduler-settings"]')
+    const restart = actions.find('[data-test="restart-week"]')
+
+    expect(settings.element.tagName).toBe('BUTTON')
+    expect(settings.attributes('aria-label')).toBe('Schedule settings')
+    expect(settings.find('.pi-cog').exists()).toBe(true)
+    expect(actions.element.firstElementChild).toBe(settings.element)
+    expect(actions.element.lastElementChild).toBe(restart.element)
+    expect(wrapper.find('[data-test="scheduler-settings-form"]').exists()).toBe(false)
+
+    await settings.trigger('click')
+
+    expect(wrapper.find('[data-test="scheduler-settings-form"]').exists()).toBe(true)
+  })
+
+  it('regenerates the grid minute cells when settings change', async () => {
+    const settingsStore = useSchedulerSettingsStore()
+    const wrapper = mountView()
+    const minuteCells = () =>
+      wrapper.findAll('.shift-grid__time-row:last-child .shift-grid__time-cell')
+
+    expect(minuteCells()).toHaveLength(32)
+
+    settingsStore.applySettings({ startTime: '09:00', endTime: '01:00', slotMinutes: 15 })
+    await nextTick()
+    expect(minuteCells()).toHaveLength(64)
+
+    settingsStore.applySettings({ startTime: '09:00', endTime: '12:00', slotMinutes: 30 })
+    await nextTick()
+    expect(minuteCells()).toHaveLength(6)
+
+    settingsStore.applySettings({ startTime: '09:00', endTime: '12:00', slotMinutes: 15 })
+    await nextTick()
+    expect(minuteCells()).toHaveLength(12)
   })
 
   it('combines selected day and restart button in the day header', () => {
@@ -435,6 +475,9 @@ describe('SchedulerView', () => {
     )
     expect(wrapper.find('[data-test="restart-week"]').attributes('aria-label')).toBe(
       'Borrar todo',
+    )
+    expect(wrapper.find('[data-test="scheduler-settings"]').attributes('aria-label')).toBe(
+      'Configuración del horario',
     )
     expect(wrapper.find('.weekly-hours__title').text()).toBe('Horas semanales')
   })

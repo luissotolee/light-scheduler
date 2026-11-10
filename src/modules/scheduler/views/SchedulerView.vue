@@ -47,6 +47,18 @@
         </h2>
         <div class="scheduler__actions">
           <Button
+            v-tooltip.top="t('scheduler.settings')"
+            type="button"
+            icon="pi pi-cog"
+            class="scheduler__settings"
+            size="small"
+            text
+            rounded
+            :aria-label="t('scheduler.settings')"
+            data-test="scheduler-settings"
+            @click="settingsDialogVisible = true"
+          />
+          <Button
             v-tooltip.top="t('scheduler.clearAll')"
             type="button"
             icon="pi pi-trash"
@@ -91,6 +103,13 @@
       @update:visible="handleResetVisibility"
       @confirm="confirmReset"
     />
+
+    <SchedulerSettingsDialog
+      :visible="settingsDialogVisible"
+      :settings="settings"
+      @update:visible="settingsDialogVisible = $event"
+      @save="handleSaveSettings"
+    />
   </section>
 </template>
 
@@ -102,9 +121,15 @@ import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import WeekdayTabs from '@/modules/scheduler/components/WeekdayTabs.vue'
 import ShiftGrid from '@/modules/scheduler/components/ShiftGrid.vue'
+import SchedulerSettingsDialog from '@/modules/scheduler/components/SchedulerSettingsDialog.vue'
 import WeeklyHoursTable from '@/modules/scheduler/components/WeeklyHoursTable.vue'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
-import type { ShiftRangeInput, ShiftResizeInput } from '@/modules/scheduler/types'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
+import type {
+  SchedulerSettings,
+  ShiftRangeInput,
+  ShiftResizeInput,
+} from '@/modules/scheduler/types'
 import { useI18n } from '@/shared/i18n'
 import {
   WEEKDAY_ORDER,
@@ -115,6 +140,7 @@ import {
 import { buildDaySlots } from '@/shared/utils/shifts'
 
 const store = useSchedulerStore()
+const settingsStore = useSchedulerSettingsStore()
 const {
   currentWeekKey,
   dayRows,
@@ -123,6 +149,7 @@ const {
   selectedWeekdayDate,
   weeklyHoursGroups,
 } = storeToRefs(store)
+const { settings, schedulingWindow } = storeToRefs(settingsStore)
 const { t, locale } = useI18n()
 
 const weekdayOptions = computed(() =>
@@ -134,9 +161,18 @@ const weekdayOptions = computed(() =>
 )
 const selectedDayLabel = computed(() => formatFullDate(selectedWeekdayDate.value, locale.value))
 const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value, locale.value))
-const errorMessage = computed(() => (error.value ? t(error.value) : ''))
-const slots = buildDaySlots()
+const errorMessage = computed(() =>
+  error.value ? t(error.value.key, error.value.params) : '',
+)
+const slots = computed(() => buildDaySlots(schedulingWindow.value))
 const resetDialogVisible = ref(false)
+const settingsDialogVisible = ref(false)
+
+function handleSaveSettings(next: SchedulerSettings): void {
+  if (settingsStore.applySettings(next)) {
+    settingsDialogVisible.value = false
+  }
+}
 
 function openRestartConfirm(): void {
   resetDialogVisible.value = true
@@ -227,7 +263,25 @@ function handleRemove(id: string): void {
 .scheduler__actions {
   grid-column: 3;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 0.25rem;
+}
+
+.scheduler__settings.p-button {
+  color: var(--color-accent);
+}
+
+.scheduler__settings.p-button:not(:disabled):hover,
+.scheduler__settings.p-button:not(:disabled):active {
+  background: var(--color-surface-alt);
+  color: var(--color-accent);
+}
+
+.scheduler__settings.p-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .scheduler__layout {
@@ -240,5 +294,27 @@ function handleRemove(id: string): void {
 .scheduler__layout > :last-child {
   flex: 1;
   min-width: 0;
+}
+
+@media screen and (max-height: 899px) {
+  .scheduler {
+    gap: 0.125rem;
+  }
+
+  .scheduler__day-header {
+    min-height: 1.75rem;
+  }
+
+  .scheduler__selected-day {
+    font-size: 0.85rem;
+  }
+
+  .scheduler__layout {
+    gap: 0.75rem;
+  }
+
+  .scheduler__error {
+    padding: 0.5rem 0.75rem;
+  }
 }
 </style>

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useArchiveStore } from '@/modules/archive/stores/archive'
+import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import {
@@ -9,6 +10,7 @@ import {
   buildBackup,
   gunzipJson,
   gzipJson,
+  type BackupSettings,
 } from '@/shared/utils/archiveBackup'
 import { todayIsoDate } from '@/shared/utils/calendar'
 import type { TeamMember } from '@/types'
@@ -642,7 +644,7 @@ describe('archive store', () => {
   })
 
   describe('backup', () => {
-    async function makeBackupFile(): Promise<File> {
+    async function makeBackupFile(settings?: BackupSettings): Promise<File> {
       const backup = buildBackup(
         [ada, bo],
         {
@@ -660,6 +662,7 @@ describe('archive store', () => {
           '2026-11-02': [{ memberId: 'member-2', weekday: 'tuesday' }],
         },
         '2026-11-02',
+        settings,
       )
 
       return new File([await gzipJson(backup)], 'backup.json.gz', {
@@ -825,6 +828,71 @@ describe('archive store', () => {
       expect(store.status).toEqual({
         state: 'error',
         message: { kind: 'simple', code: 'archive.unsupportedVersion' },
+      })
+    })
+
+    it('exports the current locale and scheduler settings', async () => {
+      const workspace = useWorkspaceStore()
+      workspace.setMembers([ada])
+      useLocaleStore().setLocale('es')
+      useSchedulerSettingsStore().applySettings({
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
+      })
+      const store = useArchiveStore()
+
+      await store.exportBackup()
+
+      const backup = await gunzipJson(blobs[0])
+      expect(backup).toMatchObject({
+        settings: {
+          locale: 'es',
+          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+        },
+      })
+    })
+
+    it('applies user settings when restoring a backup', async () => {
+      const workspace = useWorkspaceStore()
+      workspace.setMembers([ada])
+      const store = useArchiveStore()
+
+      await store.prepareBackupImport(
+        await makeBackupFile({
+          locale: 'es',
+          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+        }),
+      )
+      store.confirmBackupImport()
+
+      expect(useLocaleStore().locale).toBe('es')
+      expect(useSchedulerSettingsStore().settings).toEqual({
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
+      })
+    })
+
+    it('leaves user settings unchanged when a backup has none', async () => {
+      const workspace = useWorkspaceStore()
+      workspace.setMembers([ada])
+      useLocaleStore().setLocale('es')
+      useSchedulerSettingsStore().applySettings({
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
+      })
+      const store = useArchiveStore()
+
+      await store.prepareBackupImport(await makeBackupFile())
+      store.confirmBackupImport()
+
+      expect(useLocaleStore().locale).toBe('es')
+      expect(useSchedulerSettingsStore().settings).toEqual({
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
       })
     })
   })

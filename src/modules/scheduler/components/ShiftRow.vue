@@ -66,6 +66,7 @@
         :shift="bar"
         :member-name="row.member.name"
         :duty="row.member.duty"
+        :limits="limits"
         :disabled="row.isOff"
         @resize="emit('resize', $event)"
         @remove="emit('remove', $event)"
@@ -78,12 +79,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { DaySlot, MinuteRange } from '@/shared/utils/shifts'
+import type { DaySlot, MinuteRange, SchedulingWindow } from '@/shared/utils/shifts'
 import {
-  DAY_END_MINUTE,
-  DAY_START_MINUTE,
   DEFAULT_SHIFT_MINUTES,
-  MIN_SHIFT_MINUTES,
   clampToDayWindow,
   snapToSlot,
 } from '@/shared/utils/shifts'
@@ -93,6 +91,7 @@ import {
   minuteToPercent,
   offsetXToMinute,
   rangeToPercentWidth,
+  windowFromSlots,
 } from '@/modules/scheduler/utils/grid'
 import ShiftBar from '@/modules/scheduler/components/ShiftBar.vue'
 import { useI18n } from '@/shared/i18n'
@@ -106,6 +105,8 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+
+const limits = computed<SchedulingWindow>(() => windowFromSlots(props.slots))
 
 const MAX_NAME_LENGTH = 20
 const displayName = computed(() => {
@@ -129,21 +130,21 @@ const toggleAriaLabel = computed(() =>
 const track = ref<HTMLElement | null>(null)
 const dragging = ref(false)
 const moved = ref(false)
-const anchorMinute = ref(DAY_START_MINUTE)
+const anchorMinute = ref(limits.value.startMinute)
 const draft = ref<MinuteRange | null>(null)
 
 const draftStyle = computed(() => {
   if (!draft.value) return {}
   return {
-    left: `${minuteToPercent(draft.value.startMinute)}%`,
-    width: `${rangeToPercentWidth(draft.value.startMinute, draft.value.endMinute)}%`,
+    left: `${minuteToPercent(draft.value.startMinute, limits.value)}%`,
+    width: `${rangeToPercentWidth(draft.value.startMinute, draft.value.endMinute, limits.value)}%`,
   }
 })
 
 function minuteAt(clientX: number): number | null {
   const rect = track.value?.getBoundingClientRect()
   if (!rect || !rect.width) return null
-  return offsetXToMinute(clientX - rect.left, rect.width)
+  return offsetXToMinute(clientX - rect.left, rect.width, limits.value)
 }
 
 function capturePointer(event: PointerEvent): void {
@@ -167,14 +168,14 @@ function startSelection(event: PointerEvent): void {
   const minute = minuteAt(event.clientX)
   if (minute === null) return
 
-  const anchor = clampToDayWindow(snapToSlot(minute))
-  if (DAY_END_MINUTE - anchor < MIN_SHIFT_MINUTES) return
+  const anchor = clampToDayWindow(snapToSlot(minute, limits.value.slotMinutes), limits.value)
+  if (limits.value.endMinute - anchor < limits.value.slotMinutes) return
 
   anchorMinute.value = anchor
   moved.value = false
   draft.value = {
     startMinute: anchor,
-    endMinute: Math.min(anchor + DEFAULT_SHIFT_MINUTES, DAY_END_MINUTE),
+    endMinute: Math.min(anchor + DEFAULT_SHIFT_MINUTES, limits.value.endMinute),
   }
   dragging.value = true
   capturePointer(event)
@@ -186,7 +187,7 @@ function updateSelection(event: PointerEvent): void {
   const minute = minuteAt(event.clientX)
   if (minute === null) return
 
-  const current = clampToDayWindow(snapToSlot(minute))
+  const current = clampToDayWindow(snapToSlot(minute, limits.value.slotMinutes), limits.value)
   if (current !== anchorMinute.value) moved.value = true
   if (!moved.value) return
 
@@ -194,11 +195,14 @@ function updateSelection(event: PointerEvent): void {
   const endMinute = Math.max(anchorMinute.value, current)
 
   draft.value =
-    endMinute - startMinute >= MIN_SHIFT_MINUTES
+    endMinute - startMinute >= limits.value.slotMinutes
       ? { startMinute, endMinute }
       : {
           startMinute: anchorMinute.value,
-          endMinute: Math.min(anchorMinute.value + MIN_SHIFT_MINUTES, DAY_END_MINUTE),
+          endMinute: Math.min(
+            anchorMinute.value + limits.value.slotMinutes,
+            limits.value.endMinute,
+          ),
         }
 }
 
@@ -212,14 +216,14 @@ function finishSelection(event: PointerEvent): void {
     ? draft.value
     : {
         startMinute: anchor,
-        endMinute: Math.min(anchor + DEFAULT_SHIFT_MINUTES, DAY_END_MINUTE),
+        endMinute: Math.min(anchor + DEFAULT_SHIFT_MINUTES, limits.value.endMinute),
       }
 
   dragging.value = false
   moved.value = false
   draft.value = null
 
-  if (!range || range.endMinute - range.startMinute < MIN_SHIFT_MINUTES) return
+  if (!range || range.endMinute - range.startMinute < limits.value.slotMinutes) return
   emit('create', { memberId: props.row.member.id, ...range })
 }
 
@@ -234,9 +238,9 @@ function handleKeydown(event: KeyboardEvent): void {
   if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return
 
   event.preventDefault()
-  const startMinute = firstFreeStartMinute(props.row.bars)
-  const endMinute = Math.min(startMinute + DEFAULT_SHIFT_MINUTES, DAY_END_MINUTE)
-  if (endMinute - startMinute < MIN_SHIFT_MINUTES) return
+  const startMinute = firstFreeStartMinute(props.row.bars, limits.value)
+  const endMinute = Math.min(startMinute + DEFAULT_SHIFT_MINUTES, limits.value.endMinute)
+  if (endMinute - startMinute < limits.value.slotMinutes) return
 
   emit('create', {
     memberId: props.row.member.id,
@@ -361,6 +365,7 @@ function handleKeydown(event: KeyboardEvent): void {
   background: var(--color-surface);
   cursor: crosshair;
   touch-action: none;
+  overflow: hidden;
 }
 
 .shift-row__track:focus-visible {
@@ -400,5 +405,22 @@ function handleKeydown(event: KeyboardEvent): void {
   border-radius: var(--radius-sm);
   background: var(--color-shift-bar);
   pointer-events: none;
+}
+
+@media screen and (max-height: 899px) {
+  .shift-row__name {
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+  }
+
+  .shift-row__hours {
+    padding: 0 0.3rem;
+    font-size: 0.72rem;
+  }
+
+  .shift-row__day-off-chip {
+    padding: 0.02rem 0.3rem;
+    font-size: 0.62rem;
+  }
 }
 </style>

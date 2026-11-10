@@ -2,9 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import { isLocale, readInitialLocale, useLocaleStore } from '@/shared/stores/locale'
+import { LEGACY_LOCALE_STORAGE_KEY, USER_SETTINGS_STORAGE_KEY } from '@/shared/utils/userSettings'
 import type { Locale } from '@/shared/i18n/types'
 
-const STORAGE_KEY = 'light-scheduler.locale'
+function storedLocale(): unknown {
+  const raw = localStorage.getItem(USER_SETTINGS_STORAGE_KEY)
+  return raw === null ? null : JSON.parse(raw).locale
+}
 
 describe('locale store', () => {
   beforeEach(() => {
@@ -31,19 +35,26 @@ describe('locale store', () => {
     await nextTick()
 
     expect(store.locale).toBe('es')
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('es')
+    expect(storedLocale()).toBe('es')
     expect(document.documentElement.lang).toBe('es')
   })
 
   it('reads a stored supported locale on creation', () => {
-    localStorage.setItem(STORAGE_KEY, 'es')
+    localStorage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify({ version: 1, locale: 'es' }))
+    setActivePinia(createPinia())
+
+    expect(useLocaleStore().locale).toBe('es')
+  })
+
+  it('reads the legacy locale key on creation', () => {
+    localStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, 'es')
     setActivePinia(createPinia())
 
     expect(useLocaleStore().locale).toBe('es')
   })
 
   it('rejects invalid stored values and falls back to English', () => {
-    localStorage.setItem(STORAGE_KEY, 'fr')
+    localStorage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify({ version: 1, locale: 'fr' }))
     setActivePinia(createPinia())
 
     expect(useLocaleStore().locale).toBe('en')
@@ -56,7 +67,7 @@ describe('locale store', () => {
     store.setLocale('fr' as Locale)
 
     expect(store.locale).toBe('en')
-    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+    expect(localStorage.getItem(USER_SETTINGS_STORAGE_KEY)).toBeNull()
   })
 
   it('falls back to English when reading storage throws', () => {

@@ -76,6 +76,7 @@ const errorMessage = computed(() =>
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.65rem 0.9rem;
+  margin-bottom: var(--space-stack);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
   background: var(--color-surface-alt);
@@ -152,6 +153,27 @@ const errorMessage = computed(() =>
 .demo-banner__exit:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+@media screen and (max-height: 899px) {
+  .demo-banner {
+    gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+  }
+
+  .demo-banner__message {
+    min-width: 10rem;
+    font-size: 0.8rem;
+  }
+
+  .demo-banner__badge {
+    font-size: 0.62rem;
+  }
+
+  .demo-banner__exit {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.72rem;
+  }
 }
 
 @media (max-width: 600px) {

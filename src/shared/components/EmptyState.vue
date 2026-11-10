@@ -21,7 +21,7 @@ defineProps<{
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 2.5rem 1.5rem;
+  padding: clamp(1.25rem, 4vh, 2.5rem) 1.5rem;
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -30,7 +30,7 @@ defineProps<{
 
 .empty-state__title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--font-size-section-title);
 }
 
 .empty-state__description {

@@ -353,6 +353,15 @@ function handleSubmit(): void {
   min-width: min(32rem, 90vw);
 }
 
+.employee-form-dialog {
+  width: min(34rem, 92vw);
+}
+
+.employee-form-dialog :deep(.p-dialog-content) {
+  max-height: calc(100dvh - 10rem);
+  overflow-y: auto;
+}
+
 .employee-form__field {
   display: flex;
   flex-direction: column;
@@ -402,6 +411,12 @@ function handleSubmit(): void {
 @media (max-width: 40rem) {
   .employee-form {
     grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-height: 899px) {
+  .employee-form {
+    gap: 0.75rem;
   }
 }
 </style>
