@@ -243,6 +243,18 @@ describe('EmployeeTable', () => {
     expect(columns[2].props('sortField')).toBe('contractSortRank')
   })
 
+  it('exposes stable sort header hooks for the guided demo', async () => {
+    const wrapper = mountSortingTable()
+
+    expect(wrapper.find('[data-test="sort-name"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="sort-duty"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="sort-contract"]').exists()).toBe(true)
+
+    await wrapper.find('[data-test="sort-duty"]').trigger('click')
+    await nextTick()
+    expect(renderedNames(wrapper)).toEqual(['Bea', 'Abel', 'Cara'])
+  })
+
   it('sorts by name ascending by default', () => {
     const wrapper = mountSortingTable()
 

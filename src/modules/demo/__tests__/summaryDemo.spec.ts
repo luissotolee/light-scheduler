@@ -8,7 +8,12 @@ const knownTargets = [
   'summary-previous-week',
   'summary-next-week',
   'summary-this-week',
+  'week-1',
   'summary-table',
+  'summary-vacation',
+  'summary-details-emp-mock-01',
+  'details-duty',
+  'close-details',
   'print-summary',
   'save-summary-pdf',
 ]

@@ -119,6 +119,29 @@ describe('EmployeesView', () => {
     expect(wrapper.text()).toContain(en['employees.count'].replace('{active}', '1').replace('{total}', '2'))
   })
 
+  it('toggles the active-only filter from the demo label target', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    const store = useEmployeesStore()
+    const wrapper = mount(EmployeesView, {
+      attachTo: document.body,
+      global: {
+        plugins: [pinia, PrimeVue],
+        stubs: { teleport: true },
+        directives: { tooltip: Tooltip },
+      },
+    })
+
+    const toggle = wrapper.find('[data-test="hide-inactive"]')
+    ;(toggle.element as HTMLElement).click()
+    await nextTick()
+
+    expect(store.hideInactive).toBe(true)
+    expect(wrapper.findAll('.employee-table__name')).toHaveLength(1)
+    expect(wrapper.text()).not.toContain('Bo')
+    wrapper.unmount()
+  })
+
   it('restores deactivated employees when the switch is turned off', async () => {
     const workspace = useWorkspaceStore()
     workspace.setMembers([ada, bo])

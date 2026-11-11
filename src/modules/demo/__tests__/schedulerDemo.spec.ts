@@ -7,11 +7,14 @@ import { es } from '@/shared/i18n/messages/es'
 const knownTargets = [
   'previous-week',
   'next-week',
+  'scheduler-week-label',
+  'week-1',
   'weekday-tab-tuesday',
   'shift-grid',
   'shift-track',
   'shift-bar',
   'resize-end',
+  'shift-row-emp-mock-05',
   'shift-row-name-toggle',
   'day-off-count',
   'weekly-hours',
@@ -102,16 +105,18 @@ describe('demoScenarios registry', () => {
     expect(demoScenarios['employees-demo']).toBeDefined()
     expect(demoScenarios['scheduler-demo']).toBeDefined()
     expect(demoScenarios['summary-demo']).toBeDefined()
+    expect(demoScenarios['archive-demo']).toBeDefined()
     expect(getDemoScenario('scheduler-demo')).toBe(schedulerDemoScenario)
   })
 
   it('listDemoScenarios returns all scenarios', () => {
     const list = listDemoScenarios()
-    expect(list).toHaveLength(3)
+    expect(list).toHaveLength(4)
     expect(list.map((scenario) => scenario.id)).toEqual([
       'employees-demo',
       'scheduler-demo',
       'summary-demo',
+      'archive-demo',
     ])
   })
 })

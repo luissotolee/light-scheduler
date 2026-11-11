@@ -10,6 +10,9 @@
     class="employee-table"
   >
     <Column field="name" :header="t('employees.column.name')" sortable>
+      <template #header>
+        <span data-test="sort-name">{{ t('employees.column.name') }}</span>
+      </template>
       <template #body="{ data }">
         <button
           type="button"
@@ -37,6 +40,9 @@
       :header="t('employees.column.duty')"
       sortable
     >
+      <template #header>
+        <span data-test="sort-duty">{{ t('employees.column.duty') }}</span>
+      </template>
       <template #body="{ data }">
         <Chip
           :label="dutyLabel(data.duty)"
@@ -51,6 +57,9 @@
       :header="t('employees.column.contract')"
       sortable
     >
+      <template #header>
+        <span data-test="sort-contract">{{ t('employees.column.contract') }}</span>
+      </template>
       <template #body="{ data }">
         <Chip
           :label="contractLabel(data.contract)"

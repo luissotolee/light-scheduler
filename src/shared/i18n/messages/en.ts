@@ -305,6 +305,9 @@ export const en = {
   'demo.picker.description':
     'Choose a page to explore with sample data. Your saved data is restored when you exit the demo.',
   'demo.picker.optionsAria': 'Demo pages',
+  'demo.picker.archive': 'Archive',
+  'demo.picker.archiveDescription':
+    'Export a compressed backup of every employee, shift, day off and setting, and restore from a backup file.',
   'demo.picker.employees': 'Employees',
   'demo.picker.employeesDescription':
     'Search, add, edit, deactivate, reactivate and remove team members, and manage holiday weeks.',
@@ -318,6 +321,9 @@ export const en = {
   'demo.scenario.employees.search': 'Type a name in the search box to filter the list instantly.',
   'demo.scenario.employees.searchTyping': 'The list now shows only matching employees.',
   'demo.scenario.employees.searchClear': 'Clear the search to see the full team again.',
+  'demo.scenario.employees.sortDuty':
+    'Click a column header to sort the list, for example by role.',
+  'demo.scenario.employees.sortName': 'Click the name header to sort by name again.',
   'demo.scenario.employees.add': 'Select Add employee to create a new team member.',
   'demo.scenario.employees.formIntro': 'This form collects the details used by the scheduler.',
   'demo.scenario.employees.formName': "Enter the employee's full name. This field is required.",
@@ -357,6 +363,12 @@ export const en = {
   'demo.scenario.employees.confirmDeactivate':
     'Confirm to deactivate. The employee stays in the list but becomes inactive.',
   'demo.scenario.employees.deactivated': 'Inactive employees are shown with their end date.',
+  'demo.scenario.employees.hideInactive':
+    'Turn on Active only to hide deactivated employees from the list.',
+  'demo.scenario.employees.hideInactiveOn':
+    'The list now shows only active employees, and the counter reflects the filter.',
+  'demo.scenario.employees.hideInactiveOff':
+    'Turn it off to see every employee again before reactivating one.',
   'demo.scenario.employees.reactivate':
     'Use the reactivate action to make the employee active again.',
   'demo.scenario.employees.remove': 'Use the delete action to remove an employee permanently.',
@@ -380,6 +392,8 @@ export const en = {
   'demo.scenario.scheduler.dayOff': 'Select the member name to mark a day off.',
   'demo.scenario.scheduler.dayOffMarked': 'The row is disabled and the days-off counter updates.',
   'demo.scenario.scheduler.dayOffRestored': 'Select the name again to restore the day.',
+  'demo.scenario.scheduler.holiday':
+    'Members on holiday appear disabled and are excluded from the weekly hours table.',
   'demo.scenario.scheduler.hours':
     'The weekly hours table compares scheduled hours with contract hours.',
   'demo.scenario.scheduler.settingsOpen':
@@ -395,17 +409,41 @@ export const en = {
   'demo.scenario.scheduler.confirmRestart':
     'Confirm to clear the week. This only affects the demo data.',
   'demo.scenario.scheduler.restarted': 'The current week is now empty.',
+  'demo.scenario.scheduler.weekPicker':
+    'Open the week picker to jump directly to any week of the year.',
+  'demo.scenario.scheduler.weekPickerDialog':
+    'Pick any week from the calendar. The current week is highlighted.',
+  'demo.scenario.scheduler.weekPickerSelected': 'The scheduler now shows the week you picked.',
   'demo.scenario.scheduler.finish': 'That covers the Scheduler page. Exit to restore your data.',
   'demo.scenario.summary.intro': 'The summary shows the week at a glance.',
   'demo.scenario.summary.week': 'The current week is shown here.',
   'demo.scenario.summary.weekPrevious': 'Move to the previous week.',
   'demo.scenario.summary.weekNext': 'Move to the next week.',
   'demo.scenario.summary.thisWeek': 'Jump back to the current week.',
+  'demo.scenario.summary.weekPicker': 'Open the week picker to jump to any week.',
+  'demo.scenario.summary.weekPickerDialog':
+    'Pick a week from the calendar. The summary updates immediately.',
+  'demo.scenario.summary.weekPickerSelected': 'The summary now shows the selected week.',
+  'demo.scenario.summary.backToThisWeek': 'Use This week to return to the current week.',
   'demo.scenario.summary.table':
     'Each row is a team member and each column is a day, with shifts and holidays in one place.',
+  'demo.scenario.summary.vacation':
+    'Employees on holiday for the whole week appear as a single vacation row.',
+  'demo.scenario.summary.details':
+    'Select a name to open the employee details from the summary.',
+  'demo.scenario.summary.detailsDialog':
+    'The same employee details dialog opens here, with contact and holiday information.',
+  'demo.scenario.summary.detailsClose': 'Close it to return to the summary.',
   'demo.scenario.summary.print': 'Print the summary using your browser print dialog.',
   'demo.scenario.summary.pdf': 'Save the summary as a PDF file.',
   'demo.scenario.summary.finish': 'That covers the Summary page. Exit to restore your data.',
+  'demo.scenario.archive.intro':
+    'The archive page saves and restores your entire workspace as a single compressed backup file.',
+  'demo.scenario.archive.export':
+    'Download a .json.gz backup with every employee, schedule, day off and setting.',
+  'demo.scenario.archive.import':
+    'Restore from a backup file here. You will be asked to confirm before your data is replaced.',
+  'demo.scenario.archive.finish': 'That covers the Archive page. Exit to restore your data.',
 } as const
 
 export type MessageKey = keyof typeof en

@@ -27,9 +27,10 @@ src/modules/demo/
 │   └── demoWorkspace.ts        # buildDemoWorkspace(now?) → PersistedWorkspace
 ├── scenarios/
 │   ├── index.ts                # demoScenarios registry, getDemoScenario, listDemoScenarios
-│   ├── employeesDemo.ts        # employees-demo: search, add, edit, holidays, deactivate/reactivate, remove
-│   ├── schedulerDemo.ts        # scheduler-demo: weeks, weekdays, shift CRUD, day off, weekly hours, restart
-│   └── summaryDemo.ts          # summary-demo: week navigation, summary table, print, PDF
+│   ├── employeesDemo.ts        # employees-demo: search, sort, add, edit, holidays, active filter, deactivate/reactivate, remove
+│   ├── schedulerDemo.ts        # scheduler-demo: weeks, week picker, weekdays, shift CRUD, day off, holidays, weekly hours, restart
+│   ├── summaryDemo.ts          # summary-demo: week navigation, week picker, summary table, details, print, PDF
+│   └── archiveDemo.ts          # archive-demo: backup export and restore entry points
 ├── utils/
 │   ├── storageSnapshot.ts      # captureAppStorage, restoreAppStorage, writeDemoBackup, readDemoBackup, clearDemoBackup, recoverInterruptedDemo
 │   ├── dom.ts                  # waitForTarget, resolveTarget, getRectCenter, clickElement, pointerClickElement, pressKey, fillInput, prefersReducedMotion
@@ -40,7 +41,7 @@ src/modules/demo/
 │   └── demo.ts                 # Pinia store: status, scenarioId, stepIndex, errorKey, cursor, ring, showRestoredFlag
 ├── components/
 │   ├── DemoModeButton.vue      # Shell button that opens the scenario picker
-│   ├── DemoPickerDialog.vue    # Modal with the Employees / Scheduler / Summary scenarios
+│   ├── DemoPickerDialog.vue    # Modal with the Employees / Scheduler / Summary / Archive scenarios
 │   ├── DemoBanner.vue          # Non-blocking banner shown during demo
 │   └── DemoOverlay.vue         # Fixed overlay: cursor, ring, narration card, controls (Prev/Next/Pause/Resume/Exit)
 ├── overlay/
@@ -125,7 +126,7 @@ interface DemoScenario {
 ### Example: Add a step to highlight the backup download button
 
 ```ts
-// In a scenario file (Archive is not one of the v1 scenarios yet)
+// In archiveDemo.ts (the archive scenario highlights the backup controls)
 {
   id: 'backup-export-highlight',
   action: 'spotlight',
@@ -227,7 +228,7 @@ npm run build
 - `dom.spec.ts` — target resolution, waitForTarget, click/pointerClick/press/fill (including nested inputs), reduced motion.
 - `DemoModeButton.spec.ts` — picker opens, each option starts its scenario, cancel does not start.
 - `DemoPickerDialog.spec.ts` (covered via `DemoModeButton.spec.ts`) — three translated options.
-- `employeesDemo.spec.ts` / `schedulerDemo.spec.ts` / `summaryDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
+- `employeesDemo.spec.ts` / `schedulerDemo.spec.ts` / `summaryDemo.spec.ts` / `archiveDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
 - `DemoOverlay.spec.ts` — conditional render, narration translation, progress, controls, keyboard Exit, restored toast, a11y attrs.
 
 ### Manual verification

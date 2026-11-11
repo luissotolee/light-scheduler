@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
+import { getIsoWeek } from '@/shared/utils/calendar'
 import { parsePersistedWorkspace, WORKSPACE_SCHEMA_VERSION } from '@/shared/utils/persistence'
 
 describe('demoWorkspace', () => {
@@ -79,5 +80,17 @@ describe('demoWorkspace', () => {
     const workspace2 = buildDemoWorkspace(new Date('2026-11-16'))
 
     expect(workspace1.members.map((m) => m.id)).toEqual(workspace2.members.map((m) => m.id))
+  })
+
+  it('includes a holiday for a sample member in the current week', () => {
+    const now = new Date('2026-11-09T12:00:00')
+    const workspace = buildDemoWorkspace(now)
+    const memberId = 'emp-mock-05'
+
+    const member = workspace.members.find((item) => item.id === memberId)
+    expect(member?.holidays).toContainEqual(getIsoWeek(now))
+    expect(
+      workspace.schedules[workspace.currentWeekKey].some((shift) => shift.memberId === memberId),
+    ).toBe(false)
   })
 })
