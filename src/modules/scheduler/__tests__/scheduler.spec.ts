@@ -488,6 +488,7 @@ describe('scheduler weekday grid', () => {
       startTime: '09:00',
       endTime: '01:00',
       slotMinutes: 15,
+      showHourlyHeadcount: false,
     })
 
     const shift = store.addShiftRange({ memberId: 'ada', startMinute: 615, endMinute: 795 })
@@ -501,6 +502,7 @@ describe('scheduler weekday grid', () => {
       startTime: '09:00',
       endTime: '01:00',
       slotMinutes: 15,
+      showHourlyHeadcount: false,
     })
 
     expect(store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 547 })).toBeNull()
@@ -515,6 +517,7 @@ describe('scheduler weekday grid', () => {
       startTime: '09:00',
       endTime: '12:00',
       slotMinutes: 30,
+      showHourlyHeadcount: false,
     })
 
     expect(
@@ -526,6 +529,178 @@ describe('scheduler weekday grid', () => {
       key: 'errors.shiftRange',
       params: { min: 30, start: '09:00', end: '12:00' },
     })
+  })
+})
+
+describe('scheduler move shift to another member', () => {
+  let store: ReturnType<typeof useSchedulerStore>
+  let workspace: ReturnType<typeof useWorkspaceStore>
+
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+    store = useSchedulerStore()
+    workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([
+      makeMember({ id: 'ada', name: 'Ada', duty: 'manager' }),
+      makeMember({ id: 'bo', name: 'Bo', duty: 'employee' }),
+    ])
+  })
+
+  it('moves a shift to another employee and keeps the same id and duration', () => {
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })!
+
+    const moved = store.moveShiftToMember({
+      id: shift.id,
+      memberId: 'bo',
+      startMinute: 600,
+      endMinute: 780,
+    })
+
+    expect(moved).toMatchObject({
+      id: shift.id,
+      memberId: 'bo',
+      startMinute: 600,
+      endMinute: 780,
+    })
+    expect(store.currentWeekShifts).toEqual([moved])
+    expect(store.dayRows.find((row) => row.member.id === 'ada')?.bars).toEqual([])
+    expect(store.dayRows.find((row) => row.member.id === 'bo')?.bars).toEqual([moved])
+    expect(store.error).toBeNull()
+  })
+
+  it('merges into an overlapping shift on the destination row', () => {
+    const source = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 })!
+    const destination = store.addShiftRange({
+      memberId: 'bo',
+      startMinute: 570,
+      endMinute: 720,
+    })!
+
+    const moved = store.moveShiftToMember({
+      id: source.id,
+      memberId: 'bo',
+      startMinute: 570,
+      endMinute: 690,
+    })
+
+    expect(moved).toMatchObject({ id: source.id, memberId: 'bo', startMinute: 570, endMinute: 720 })
+    expect(store.currentWeekShifts).toHaveLength(1)
+    expect(store.currentWeekShifts[0].id).toBe(source.id)
+    expect(store.currentWeekShifts.some((shift) => shift.id === destination.id)).toBe(false)
+  })
+
+  it('keeps the destination row at the shift cap by relocating the nearest shift', () => {
+    const first = store.addShiftRange({ memberId: 'bo', startMinute: 540, endMinute: 600 })!
+    store.addShiftRange({ memberId: 'bo', startMinute: 720, endMinute: 780 })
+    const source = store.addShiftRange({ memberId: 'ada', startMinute: 900, endMinute: 960 })!
+
+    const moved = store.moveShiftToMember({
+      id: source.id,
+      memberId: 'bo',
+      startMinute: 600,
+      endMinute: 660,
+    })
+
+    expect(moved).toMatchObject({
+      id: first.id,
+      memberId: 'bo',
+      startMinute: 600,
+      endMinute: 660,
+    })
+    expect(store.currentWeekShifts.filter((shift) => shift.memberId === 'bo')).toHaveLength(2)
+    expect(store.currentWeekShifts.some((shift) => shift.id === source.id)).toBe(false)
+  })
+
+  it('rejects a destination on a day off and leaves the shift in place', () => {
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })!
+    store.toggleDayOff('bo')
+
+    expect(
+      store.moveShiftToMember({
+        id: shift.id,
+        memberId: 'bo',
+        startMinute: 540,
+        endMinute: 720,
+      }),
+    ).toBeNull()
+    expect(store.currentWeekShifts).toEqual([shift])
+  })
+
+  it('rejects a destination on holiday and leaves the shift in place', () => {
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })!
+    workspace.setMembers([
+      makeMember({ id: 'ada', name: 'Ada', duty: 'manager' }),
+      makeMember({ id: 'bo', name: 'Bo', duty: 'employee', holidays: [getIsoWeek(new Date(2026, 10, 2))] }),
+    ])
+
+    expect(
+      store.moveShiftToMember({
+        id: shift.id,
+        memberId: 'bo',
+        startMinute: 540,
+        endMinute: 720,
+      }),
+    ).toBeNull()
+    expect(store.currentWeekShifts).toEqual([shift])
+  })
+
+  it('rejects an inactive or future-start destination', () => {
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })!
+    workspace.setMembers([
+      makeMember({ id: 'ada', name: 'Ada', duty: 'manager' }),
+      makeMember({ id: 'inactive', active: false }),
+      makeMember({ id: 'future', startDate: '2026-11-10' }),
+    ])
+
+    expect(
+      store.moveShiftToMember({ id: shift.id, memberId: 'inactive', startMinute: 540, endMinute: 720 }),
+    ).toBeNull()
+    expect(
+      store.moveShiftToMember({ id: shift.id, memberId: 'future', startMinute: 540, endMinute: 720 }),
+    ).toBeNull()
+    expect(store.currentWeekShifts).toEqual([shift])
+  })
+
+  it('rejects an invalid range and keeps the shift on its original row', () => {
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })!
+
+    expect(
+      store.moveShiftToMember({
+        id: shift.id,
+        memberId: 'bo',
+        startMinute: 540,
+        endMinute: 550,
+      }),
+    ).toBeNull()
+    expect(store.error).toMatchObject({ key: 'errors.shiftRange' })
+    expect(store.currentWeekShifts).toEqual([shift])
+  })
+
+  it('treats a drop on the same member as a range update', () => {
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })!
+
+    const updated = store.moveShiftToMember({
+      id: shift.id,
+      memberId: 'ada',
+      startMinute: 600,
+      endMinute: 780,
+    })
+
+    expect(updated).toMatchObject({ id: shift.id, memberId: 'ada', startMinute: 600, endMinute: 780 })
+    expect(store.currentWeekShifts).toHaveLength(1)
+  })
+
+  it('ignores unknown shifts', () => {
+    expect(
+      store.moveShiftToMember({
+        id: 'missing',
+        memberId: 'bo',
+        startMinute: 540,
+        endMinute: 720,
+      }),
+    ).toBeNull()
   })
 })
 

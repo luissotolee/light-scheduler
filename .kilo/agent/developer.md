@@ -22,6 +22,26 @@ If the task implements or changes backup export/import, gzip handling, archive r
 
 If the task adds or changes any field in the backup format, the persisted workspace, or stored user settings, load the `backup-compatibility` skill and follow it: export a default constant, parse missing fields with that default, ignore unknown fields, keep additive changes non-breaking, and add a legacy-fixture test proving an older backup still restores. Do not make a missing new field fail restore.
 
+If the task changes functionality, behavior, or layout in a module covered by the guided demo (**employees**, **scheduler**, **summary**, **archive**), load the `guided-demo` skill and update the matching scenario in `src/modules/demo/scenarios/` in the same change.
+
+## Guided demo parity
+
+The demo is part of the feature surface. When a demoed module changes, the scenario must reflect it:
+
+| Module change | Update |
+| ------------- | ------ |
+| `src/modules/employees/` | `src/modules/demo/scenarios/employeesDemo.ts` |
+| `src/modules/scheduler/` | `src/modules/demo/scenarios/schedulerDemo.ts` |
+| `src/modules/summary/` | `src/modules/demo/scenarios/summaryDemo.ts` |
+| `src/modules/archive/` | `src/modules/demo/scenarios/archiveDemo.ts` |
+
+- **New functionality or changed behavior** → add, edit, or remove the affected `DemoStep`; add narration under `demo.scenario.*` in both `en.ts` and `es.ts`.
+- **Layout or visual change** (moved, reordered, resized, replaced, or wrapped element) → re-check that the step's `target` still resolves to the intended element and update `testId`/`within`/`index` when the position changes. The cursor and ring must always point at the right place; a step that runs but highlights the wrong element is a defect, not a pass.
+- **Renamed or removed `data-test`** → update every step and scenario spec that references it.
+- **New demoed behavior** → add a step so the demo stays a complete walkthrough; keep step order and narration coherent.
+- Add stable `data-test` attributes in the owning component when a new element needs to be demonstrated.
+- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `summaryDemo`, `archiveDemo`); they assert unique step IDs, translated narration keys, and known targets/routes.
+
 ## Your job
 
 1. Follow the provided plan (or the direct simple task) exactly.

@@ -6,13 +6,22 @@
       <div class="shift-grid__time-header">
         <div class="shift-grid__time-row shift-grid__time-row--hours">
           <span
-            v-for="hour in hourLabels"
+            v-for="hour in hourGroups"
             :key="hour.key"
             class="shift-grid__time-cell"
             :class="{ 'shift-grid__time-cell--next-day': hour.isNextDay }"
             :style="hourCellStyle(hour.span)"
           >
-            {{ hour.label }}
+            <span>{{ hour.label }}</span>
+            <span
+              v-if="showHeadcount"
+              class="shift-grid__headcount"
+              :class="{ 'shift-grid__headcount--empty': hour.count === 0 }"
+              :title="headcountTitle(hour)"
+              data-test="hour-headcount"
+            >
+              {{ hour.count }}
+            </span>
           </span>
         </div>
         <div class="shift-grid__time-row shift-grid__time-row--minutes">
@@ -29,16 +38,21 @@
       </div>
     </div>
 
-    <div v-if="rows.length > 0" class="shift-grid__body">
+    <div v-if="rows.length > 0" ref="body" class="shift-grid__body">
       <ShiftRow
         v-for="row in rows"
         :key="row.member.id"
         :row="row"
         :slots="slots"
+        :drop-target="dropTargetMemberId === row.member.id"
         @create="emit('create', $event)"
         @resize="emit('resize', $event)"
         @remove="emit('remove', $event)"
         @toggle-off="emit('toggleOff', $event)"
+        @move-start="handleMoveStart"
+        @move-drag="handleMoveDrag"
+        @move-end="handleMoveEnd"
+        @move-cancel="resetDrag"
       />
     </div>
 
@@ -47,15 +61,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { DaySlot } from '@/shared/utils/shifts'
-import type { DayRow, ShiftRangeInput, ShiftResizeInput } from '@/modules/scheduler/types'
+import type {
+  DayRow,
+  ShiftMoveDrag,
+  ShiftMoveInput,
+  ShiftRangeInput,
+  ShiftResizeInput,
+} from '@/modules/scheduler/types'
 import ShiftRow from '@/modules/scheduler/components/ShiftRow.vue'
+import { buildHourlyHeadcounts, type HourHeadcount } from '@/modules/scheduler/utils/headcount'
 import { useI18n } from '@/shared/i18n'
 
 const props = defineProps<{
   rows: DayRow[]
   slots: DaySlot[]
+  showHeadcount?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -63,9 +85,21 @@ const emit = defineEmits<{
   resize: [input: ShiftResizeInput]
   remove: [id: string]
   toggleOff: [memberId: string]
+  move: [input: ShiftMoveInput]
 }>()
 
-const { t } = useI18n()
+const { t, tc } = useI18n()
+
+const hourGroups = computed(() => buildHourlyHeadcounts(props.rows, props.slots))
+
+function headcountTitle(hour: HourHeadcount): string {
+  return tc(
+    'shiftGrid.headcountTooltipOne',
+    'shiftGrid.headcountTooltipMany',
+    hour.count,
+    { count: hour.count, hour: hour.label },
+  )
+}
 
 const slotWidthPercent = computed(() => 100 / props.slots.length)
 
@@ -77,31 +111,93 @@ function slotCellStyle(): Record<string, string> {
   return { flex: `0 0 ${slotWidthPercent.value}%` }
 }
 
-interface HourGroup {
-  key: string
-  label: string
-  span: number
-  isNextDay: boolean
+const body = ref<HTMLElement | null>(null)
+const dragSourceMemberId = ref<string | null>(null)
+const dropTargetMemberId = ref<string | null>(null)
+const dropBlocked = ref(false)
+
+interface RowHit {
+  memberId: string
+  disabled: boolean
 }
 
-const hourLabels = computed<HourGroup[]>(() => {
-  const groups: HourGroup[] = []
-  let current = ''
-  for (const slot of props.slots) {
-    if (slot.hourLabel !== current) {
-      groups.push({
-        key: `${slot.hourLabel}-${slot.index}`,
-        label: slot.hourLabel,
-        span: 1,
-        isNextDay: slot.isNextDay,
-      })
-      current = slot.hourLabel
-    } else {
-      groups[groups.length - 1].span += 1
+function memberIdForShift(shiftId: string): string | null {
+  for (const row of props.rows) {
+    if (row.bars.some((bar) => bar.id === shiftId)) return row.member.id
+  }
+  return null
+}
+
+function rowAt(clientY: number): RowHit | null {
+  const container = body.value
+  if (!container) return null
+  const tracks = container.querySelectorAll<HTMLElement>('[data-row-member-id]')
+  for (const track of tracks) {
+    const rect = track.getBoundingClientRect()
+    if (clientY >= rect.top && clientY < rect.bottom) {
+      return {
+        memberId: track.dataset.rowMemberId ?? '',
+        disabled: track.dataset.rowDisabled === 'true',
+      }
     }
   }
-  return groups
-})
+  return null
+}
+
+function handleMoveStart(shiftId: string): void {
+  dragSourceMemberId.value = memberIdForShift(shiftId)
+  dropTargetMemberId.value = null
+  dropBlocked.value = false
+}
+
+function updateDropTarget(clientY: number): void {
+  const hit = rowAt(clientY)
+  dropTargetMemberId.value = null
+  dropBlocked.value = false
+
+  if (!hit) return
+  if (hit.disabled) {
+    dropBlocked.value = true
+    return
+  }
+  if (hit.memberId === dragSourceMemberId.value) return
+  dropTargetMemberId.value = hit.memberId
+}
+
+function handleMoveDrag(payload: ShiftMoveDrag): void {
+  updateDropTarget(payload.clientY)
+}
+
+function handleMoveEnd(payload: ShiftMoveDrag): void {
+  updateDropTarget(payload.clientY)
+  const blocked = dropBlocked.value
+  const target = dropTargetMemberId.value
+  resetDrag()
+
+  if (blocked) return
+
+  if (target) {
+    emit('move', {
+      id: payload.id,
+      memberId: target,
+      startMinute: payload.startMinute,
+      endMinute: payload.endMinute,
+    })
+    return
+  }
+
+  emit('resize', {
+    id: payload.id,
+    startMinute: payload.startMinute,
+    endMinute: payload.endMinute,
+  })
+}
+
+function resetDrag(): void {
+  dragSourceMemberId.value = null
+  dropTargetMemberId.value = null
+  dropBlocked.value = false
+}
 </script>
 
 <style scoped>
@@ -185,11 +281,34 @@ const hourLabels = computed<HourGroup[]>(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.2rem;
+  padding: 0 0.1rem;
   border-right: 1px solid var(--color-border);
   color: var(--color-muted);
   font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  overflow: hidden;
+}
+
+.shift-grid__headcount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  padding: 0 0.2rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  color: var(--color-accent);
+  font-size: 0.58rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+
+.shift-grid__headcount--empty {
+  border-color: var(--color-border);
+  color: var(--color-muted);
 }
 
 .shift-grid__time-cell--next-day {
@@ -211,6 +330,12 @@ const hourLabels = computed<HourGroup[]>(() => {
 
   .shift-grid__time-cell {
     font-size: 0.6rem;
+  }
+
+  .shift-grid__headcount {
+    min-width: 0.9rem;
+    padding: 0 0.15rem;
+    font-size: 0.52rem;
   }
 
   .shift-grid__empty {

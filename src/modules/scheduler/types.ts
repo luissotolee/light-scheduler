@@ -15,6 +15,20 @@ export interface ShiftResizeInput {
   endMinute: number
 }
 
+export interface ShiftMoveInput {
+  id: string
+  memberId: string
+  startMinute: number
+  endMinute: number
+}
+
+export interface ShiftMoveDrag {
+  id: string
+  startMinute: number
+  endMinute: number
+  clientY: number
+}
+
 export interface DayRow {
   member: TeamMember
   bars: Shift[]

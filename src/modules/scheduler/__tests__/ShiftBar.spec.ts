@@ -134,9 +134,14 @@ describe('ShiftBar', () => {
     await pointer(bar.element, 'pointermove', { clientX: 148 })
     await pointer(bar.element, 'pointerup', { clientX: 148 })
 
-    expect(wrapper.emitted('resize')).toEqual([
-      [{ id: 'shift-1', startMinute: 570, endMinute: 630 }],
+    expect(wrapper.emitted('moveStart')).toEqual([['shift-1']])
+    expect(wrapper.emitted('moveDrag')).toEqual([
+      [{ id: 'shift-1', startMinute: 570, endMinute: 630, clientY: 0 }],
     ])
+    expect(wrapper.emitted('moveEnd')).toEqual([
+      [{ id: 'shift-1', startMinute: 570, endMinute: 630, clientY: 0 }],
+    ])
+    expect(wrapper.emitted('resize')).toBeUndefined()
   })
 
   it('clamps a moved bar to the day window', async () => {
@@ -147,9 +152,10 @@ describe('ShiftBar', () => {
     await pointer(bar.element, 'pointermove', { clientX: -1000 })
     await pointer(bar.element, 'pointerup', { clientX: -1000 })
 
-    expect(wrapper.emitted('resize')).toEqual([
-      [{ id: 'shift-1', startMinute: 540, endMinute: 600 }],
+    expect(wrapper.emitted('moveEnd')).toEqual([
+      [{ id: 'shift-1', startMinute: 540, endMinute: 600, clientY: 0 }],
     ])
+    expect(wrapper.emitted('resize')).toBeUndefined()
   })
 
   it('resizes from the end handle', async () => {

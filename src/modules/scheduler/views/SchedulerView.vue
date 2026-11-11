@@ -92,9 +92,11 @@
         <ShiftGrid
           :rows="dayRows"
           :slots="slots"
+          :show-headcount="settings.showHourlyHeadcount"
           @create="handleCreate"
           @resize="handleResize"
           @remove="handleRemove"
+          @move="handleMoveShift"
           @toggle-off="store.toggleDayOff"
         />
       </div>
@@ -145,6 +147,7 @@ import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import type {
   SchedulerSettings,
+  ShiftMoveInput,
   ShiftRangeInput,
   ShiftResizeInput,
 } from '@/modules/scheduler/types'
@@ -212,6 +215,10 @@ function handleCreate(input: ShiftRangeInput): void {
 
 function handleResize(input: ShiftResizeInput): void {
   store.updateShiftRange(input)
+}
+
+function handleMoveShift(input: ShiftMoveInput): void {
+  store.moveShiftToMember(input)
 }
 
 function handleRemove(id: string): void {

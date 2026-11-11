@@ -5,6 +5,7 @@ import type { MessageKey } from '@/shared/i18n/messages/en'
 import type {
   DayRow,
   SchedulerError,
+  ShiftMoveInput,
   ShiftRangeInput,
   ShiftResizeInput,
 } from '@/modules/scheduler/types'
@@ -112,6 +113,13 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   function memberIsOnHoliday(memberId: string): boolean {
     const member = workspace().findMember(memberId)
     return member ? isMemberOnHoliday(member, currentWeekKey.value) : false
+  }
+
+  function memberIsDisabledOnSelectedDay(memberId: string): boolean {
+    if (memberIsOnHoliday(memberId)) return true
+    return currentWeekDayOffs.value.some(
+      (off) => off.memberId === memberId && off.weekday === selectedWeekday.value,
+    )
   }
 
   function selectWeekday(weekday: Weekday): void {
@@ -242,6 +250,37 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     return mergeCandidate(candidate, 'update')
   }
 
+  function moveShiftToMember(input: ShiftMoveInput): Shift | null {
+    const existing = currentWeekShifts.value.find((shift) => shift.id === input.id)
+    if (!existing) return null
+    if (memberIsOnHoliday(existing.memberId)) return null
+    if (input.memberId === existing.memberId) return updateShiftRange(input)
+
+    const target = workspace().members.find((member) => member.id === input.memberId)
+    if (
+      !target ||
+      !target.active ||
+      target.startDate > selectedWeekdayDate.value ||
+      memberIsDisabledOnSelectedDay(target.id)
+    ) {
+      return null
+    }
+
+    const range = normalizeGridRange(input.startMinute, input.endMinute, schedulingWindow.value)
+    if (!range) {
+      setShiftRangeError()
+      return null
+    }
+
+    workspace().setShiftsForWeek(
+      currentWeekKey.value,
+      currentWeekShifts.value.filter((shift) => shift.id !== existing.id),
+    )
+
+    const candidate: Shift = { ...existing, memberId: input.memberId, ...range }
+    return mergeCandidate(candidate, 'create')
+  }
+
   function removeShift(id: string): void {
     const existing = currentWeekShifts.value.find((shift) => shift.id === id)
     if (!existing) return
@@ -350,6 +389,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     addShift,
     addShiftRange,
     updateShiftRange,
+    moveShiftToMember,
     removeShift,
     resetCurrentWeek,
     updateShift,

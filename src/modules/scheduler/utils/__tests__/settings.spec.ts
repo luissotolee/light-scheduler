@@ -66,8 +66,43 @@ describe('validateSchedulerSettings', () => {
 
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.value).toEqual({ startTime: '09:15', endTime: '01:00', slotMinutes: 15 })
+    expect(result.value).toEqual({
+      startTime: '09:15',
+      endTime: '01:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: false,
+    })
     expect(result.window).toEqual({ startMinute: 555, endMinute: 1500, slotMinutes: 15 })
+  })
+
+  it('defaults a missing headcount setting and accepts explicit booleans', () => {
+    const missing = validateSchedulerSettings({
+      startTime: '09:00',
+      endTime: '01:00',
+      slotMinutes: 30,
+    })
+    expect(missing.ok).toBe(true)
+    if (missing.ok) expect(missing.value.showHourlyHeadcount).toBe(false)
+
+    const enabled = validateSchedulerSettings({
+      startTime: '09:00',
+      endTime: '01:00',
+      slotMinutes: 30,
+      showHourlyHeadcount: true,
+    })
+    expect(enabled.ok).toBe(true)
+    if (enabled.ok) expect(enabled.value.showHourlyHeadcount).toBe(true)
+  })
+
+  it('rejects a non-boolean headcount setting', () => {
+    expect(
+      validateSchedulerSettings({
+        startTime: '09:00',
+        endTime: '01:00',
+        slotMinutes: 30,
+        showHourlyHeadcount: 'yes',
+      }),
+    ).toEqual({ ok: false, error: 'errors.settingsHeadcount' })
   })
 
   it('rejects non-object values and invalid slot values', () => {
