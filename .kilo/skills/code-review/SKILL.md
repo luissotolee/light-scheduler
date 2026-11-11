@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Audit code for correctness, security, TypeScript strictness, Vue/Pinia conventions, i18n parity (both languages), dead code, and accessibility. Use when asked to review code, validate implementation quality, or find bugs before merging.
+description: Audit code for correctness, security, TypeScript strictness, Vue/Pinia conventions, i18n parity (both languages), guided-demo step parity, dead code, and accessibility. Use when asked to review code, validate implementation quality, or find bugs before merging.
 ---
 
 # Code Review
@@ -101,6 +101,13 @@ Read `workspace.md` for the module map. The conventions this checklist checks li
 - Store tests reset Pinia: `beforeEach(() => setActivePinia(createPinia()))`.
 - Component tests assert rendered output and `wrapper.emitted()`; never assert internal state.
 - Coverage thresholds: statements/functions/lines >= 80, branches >= 75; excludes `src/main.ts`, `*.d.ts`, `src/router/**`.
+
+### 14. Guided demo parity
+- The demoed modules are `employees`, `scheduler`, `summary`, and `archive`; each maps to a scenario in `src/modules/demo/scenarios/` (`employeesDemo.ts`, `schedulerDemo.ts`, `summaryDemo.ts`, `archiveDemo.ts`).
+- Any behavior or functionality change in those modules updates the matching scenario in the same change: steps added/edited/removed, narration under `demo.scenario.*` in both `en.ts` and `es.ts`.
+- Any layout/visual change re-validates each affected step's `target` (`testId`, `within`, `index`); a step that resolves but highlights the wrong element is a finding.
+- `data-test` renames/removals are reflected in every scenario step and spec.
+- The scenario specs exist and pass (unique step IDs, translated narration keys, known targets/routes).
 
 ## Severity scale
 - **Blocker** — breaks functionality, crashes, data loss, security vulnerability.

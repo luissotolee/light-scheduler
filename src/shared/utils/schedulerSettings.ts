@@ -11,6 +11,7 @@ export const DEFAULT_SCHEDULER_SETTINGS: SchedulerSettings = {
   startTime: '09:00',
   endTime: '01:00',
   slotMinutes: 30,
+  showHourlyHeadcount: false,
 }
 
 export type SchedulerSettingsValidation =
@@ -82,10 +83,20 @@ export function validateSchedulerSettings(value: unknown): SchedulerSettingsVali
     return { ok: false, error: 'errors.settingsAligned' }
   }
 
+  const showHourlyHeadcount =
+    value.showHourlyHeadcount === undefined
+      ? DEFAULT_SCHEDULER_SETTINGS.showHourlyHeadcount
+      : value.showHourlyHeadcount
+
+  if (typeof showHourlyHeadcount !== 'boolean') {
+    return { ok: false, error: 'errors.settingsHeadcount' }
+  }
+
   const settings: SchedulerSettings = {
     startTime: formatMinutesToHhmm(startMinute),
     endTime: formatMinutesToHhmm(clockEnd),
     slotMinutes,
+    showHourlyHeadcount,
   }
 
   return {

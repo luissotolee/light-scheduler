@@ -4,6 +4,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
 import SelectButton from 'primevue/selectbutton'
+import ToggleSwitch from 'primevue/toggleswitch'
+import Tooltip from 'primevue/tooltip'
 import SchedulerSettingsDialog from '@/modules/scheduler/components/SchedulerSettingsDialog.vue'
 import TimePickerField from '@/modules/scheduler/components/TimePickerField.vue'
 import { DEFAULT_SCHEDULER_SETTINGS } from '@/modules/scheduler/utils/settings'
@@ -24,13 +26,17 @@ describe('SchedulerSettingsDialog', () => {
   async function mountDialog(settings: SchedulerSettings = DEFAULT_SCHEDULER_SETTINGS) {
     const wrapper = mount(SchedulerSettingsDialog, {
       props: { visible: true, settings },
-      global: { plugins: [PrimeVue], stubs: { teleport: true } },
+      global: {
+        plugins: [PrimeVue],
+        directives: { tooltip: Tooltip },
+        stubs: { teleport: true },
+      },
     })
     await nextTick()
     return wrapper
   }
 
-  it('renders the translated labels, pickers, rate switch, and hints', async () => {
+  it('renders the translated labels, pickers, rate switch, and tooltip icons', async () => {
     const wrapper = await mountDialog()
 
     expect(wrapper.text()).toContain('Schedule settings')
@@ -43,9 +49,64 @@ describe('SchedulerSettingsDialog', () => {
       { label: '15 min', value: 15 },
     ])
     expect(wrapper.text()).toContain('Ends the next day')
-    expect(wrapper.text()).toContain(
-      'Shifts outside these limits stay saved but are hidden from the grid.',
+    expect(wrapper.text()).toContain('Show headcount per hour')
+    expect(wrapper.findComponent(ToggleSwitch).props('modelValue')).toBe(false)
+  })
+
+  it('moves the setting explanations into info tooltips', async () => {
+    const wrapper = await mountDialog()
+
+    const startInfo = wrapper.find('[data-test="settings-start-info"]')
+    expect(startInfo.attributes('aria-label')).toBe(
+      'First hour shown in the grid. Shifts outside the visible window stay saved but are hidden.',
     )
+    expect(startInfo.attributes('data-pd-tooltip')).toBeDefined()
+
+    const endInfo = wrapper.find('[data-test="settings-end-info"]')
+    expect(endInfo.attributes('aria-label')).toBe(
+      'Last hour shown in the grid. If it is earlier than the start time, the schedule continues into the next day.',
+    )
+    expect(endInfo.attributes('data-pd-tooltip')).toBeDefined()
+
+    const rateInfo = wrapper.find('[data-test="settings-rate-info"]')
+    expect(rateInfo.attributes('aria-label')).toBe(
+      'Time step used by the grid. Smaller slots allow more precise shifts but add more columns.',
+    )
+    expect(rateInfo.attributes('data-pd-tooltip')).toBeDefined()
+
+    const headcountInfo = wrapper.find('[data-test="settings-headcount-info"]')
+    expect(headcountInfo.attributes('aria-label')).toBe(
+      'Adds a badge next to each hour with the largest number of employees working at the same time during that hour.',
+    )
+    expect(headcountInfo.attributes('data-pd-tooltip')).toBeDefined()
+
+    expect(wrapper.find('.scheduler-settings__description').exists()).toBe(false)
+    expect(wrapper.findAll('.scheduler-settings__hint')).toHaveLength(1)
+    expect(wrapper.find('[data-test="settings-next-day"]').exists()).toBe(true)
+  })
+
+  it('emits the enabled hourly headcount setting on save', async () => {
+    const wrapper = await mountDialog()
+    const toggle = wrapper.findComponent(ToggleSwitch)
+
+    expect(toggle.props('modelValue')).toBe(false)
+
+    toggle.vm.$emit('update:modelValue', true)
+    await nextTick()
+    await wrapper.find('[data-test="scheduler-settings-form"]').trigger('submit')
+
+    expect(wrapper.emitted('save')).toEqual([
+      [{ ...DEFAULT_SCHEDULER_SETTINGS, showHourlyHeadcount: true }],
+    ])
+  })
+
+  it('reflects an enabled hourly headcount setting as checked', async () => {
+    const wrapper = await mountDialog({
+      ...DEFAULT_SCHEDULER_SETTINGS,
+      showHourlyHeadcount: true,
+    })
+
+    expect(wrapper.findComponent(ToggleSwitch).props('modelValue')).toBe(true)
   })
 
   it('emits valid settings on save', async () => {
@@ -61,6 +122,7 @@ describe('SchedulerSettingsDialog', () => {
       startTime: '09:00',
       endTime: '09:00',
       slotMinutes: 30,
+      showHourlyHeadcount: false,
     })
 
     expect(wrapper.find('[data-test="settings-error"]').text()).toBe(
@@ -78,6 +140,7 @@ describe('SchedulerSettingsDialog', () => {
       startTime: '10:45',
       endTime: '12:45',
       slotMinutes: 15,
+      showHourlyHeadcount: false,
     })
     const pickers = () => wrapper.findAllComponents(TimePickerField)
 
@@ -119,5 +182,9 @@ describe('SchedulerSettingsDialog', () => {
     expect(wrapper.text()).toContain('Configuración del horario')
     expect(wrapper.text()).toContain('Hora de inicio')
     expect(wrapper.text()).toContain('Franja horaria')
+    expect(wrapper.text()).toContain('Mostrar empleados por hora')
+    expect(wrapper.find('[data-test="settings-start-info"]').attributes('aria-label')).toBe(
+      'Primera hora que se muestra en la tabla. Los turnos fuera de la ventana visible se guardan pero no se muestran.',
+    )
   })
 })

@@ -421,6 +421,34 @@ describe('ShiftRow', () => {
     expect(wrapper.emitted('remove')).toEqual([['shift-1']])
   })
 
+  it('forwards cross-row drag events from the shift bar', async () => {
+    const wrapper = mountRow([bar])
+    const shiftBar = wrapper.findComponent(ShiftBar)
+    const payload = { id: 'shift-1', startMinute: 540, endMinute: 630, clientY: 42 }
+
+    shiftBar.vm.$emit('moveStart', 'shift-1')
+    shiftBar.vm.$emit('moveDrag', payload)
+    shiftBar.vm.$emit('moveEnd', payload)
+    shiftBar.vm.$emit('moveCancel')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.emitted('moveStart')).toEqual([['shift-1']])
+    expect(wrapper.emitted('moveDrag')).toEqual([[payload]])
+    expect(wrapper.emitted('moveEnd')).toEqual([[payload]])
+    expect(wrapper.emitted('moveCancel')).toEqual([[]])
+  })
+
+  it('marks the row as a drop target without disabling it', () => {
+    const regular = mountRow([bar])
+    const target = mount(ShiftRow, {
+      props: { row: makeRow([bar]), slots: buildDaySlots(), dropTarget: true },
+    })
+
+    expect(regular.find('.shift-row').classes()).not.toContain('shift-row--drop-target')
+    expect(target.find('.shift-row').classes()).toContain('shift-row--drop-target')
+    expect(target.find('[data-test="shift-track"]').attributes('aria-disabled')).toBe('false')
+  })
+
   it('uses a custom 15-minute window for selection and snapping', async () => {
     const wrapper = mount(ShiftRow, {
       props: {

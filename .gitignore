@@ -13,3 +13,5 @@ yarn-error.log*
 !.vscode/extensions.json
 .idea
 *.tsbuildinfo
+.kilo/agent-manager.json
+.kilo/worktrees/

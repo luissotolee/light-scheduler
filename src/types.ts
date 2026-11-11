@@ -11,6 +11,7 @@ export interface SchedulerSettings {
   startTime: string
   endTime: string
   slotMinutes: SlotMinutes
+  showHourlyHeadcount: boolean
 }
 
 export type Duty = 'manager' | 'employee' | 'assistant' | 'head_manager'

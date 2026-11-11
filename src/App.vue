@@ -15,6 +15,10 @@
     </main>
 
     <footer class="app__footer">
+      <a class="app__footer-contact" :href="CONTACT_EMAIL">
+        <i class="pi pi-envelope app__footer-contact-icon" aria-hidden="true" />
+        {{ t('app.contact') }}
+      </a>
       <p class="app__footer-text">{{ t('app.footer') }}</p>
       <KoFiButton />
     </footer>
@@ -38,6 +42,8 @@ import { NAV_ITEMS } from '@/router/nav'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
+
+const CONTACT_EMAIL = 'mailto:luissotolee@gmail.com?subject=Light%20Scheduler'
 
 onMounted(() => {
   demoStore.checkRecovery()
@@ -93,11 +99,10 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
 }
 
 .app__footer {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  column-gap: 1rem;
   padding: var(--footer-padding-y) var(--space-page-x);
   border-top: 1px solid var(--color-border);
   color: var(--color-muted);
@@ -106,11 +111,47 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
 }
 
 .app__footer-text {
+  grid-column: 2;
   margin: 0;
+  text-align: center;
 }
 
 .app__footer .ko-fi-button {
-  margin-left: auto;
+  grid-column: 3;
+  justify-self: end;
+}
+
+.app__footer-contact {
+  justify-self: start;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.app__footer-contact-icon {
+  margin-right: 0.35rem;
+}
+
+.app__footer-contact:hover {
+  text-decoration: underline;
+}
+
+.app__footer-contact:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .app__footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    row-gap: 0.75rem;
+  }
+
+  .app__footer-text,
+  .app__footer .ko-fi-button {
+    grid-column: auto;
+    justify-self: center;
+  }
 }
 
 @media (max-width: 480px) {

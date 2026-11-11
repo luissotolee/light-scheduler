@@ -12,6 +12,7 @@ export const en = {
   'app.navPrimary': 'Primary',
   'app.footer':
     'Light Scheduler — a frontend-only weekly shift scheduler. We recommend backing up your work locally through Archive.',
+  'app.contact': 'Contact the creator',
   'app.supportOnKoFi': 'Support me on Ko-fi',
 
   'nav.home': 'Home',
@@ -47,18 +48,23 @@ export const en = {
   'scheduler.clearAll': 'Clear all',
   'scheduler.settings': 'Schedule settings',
   'scheduler.settings.title': 'Schedule settings',
-  'scheduler.settings.description':
-    'Choose the visible time limits and the time slot used by the grid.',
   'scheduler.settings.start': 'Start time',
+  'scheduler.settings.startTooltip':
+    'First hour shown in the grid. Shifts outside the visible window stay saved but are hidden.',
   'scheduler.settings.end': 'End time',
+  'scheduler.settings.endTooltip':
+    'Last hour shown in the grid. If it is earlier than the start time, the schedule continues into the next day.',
   'scheduler.settings.nextDay': 'Ends the next day',
   'scheduler.settings.rate': 'Time slot',
+  'scheduler.settings.rateTooltip':
+    'Time step used by the grid. Smaller slots allow more precise shifts but add more columns.',
   'scheduler.settings.rate30': '30 min',
   'scheduler.settings.rate15': '15 min',
   'scheduler.settings.hour': 'Hour',
   'scheduler.settings.minutes': 'Minutes',
-  'scheduler.settings.outsideWindow':
-    'Shifts outside these limits stay saved but are hidden from the grid.',
+  'scheduler.settings.showHeadcount': 'Show headcount per hour',
+  'scheduler.settings.showHeadcountTooltip':
+    'Adds a badge next to each hour with the largest number of employees working at the same time during that hour.',
   'scheduler.confirm.restartHeader': 'Restart week schedule',
   'scheduler.confirm.restartMessage':
     'This clears all shifts and days off for the current week. Team members are kept. This cannot be undone.',
@@ -84,6 +90,8 @@ export const en = {
   'shiftGrid.employee': 'Employee',
   'shiftGrid.hours': 'Hours',
   'shiftGrid.empty': 'No active employees are available on this day.',
+  'shiftGrid.headcountTooltipOne': '{count} employee scheduled at {hour}:00',
+  'shiftGrid.headcountTooltipMany': '{count} employees scheduled at {hour}:00',
   'shiftBar.removeHint': 'Right-click to remove this shift',
   'shiftBar.aria':
     'Shift for {name}: {start} to {end}. Use arrow keys to move, Shift plus arrow keys to resize, Delete to remove.',
@@ -287,6 +295,7 @@ export const en = {
   'errors.settingsSameTimes': 'Start and end times must be different',
   'errors.settingsWindow': 'The schedule must cover at least one time slot',
   'errors.settingsMaxEnd': 'The schedule cannot extend past 01:00 the next day',
+  'errors.settingsHeadcount': 'The headcount setting must be on or off',
 
   'demo.start': 'Demo',
   'demo.startAria': 'Start the guided demo',
@@ -388,7 +397,9 @@ export const en = {
   'demo.scenario.scheduler.resize':
     'Drag the shift edges to resize it, or use Shift with the arrow keys.',
   'demo.scenario.scheduler.move':
-    'Drag the shift to move it, or use the arrow keys. Press Delete to remove it.',
+    'Drag the shift to move it within the row, or use the arrow keys. Press Delete to remove it.',
+  'demo.scenario.scheduler.moveBetweenRows':
+    "Drag a shift onto another employee's row to reassign it. The shift leaves the original employee and merges into the destination employee's schedule. Disabled rows, such as days off and holidays, won't accept it.",
   'demo.scenario.scheduler.removed': 'The shift has been removed.',
   'demo.scenario.scheduler.dayOff': 'Select the member name to mark a day off.',
   'demo.scenario.scheduler.dayOffMarked': 'The row is disabled and the days-off counter updates.',
@@ -398,11 +409,15 @@ export const en = {
   'demo.scenario.scheduler.hours':
     'The weekly hours table compares scheduled hours with contract hours.',
   'demo.scenario.scheduler.settingsOpen':
-    'Open the schedule settings to change the time window and slot size shown in the grid.',
+    'Open the schedule settings. Each option has an info icon with the details.',
   'demo.scenario.scheduler.settingsWindow':
     'Set the start and end times. An end time before the start time keeps the schedule open past midnight.',
+  'demo.scenario.scheduler.settingsTooltips':
+    'Hover or focus the info icon next to a setting to read what it does without cluttering the dialog.',
   'demo.scenario.scheduler.settingsSlot':
     'Switch the time slot between 30 and 15 minutes to change the grid detail.',
+  'demo.scenario.scheduler.settingsHeadcount':
+    'The headcount switch sits next to its label, and its info icon explains the hourly badge.',
   'demo.scenario.scheduler.settingsSaved':
     'Save to apply the new window and slot size to the scheduler.',
   'demo.scenario.scheduler.restart':

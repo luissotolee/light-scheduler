@@ -15,6 +15,25 @@ description: Build and extend the in-app real-time guided demo (mock data, local
 - Adding or changing `data-test` selectors used by demo steps
 - Updating demo fixtures (`buildDemoWorkspace`)
 - Adding i18n keys for demo narration or controls
+- Changing behavior, functionality, or layout in any demoed module: **employees**, **scheduler**, **summary**, or **archive**
+
+## Keeping scenarios in sync with the app
+
+The demo must mirror the current app. Every change to a demoed module updates its scenario in the same change:
+
+| Module | Scenario | Demoed surface |
+| ------ | -------- | -------------- |
+| `src/modules/employees/` | `scenarios/employeesDemo.ts` | search, sort, add, edit, holidays, active filter, deactivate/reactivate, remove |
+| `src/modules/scheduler/` | `scenarios/schedulerDemo.ts` | weeks, week picker, weekdays, shift CRUD, day off, holidays, weekly hours |
+| `src/modules/summary/`  | `scenarios/summaryDemo.ts`  | week navigation, summary table, details, print, PDF |
+| `src/modules/archive/`  | `scenarios/archiveDemo.ts`  | backup export and restore entry points |
+
+- **New functionality or changed behavior** (added/renamed/removed control, different flow or state) → add, edit, or remove the affected `DemoStep`, and add/update/remove its narration key in **both** `en.ts` and `es.ts`.
+- **Layout or visual change** (element moved, reordered, resized, replaced, or wrapped) → confirm the step's target still resolves to the intended element. Update `testId`, `within`, or `index` when the element's place or nesting changes, and reorder/retarget steps if the flow moved. A step that runs but highlights the wrong element is a defect.
+- **New element to demonstrate** → add a stable `data-test` in the owning component, then reference it from the step.
+- **Renamed or removed `data-test`** → update every scenario step and every spec that references it.
+- **Removed feature** → remove or reword the steps and narration that describe it; do not leave stale steps.
+- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `summaryDemo`, `archiveDemo`); they assert unique step IDs, narration keys in both catalogs, and known `data-test` targets/routes. Manually confirm each step points at the intended element.
 
 ## Architecture map
 

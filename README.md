@@ -6,12 +6,12 @@ Light Scheduler is a light, modern weekly shift scheduler for creating daily shi
 
 The product scope covers the scheduling pages plus an Archive page for import/export:
 
-| Page      | Purpose                                                           | Status  |
-| --------- | ----------------------------------------------------------------- | ------- |
-| Scheduler | Create and manage daily shifts at a weekly cadence for employees. | Planned |
-| Employees | Manage employee records used when building schedules.             | Planned |
-| Summary   | Review the weekly schedule and print it or save it as PDF.        | Planned |
-| Archive   | Download or restore a compressed JSON backup of the workspace.    | Planned |
+| Page      | Purpose                                                           | Status      |
+| --------- | ----------------------------------------------------------------- | ----------- |
+| Scheduler | Create and manage daily shifts at a weekly cadence for employees. | Implemented |
+| Employees | Manage employee records used when building schedules.             | Implemented |
+| Summary   | Review the weekly schedule and print it or save it as PDF.        | Implemented |
+| Archive   | Download or restore a compressed JSON backup of the workspace.    | Implemented |
 
 The Archive page downloads a single `backup-<timestamp>.json.gz` file containing every employee plus the years, weeks, and shifts that have data. Weeks without shifts are omitted. Restoring a backup replaces the current employees, shifts, and days off.
 
@@ -21,7 +21,16 @@ There is no backend. Backup encoding, downloads, and all other application behav
 
 ## Current status
 
-Light Scheduler is at the base-structure stage. The app includes the application shell, a top navigation bar, a Home landing page, and lazily loaded skeletons for Scheduler, Employees, Summary, and Archive. A shared workspace store holds employees, weekly shifts, and the current week, while a page store per page holds page-local UI state. The pure calendar, shift, backup, and download utilities are implemented and tested. Shift editing, employee create/edit forms, and schedule review tables are planned and not yet implemented.
+All four feature pages are implemented, with a shared Spanish/English localization layer and an in-app guided demo:
+
+- **Scheduler** — weekly shift grid with shift creation, editing, and removal; a configurable day time window and slot size; holiday weeks with disabled rows excluded from weekly hours; week picker and active-employee filter; a per-day weekly-hours table; and optional hourly headcount chips.
+- **Employees** — employee create/edit/delete, search, holiday-week selection, and per-employee comments.
+- **Summary** — read-only weekly schedule review with print and PDF export.
+- **Archive** — gzip-compressed `.json.gz` backup download and restore, with backward-compatible parsing so older backups still restore and unknown fields are ignored.
+- **Guided demo** — a real-time, narrated walkthrough of the scheduler, employees, summary, and archive flows that snapshots and restores the current workspace.
+- **Localization** — every user-facing string ships in English and Spanish.
+
+A shared workspace store owns members, schedules, days off, and the current week, while each module keeps its own page state in a module store. The pure calendar, shift, settings, backup, and download utilities are unit-tested, and CI enforces lint, type-check, coverage thresholds, and a production build.
 
 ## Stack
 
@@ -65,62 +74,70 @@ npm run dev
 
 ```
 src/
-  App.vue                 app shell, brand, nav, footer, demo banner/overlay
+  App.vue                 app shell: brand, nav, footer, demo banner/overlay
   main.ts                 application entry point (boot recovery for interrupted demo)
   types.ts                shared domain types (members, shifts, weeks, results)
   assets/
     main.css              global CSS and design tokens
-  components/
-    AppNav.vue            presentational primary navigation
-    PageHeader.vue        reusable page header with actions slot
-    EmptyState.vue        reusable empty state with action slot
-    __tests__/
   router/
     index.ts              createAppRouter factory and hash-history routes
     nav.ts                NAV_ITEMS navigation metadata
-  stores/
-    workspace.ts          shared cross-page data (members, schedules, week)
-    employees.ts          Employees page state and member actions
-    scheduler.ts          Scheduler page week navigation and shift actions
-    summary.ts            read-only weekly summary getters
-    archive.ts            backup export/restore (.json.gz)
-    __tests__/
-  utils/
-    calendar.ts           timezone-safe local ISO week helpers
-    shifts.ts             HH:mm parsing and half-open overlap helpers
-    archiveBackup.ts      gzip JSON backup build, validation, encode, and decode
-    download.ts           Blob download and timestamped filename helpers
-    id.ts                 id generation helper
-    __tests__/
-  views/
-    HomeView.vue          store-free landing page
-    SchedulerView.vue     weekly shift skeleton
-    EmployeesView.vue     employee search/list skeleton
-    SummaryView.vue       weekly summary and print skeleton
-    ArchiveView.vue       export/import page for workspace information
-    __tests__/
+  shared/
+    components/           AppNav, PageHeader, EmptyState, ConfirmActionDialog,
+                          EmployeeDetailsDialog, HolidayWeeksDialog,
+                          LanguageSwitcher, LocaleFlag
+    stores/
+      workspace.ts        cross-page data (members, schedules, days off, week)
+      locale.ts           active language
+    utils/
+      calendar.ts         timezone-safe local ISO week helpers
+      shifts.ts           HH:mm parsing and half-open overlap helpers
+      archiveBackup.ts    gzip JSON backup build, validation, encode, decode
+      download.ts         Blob download and timestamped filename helpers
+      persistence.ts      browser-persisted workspace state
+      userSettings.ts     versioned user settings (locale + scheduler settings)
+      schedulerSettings.ts, employee.ts, csv.ts, csvFile.ts, scheduleCsv.ts, id.ts
+    i18n/
+      messages/en.ts      English catalog
+      messages/es.ts      Spanish catalog (kept in sync with en)
+      index.ts            useI18n, t, tc
+      primevue.ts         PrimeVue locale options
+    fixtures/employees.ts mock employee data shared with the demo
   modules/
-    demo/                 in-app real-time guided demo (see .kilo/skills/guided-demo/SKILL.md)
-      types.ts                    DemoScenario, DemoStep, DemoAction, DemoTarget
-      fixtures/demoWorkspace.ts   buildDemoWorkspace(now?) → PersistedWorkspace
-      scenarios/                  step scenarios (v1: scheduler→employees→summary→Archive)
-      utils/storageSnapshot.ts    localStorage snapshot/restore/backup/recovery
-      utils/dom.ts                target resolution, click/pointer/press/fill, reduced motion
-      utils/demoSession.ts        startDemo/stopDemo (snapshot → load mock → reset UI → engine)
-      player/engine.ts            cancellable player (AbortController, pause/resume/next/prev)
-      stores/demo.ts              Pinia store (status, stepIndex, cursor, ring, restored flag)
-      components/                 DemoModeButton, DemoBanner, DemoOverlay (lazy)
-      overlay/demo-overlay.css    shared CSS custom properties
-      __tests__/                  storageSnapshot, demoWorkspace, demoSession, demo, engine, dom, components, schedulerDemo
-  __tests__/
-    App.spec.ts
-    routes.spec.ts        lazy route resolution test
+    home/views/HomeView.vue     store-free landing page
+    scheduler/
+      views/SchedulerView.vue   weekly shift grid
+      stores/scheduler.ts       week navigation and shift actions
+      components/               ShiftGrid, ShiftRow, ShiftBar, WeekdayTabs,
+                                TimePickerField, SchedulerSettingsDialog,
+                                WeeklyHoursTable
+      utils/                    settings, off, hours, grid, headcount
+    employees/
+      views/EmployeesView.vue   employee search and list
+      stores/employees.ts       employee CRUD and holiday actions
+      components/               EmployeeTable, EmployeeFormDialog
+    summary/
+      views/SummaryView.vue     weekly review with print and PDF export
+      stores/summary.ts         read-only weekly summary getters
+      components/               SummaryTable, SummaryCell
+    archive/
+      views/ArchiveView.vue     backup export/import page
+      stores/archive.ts         restore wiring
+    demo/                       in-app guided demo (see .kilo/skills/guided-demo/SKILL.md)
+      scenarios/                scheduler, employees, summary, archive walkthroughs
+      fixtures/                 buildDemoWorkspace
+      utils/                    storage snapshot, DOM targeting, session lifecycle
+      player/engine.ts          cancellable player (pause/resume/next/prev)
+      stores/demo.ts            demo UI state
+      components/               DemoModeButton, DemoBanner, DemoPickerDialog, DemoOverlay
+  __tests__/                    app shell and route tests
 ```
 
-All five feature pages are lazy-loaded chunks, so their code mounts only after the matching navigation item is selected. Home stays eager for the first paint.
+The four feature pages are lazy-loaded chunks, so their code mounts only after the matching navigation item is selected. Home stays eager for the first paint.
 
 ## Testing strategy
 
+- **Placement** — tests are co-located in a sibling `__tests__/` folder next to the code they cover.
 - **Stores** are tested directly with a fresh `createPinia()` per test.
 - **Components** receive props/emits and are tested for rendered output and emitted events, not internals.
 - **Views** are mounted with Pinia to verify wiring between UI and store.
@@ -135,7 +152,11 @@ All five feature pages are lazy-loaded chunks, so their code mounts only after t
 ### One-time setup
 
 1. In the GitHub repository, open **Settings → Pages** and set **Source** to **GitHub Actions**.
-2. Protect `main` and require the `CI / Lint, type-check, test, build` check before merging.
+2. Protect `main` and require the `CI / Lint`, `CI / Type-check`, `CI / Test with coverage`, and `CI / Build` checks before merging.
 3. The site deploys at `https://<owner>.github.io/light-scheduler/`.
 
 The Vite `base` is `/light-scheduler/` in `vite.config.ts`. If you rename the repository or use a custom domain, update `base` accordingly.
+
+## License
+
+All rights reserved. This repository is proprietary: the source code, documentation, configuration, and AI agent and skill definitions may not be used, copied, modified, or distributed without prior written permission. Viewing it for informational or evaluation purposes is permitted. See [LICENSE](LICENSE).

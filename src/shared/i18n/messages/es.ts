@@ -14,6 +14,7 @@ export const es: Messages = {
   'app.navPrimary': 'Principal',
   'app.footer':
     'Light Scheduler — un planificador semanal de turnos solo de frontend. Recomendamos respaldar tu trabajo localmente a través de Archivo.',
+  'app.contact': 'Contacta al creador',
   'app.supportOnKoFi': 'Apóyame en Ko-fi',
 
   'nav.home': 'Inicio',
@@ -51,18 +52,23 @@ export const es: Messages = {
   'scheduler.clearAll': 'Borrar todo',
   'scheduler.settings': 'Configuración del horario',
   'scheduler.settings.title': 'Configuración del horario',
-  'scheduler.settings.description':
-    'Elige los límites de tiempo visibles y la franja horaria que usa la tabla.',
   'scheduler.settings.start': 'Hora de inicio',
+  'scheduler.settings.startTooltip':
+    'Primera hora que se muestra en la tabla. Los turnos fuera de la ventana visible se guardan pero no se muestran.',
   'scheduler.settings.end': 'Hora de fin',
+  'scheduler.settings.endTooltip':
+    'Última hora que se muestra en la tabla. Si es anterior a la hora de inicio, la planificación continúa al día siguiente.',
   'scheduler.settings.nextDay': 'Termina al día siguiente',
   'scheduler.settings.rate': 'Franja horaria',
+  'scheduler.settings.rateTooltip':
+    'Intervalo de tiempo que usa la tabla. Las franjas más pequeñas permiten turnos más precisos pero añaden más columnas.',
   'scheduler.settings.rate30': '30 min',
   'scheduler.settings.rate15': '15 min',
   'scheduler.settings.hour': 'Hora',
   'scheduler.settings.minutes': 'Minutos',
-  'scheduler.settings.outsideWindow':
-    'Los turnos fuera de estos límites se guardan pero no se muestran en la tabla.',
+  'scheduler.settings.showHeadcount': 'Mostrar empleados por hora',
+  'scheduler.settings.showHeadcountTooltip':
+    'Añade una insignia junto a cada hora con el mayor número de empleados trabajando al mismo tiempo durante esa hora.',
   'scheduler.confirm.restartHeader': 'Reiniciar planificación semanal',
   'scheduler.confirm.restartMessage':
     'Esto borra todos los turnos y días libres de la semana actual. Los empleados se conservan. Esta acción no se puede deshacer.',
@@ -88,6 +94,8 @@ export const es: Messages = {
   'shiftGrid.employee': 'Empleado',
   'shiftGrid.hours': 'Horas',
   'shiftGrid.empty': 'No hay empleados activos disponibles para este día.',
+  'shiftGrid.headcountTooltipOne': '{count} empleado programado a las {hour}:00',
+  'shiftGrid.headcountTooltipMany': '{count} empleados programados a las {hour}:00',
   'shiftBar.removeHint': 'Haz clic derecho para eliminar este turno',
   'shiftBar.aria':
     'Turno de {name}: de {start} a {end}. Usa las flechas para moverlo, Mayús más flechas para cambiar su duración y Suprimir para eliminarlo.',
@@ -292,6 +300,7 @@ export const es: Messages = {
   'errors.settingsSameTimes': 'Las horas de inicio y fin deben ser diferentes',
   'errors.settingsWindow': 'El horario debe cubrir al menos una franja horaria',
   'errors.settingsMaxEnd': 'El horario no puede extenderse más allá de la 01:00 del día siguiente',
+  'errors.settingsHeadcount': 'La opción de empleados por hora debe estar activada o desactivada',
 
   'demo.start': 'Demo',
   'demo.startAria': 'Iniciar la demostración guiada',
@@ -407,7 +416,9 @@ export const es: Messages = {
   'demo.scenario.scheduler.resize':
     'Arrastra los bordes del turno para redimensionarlo, o usa Mayús con las flechas.',
   'demo.scenario.scheduler.move':
-    'Arrastra el turno para moverlo, o usa las flechas. Pulsa Supr para eliminarlo.',
+    'Arrastra el turno para moverlo dentro de la fila, o usa las flechas. Pulsa Supr para eliminarlo.',
+  'demo.scenario.scheduler.moveBetweenRows':
+    'Arrastra un turno a la fila de otro empleado para reasignarlo. El turno sale del empleado original y se combina con la agenda del empleado de destino. Las filas deshabilitadas, como días libres y vacaciones, no lo aceptan.',
   'demo.scenario.scheduler.removed': 'El turno se ha eliminado.',
   'demo.scenario.scheduler.dayOff': 'Selecciona el nombre del miembro para marcar un día libre.',
   'demo.scenario.scheduler.dayOffMarked':
@@ -418,11 +429,15 @@ export const es: Messages = {
   'demo.scenario.scheduler.hours':
     'La tabla de horas semanales compara las horas planificadas con las del contrato.',
   'demo.scenario.scheduler.settingsOpen':
-    'Abre la configuración del horario para cambiar la franja visible y el tamaño del tramo de la cuadrícula.',
+    'Abre la configuración del horario. Cada opción tiene un icono de información con los detalles.',
   'demo.scenario.scheduler.settingsWindow':
     'Define la hora de inicio y de fin. Si la hora de fin es anterior al inicio, el horario continúa pasada la medianoche.',
+  'demo.scenario.scheduler.settingsTooltips':
+    'Pasa el cursor o enfoca el icono de información junto a un ajuste para leer qué hace sin recargar el diálogo.',
   'demo.scenario.scheduler.settingsSlot':
     'Cambia la franja entre 30 y 15 minutos para modificar el detalle de la cuadrícula.',
+  'demo.scenario.scheduler.settingsHeadcount':
+    'El interruptor de empleados por hora está junto a su etiqueta, y su icono de información explica la insignia por hora.',
   'demo.scenario.scheduler.settingsSaved':
     'Guarda para aplicar la nueva franja y el tamaño del tramo al planificador.',
   'demo.scenario.scheduler.restart':
