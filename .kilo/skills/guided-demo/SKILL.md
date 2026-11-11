@@ -122,30 +122,34 @@ interface DemoScenario {
 6. **Register** in `src/modules/demo/scenarios/index.ts` (or new scenario file).
 7. **Write tests** — unique step `id`s, narration keys exist in both catalogs, known `data-test` targets/routes.
 
-### Example: Add a step to highlight the CSV export button
+### Example: Add a step to highlight the backup download button
 
 ```ts
-// In schedulerDemo.ts or new scenario file
+// In a scenario file (Archive is not one of the v1 scenarios yet)
 {
-  id: 'csv-export-highlight',
+  id: 'backup-export-highlight',
   action: 'spotlight',
-  target: { testId: 'export-employees' },
-  narrationKey: 'demo.scenario.csv.exportDetail',
+  target: { testId: 'export-backup' },
+  narrationKey: 'demo.scenario.backup.exportDetail',
   pauseMs: 2000,
 }
 ```
 
 ```ts
 // In en.ts
-'demo.scenario.csv.exportDetail': 'Click here to download the current employee list as CSV.'
+'demo.scenario.backup.exportDetail':
+  'Click here to download a compressed backup of every employee, shift, day off, and setting.'
 // In es.ts
-'demo.scenario.csv.exportDetail': 'Haz clic aquí para descargar la lista de empleados como CSV.'
+'demo.scenario.backup.exportDetail':
+  'Haz clic aquí para descargar una copia comprimida de todos los empleados, turnos, días libres y ajustes.'
 ```
 
 ```ts
-// In ArchiveView.vue (already has data-test="export-employees")
-<button data-test="export-employees" ...>
+// In ArchiveView.vue (already has data-test="export-backup")
+<button data-test="export-backup" ...>
 ```
+
+The workspace backup is the `.json.gz` file produced by the archive module.
 
 ## Target resolution & `data-test` contract
 

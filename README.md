@@ -13,15 +13,15 @@ The product scope covers the scheduling pages plus an Archive page for import/ex
 | Summary   | Review the weekly schedule and print it or save it as PDF.        | Planned |
 | Archive   | Download or restore a compressed JSON backup of the workspace.    | Planned |
 
-The Archive page downloads a single `backup-<timestamp>.json.gz` file containing every employee plus the years, weeks, and shifts that have data. Weeks without shifts are omitted. Restoring a backup replaces the current employees, shifts, and days off. The Scheduler page also keeps CSV import/export for the weekly schedule, so a week can be edited in a spreadsheet and brought back.
+The Archive page downloads a single `backup-<timestamp>.json.gz` file containing every employee plus the years, weeks, and shifts that have data. Weeks without shifts are omitted. Restoring a backup replaces the current employees, shifts, and days off.
 
 Backups are gzip-compressed with the browser's native `CompressionStream`/`DecompressionStream`, so no additional runtime dependency is required.
 
-There is no backend. Backup encoding, CSV parsing, downloads, and all other application behavior run in the browser.
+There is no backend. Backup encoding, downloads, and all other application behavior run in the browser.
 
 ## Current status
 
-Light Scheduler is at the base-structure stage. The app includes the application shell, a top navigation bar, a Home landing page, and lazily loaded skeletons for Scheduler, Employees, Summary, and Archive. A shared workspace store holds employees, weekly shifts, and the current week, while a page store per page holds page-local UI state. The pure calendar, shift, CSV, and download utilities are implemented and tested. Shift editing, employee create/edit forms, schedule review tables, and CSV import parsing are planned and not yet implemented.
+Light Scheduler is at the base-structure stage. The app includes the application shell, a top navigation bar, a Home landing page, and lazily loaded skeletons for Scheduler, Employees, Summary, and Archive. A shared workspace store holds employees, weekly shifts, and the current week, while a page store per page holds page-local UI state. The pure calendar, shift, backup, and download utilities are implemented and tested. Shift editing, employee create/edit forms, and schedule review tables are planned and not yet implemented.
 
 ## Stack
 
@@ -83,13 +83,12 @@ src/
     employees.ts          Employees page state and member actions
     scheduler.ts          Scheduler page week navigation and shift actions
     summary.ts            read-only weekly summary getters
-    archive.ts            backup export/restore and weekly schedule CSV wiring
+    archive.ts            backup export/restore (.json.gz)
     __tests__/
   utils/
     calendar.ts           timezone-safe local ISO week helpers
     shifts.ts             HH:mm parsing and half-open overlap helpers
     archiveBackup.ts      gzip JSON backup build, validation, encode, and decode
-    csv.ts                pure RFC 4180 CSV parsing and serialization
     download.ts           Blob download and timestamped filename helpers
     id.ts                 id generation helper
     __tests__/

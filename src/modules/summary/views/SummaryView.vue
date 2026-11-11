@@ -28,6 +28,7 @@
 
       <div class="summary__toolbar" role="group" :aria-label="t('summary.title')">
         <Button
+          v-tooltip.top="t('summary.previousWeekTooltip')"
           type="button"
           icon="pi pi-chevron-left"
           text
@@ -40,6 +41,7 @@
           {{ weekRangeLabel }}
         </p>
         <Button
+          v-tooltip.top="t('summary.nextWeekTooltip')"
           type="button"
           icon="pi pi-chevron-right"
           text

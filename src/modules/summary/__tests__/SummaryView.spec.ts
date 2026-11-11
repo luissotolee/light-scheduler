@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
+import Tooltip from 'primevue/tooltip'
 import SummaryView from '@/modules/summary/views/SummaryView.vue'
 import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import { useLocaleStore } from '@/shared/stores/locale'
@@ -69,18 +70,29 @@ describe('SummaryView', () => {
 
   function mountView() {
     return mount(SummaryView, {
-      global: { plugins: [pinia, PrimeVue], stubs: { teleport: true } },
+      global: {
+        plugins: [pinia, PrimeVue],
+        stubs: { teleport: true },
+        directives: { tooltip: Tooltip },
+      },
     })
   }
 
-  it('renders the week range and navigation controls', () => {
+  it('renders the week toolbar with proper tooltips using v-tooltip directive', () => {
     seed()
     const wrapper = mountView()
+    const toolbar = wrapper.find('.summary__toolbar')
+    const previous = toolbar.find('[data-test="summary-previous-week"]')
+    const next = toolbar.find('[data-test="summary-next-week"]')
 
-    expect(wrapper.get('[data-test="summary-week-label"]').text()).toBe('Nov 2 – Nov 8, 2026')
-    expect(wrapper.find('[data-test="summary-previous-week"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="summary-next-week"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="summary-this-week"]').exists()).toBe(true)
+    expect(previous.element.tagName).toBe('BUTTON')
+    expect(next.element.tagName).toBe('BUTTON')
+    expect(previous.attributes('aria-label')).toBe('Previous week')
+    expect(next.attributes('aria-label')).toBe('Next week')
+    expect(previous.text()).toBe('')
+    expect(next.text()).toBe('')
+    expect(previous.find('.pi-chevron-left').exists()).toBe(true)
+    expect(next.find('.pi-chevron-right').exists()).toBe(true)
   })
 
   it('renders the weekly table with weekday headers', () => {

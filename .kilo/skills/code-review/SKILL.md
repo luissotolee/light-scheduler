@@ -5,7 +5,7 @@ description: Audit code for correctness, security, TypeScript strictness, Vue/Pi
 
 # Code Review
 
-Read `workspace.md` for the module map. The conventions this checklist checks live in the area skills (`vue-component`, `pinia-store`, `typescript-domain-modeling`, `testing`, `csv-import-export`, `scheduling-calendar`, `i18n`).
+Read `workspace.md` for the module map. The conventions this checklist checks live in the area skills (`vue-component`, `pinia-store`, `typescript-domain-modeling`, `testing`, `backup-import-export`, `scheduling-calendar`, `backup-compatibility`, `i18n`).
 
 ## Review checklist
 
@@ -19,7 +19,7 @@ Read `workspace.md` for the module map. The conventions this checklist checks li
 - Secrets, tokens, or keys hardcoded or logged anywhere in the source tree.
 - Unsanitized input reaching DOM (`v-html`), eval, `Function()`, or shell.
 - Unsafe dependencies (check `package.json` for known-vulnerable versions if relevant).
-- CSV/blob downloads: verify `download.ts` uses a safe Blob + object URL and revokes it.
+- `.json.gz` backup downloads: verify `download.ts` uses a safe Blob + object URL and revokes it, and that backups are gzip-compressed through `gzipJson` before `downloadBlob`.
 
 ### 3. TypeScript strictness (`verbatimModuleSyntax` is on)
 - `any` — forbidden; prefer `unknown` + narrowing or a type guard.
@@ -60,10 +60,17 @@ Read `workspace.md` for the module map. The conventions this checklist checks li
 - Input vs entity types separated (`NewTeamMember` vs `TeamMember`, `NewShift` vs `Shift`).
 - No inline interfaces for shared shapes.
 
-### 8. Data I/O
-- Pure CSV parsing/serialization in `src/shared/utils/csv.ts` (no DOM).
-- Downloads in `src/shared/utils/download.ts`.
+### 8. Data I/O and backup compatibility
+- The workspace backup is a single `.json.gz` file (`src/shared/utils/archiveBackup.ts`). Verify gzip build/parse via `buildBackup`/`parseBackup`, `gzipJson`/`gunzipJson`, and that restore goes through the archive store.
+- Downloads use `src/shared/utils/download.ts` (`downloadBlob` + `timestampedName`); keep the browser side effect out of `archiveBackup.ts`.
 - Shift times as minutes since midnight canonical; `'HH:mm'` is input/display only.
+- Backup/persisted-data changes are backward compatible (see `backup-compatibility`):
+  - New fields have an exported default and parse as missing → default, not an error.
+  - Unknown fields are ignored, not rejected.
+  - `buildBackup`/serializers write the complete current shape.
+  - Additive changes leave `BACKUP_VERSION` / `WORKSPACE_SCHEMA_VERSION` / `USER_SETTINGS_SCHEMA_VERSION` unchanged; breaking changes bump the version and add a migration that still restores older versions.
+  - Missing or partial settings do not reset unrelated preferences.
+  - A legacy fixture (older shape without the new field) restores with defaults, and a re-export includes the field.
 
 ### 9. Dead code
 - Unused imports, unused variables/params (prefix unused params with `_` or remove).
