@@ -12,22 +12,20 @@
       novalidate
       @submit.prevent="handleSave"
     >
-      <p class="scheduler-settings__description">
-        {{ t('scheduler.settings.description') }}
-      </p>
-
       <div class="scheduler-settings__times">
         <TimePickerField
           v-model="form.startTime"
           :label="t('scheduler.settings.start')"
           :minute-step="form.slotMinutes"
           id-prefix="settings-start"
+          :tooltip="t('scheduler.settings.startTooltip')"
         />
         <TimePickerField
           v-model="form.endTime"
           :label="t('scheduler.settings.end')"
           :minute-step="form.slotMinutes"
           id-prefix="settings-end"
+          :tooltip="t('scheduler.settings.endTooltip')"
         />
       </div>
 
@@ -36,7 +34,19 @@
       </p>
 
       <div class="scheduler-settings__field">
-        <span class="scheduler-settings__label">{{ t('scheduler.settings.rate') }}</span>
+        <div class="scheduler-settings__label-row">
+          <span class="scheduler-settings__label">{{ t('scheduler.settings.rate') }}</span>
+          <span
+            v-tooltip.top="t('scheduler.settings.rateTooltip')"
+            class="scheduler-settings__info"
+            role="img"
+            :aria-label="t('scheduler.settings.rateTooltip')"
+            tabindex="0"
+            data-test="settings-rate-info"
+          >
+            <i class="pi pi-info-circle" aria-hidden="true" />
+          </span>
+        </div>
         <SelectButton
           :model-value="form.slotMinutes"
           :options="rateOptions"
@@ -52,7 +62,30 @@
         </SelectButton>
       </div>
 
-      <p class="scheduler-settings__hint">{{ t('scheduler.settings.outsideWindow') }}</p>
+      <div class="scheduler-settings__field">
+        <div class="scheduler-settings__toggle">
+          <div class="scheduler-settings__label-row">
+            <label class="scheduler-settings__label" for="settings-show-headcount">
+              {{ t('scheduler.settings.showHeadcount') }}
+            </label>
+            <span
+              v-tooltip.top="t('scheduler.settings.showHeadcountTooltip')"
+              class="scheduler-settings__info"
+              role="img"
+              :aria-label="t('scheduler.settings.showHeadcountTooltip')"
+              tabindex="0"
+              data-test="settings-headcount-info"
+            >
+              <i class="pi pi-info-circle" aria-hidden="true" />
+            </span>
+          </div>
+          <ToggleSwitch
+            v-model="form.showHourlyHeadcount"
+            input-id="settings-show-headcount"
+            data-test="settings-show-headcount"
+          />
+        </div>
+      </div>
 
       <p v-if="errorMessage" class="scheduler-settings__error" role="alert" data-test="settings-error">
         {{ errorMessage }}
@@ -82,6 +115,7 @@ import { computed, reactive, watch } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import SelectButton from 'primevue/selectbutton'
+import ToggleSwitch from 'primevue/toggleswitch'
 import TimePickerField from '@/modules/scheduler/components/TimePickerField.vue'
 import type { SchedulerSettings, SlotMinutes } from '@/modules/scheduler/types'
 import {
@@ -129,6 +163,7 @@ watch(
     form.startTime = snapTimeToStep(props.settings.startTime, props.settings.slotMinutes)
     form.endTime = snapTimeToStep(props.settings.endTime, props.settings.slotMinutes)
     form.slotMinutes = props.settings.slotMinutes
+    form.showHourlyHeadcount = props.settings.showHourlyHeadcount
   },
   { immediate: true },
 )
@@ -159,7 +194,6 @@ function handleSave(): void {
   overflow-y: auto;
 }
 
-.scheduler-settings__description,
 .scheduler-settings__hint {
   margin: 0;
   color: var(--color-muted);
@@ -182,6 +216,42 @@ function handleSave(): void {
   color: var(--color-text);
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.scheduler-settings__label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scheduler-settings__info {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  cursor: help;
+}
+
+.scheduler-settings__info:hover,
+.scheduler-settings__info:focus-visible {
+  color: var(--color-accent);
+}
+
+.scheduler-settings__info:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.scheduler-settings__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+.scheduler-settings__toggle .scheduler-settings__label {
+  cursor: pointer;
 }
 
 .scheduler-settings__error {

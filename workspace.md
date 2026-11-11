@@ -14,7 +14,7 @@ Lightweight feature-module / vertical-slice layout:
 ## Module map
 
 - `home/` — landing page (store-free).
-- `scheduler/` — weekly shift view + shift actions (`scheduler` store: `addShift`, `removeShift`, `updateShift`, week navigation).
+- `scheduler/` — weekly shift view + shift actions (`scheduler` store: `addShift`, `removeShift`, `updateShift`, week navigation). Hourly employee counts for the optional headcount chips are computed in `utils/headcount.ts` (peak concurrent employees per hour).
 - `employees/` — employee CRUD + holiday dialogs (`employees` store + `EmployeeTable`/`EmployeeFormDialog`). The domain entity is `TeamMember` (see `src/types.ts`).
 - `summary/` — read-only weekly summary (`summary` store).
 - `archive/` — `.json.gz` backup export/restore (`archive` store). Backup format helpers live in `shared/utils/archiveBackup.ts`; backups key schedules by ISO year → week → `empId`, omit empty weeks, and carry locale + scheduler settings. Backup mechanics: `.kilo/skills/backup-import-export/SKILL.md`. Backup and persisted-state shapes are backward compatible: missing fields restore with defaults and unknown fields are ignored; see `.kilo/skills/backup-compatibility/SKILL.md`.

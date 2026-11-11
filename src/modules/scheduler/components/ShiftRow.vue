@@ -1,5 +1,9 @@
 <template>
-  <div class="shift-row" :data-test="`shift-row-${row.member.id}`">
+  <div
+    class="shift-row"
+    :class="{ 'shift-row--drop-target': dropTarget }"
+    :data-test="`shift-row-${row.member.id}`"
+  >
     <div
       class="shift-row__name"
       :class="[
@@ -50,6 +54,8 @@
       class="shift-row__track"
       :class="{ 'shift-row__track--disabled': disabled }"
       data-test="shift-track"
+      :data-row-member-id="row.member.id"
+      :data-row-disabled="disabled ? 'true' : 'false'"
       :tabindex="disabled ? -1 : 0"
       :aria-disabled="disabled"
       :aria-label="t('shiftRow.trackAria', { name: row.member.name })"
@@ -78,6 +84,10 @@
         :disabled="disabled"
         @resize="emit('resize', $event)"
         @remove="emit('remove', $event)"
+        @move-start="emit('moveStart', $event)"
+        @move-drag="emit('moveDrag', $event)"
+        @move-end="emit('moveEnd', $event)"
+        @move-cancel="emit('moveCancel')"
       />
 
       <div v-if="draft" class="shift-row__draft" :style="draftStyle" data-test="shift-draft" />
@@ -93,7 +103,12 @@ import {
   clampToDayWindow,
   snapToSlot,
 } from '@/shared/utils/shifts'
-import type { DayRow, ShiftRangeInput, ShiftResizeInput } from '@/modules/scheduler/types'
+import type {
+  DayRow,
+  ShiftMoveDrag,
+  ShiftRangeInput,
+  ShiftResizeInput,
+} from '@/modules/scheduler/types'
 import {
   firstFreeStartMinute,
   minuteToPercent,
@@ -107,10 +122,16 @@ import { dutyModifier } from '@/shared/utils/employee'
 import { formatHours } from '@/modules/scheduler/utils/hours'
 import { MIN_DAYS_OFF } from '@/modules/scheduler/utils/off'
 
-const props = defineProps<{
-  row: DayRow
-  slots: DaySlot[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    row: DayRow
+    slots: DaySlot[]
+    dropTarget?: boolean
+  }>(),
+  {
+    dropTarget: false,
+  },
+)
 
 const { t } = useI18n()
 
@@ -127,6 +148,10 @@ const emit = defineEmits<{
   resize: [input: ShiftResizeInput]
   remove: [id: string]
   toggleOff: [memberId: string]
+  moveStart: [id: string]
+  moveDrag: [payload: ShiftMoveDrag]
+  moveEnd: [payload: ShiftMoveDrag]
+  moveCancel: []
 }>()
 
 const disabled = computed(() => props.row.isOff || props.row.isHoliday)
@@ -399,6 +424,11 @@ function handleKeydown(event: KeyboardEvent): void {
   background: var(--color-inactive-bg);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.shift-row--drop-target .shift-row__track {
+  background: var(--color-shift-bar);
+  box-shadow: inset 0 0 0 2px var(--color-accent);
 }
 
 .shift-row__grid {

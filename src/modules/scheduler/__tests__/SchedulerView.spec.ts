@@ -151,17 +151,51 @@ describe('SchedulerView', () => {
 
     expect(minuteCells()).toHaveLength(32)
 
-    settingsStore.applySettings({ startTime: '09:00', endTime: '01:00', slotMinutes: 15 })
+    settingsStore.applySettings({
+      startTime: '09:00',
+      endTime: '01:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: false,
+    })
     await nextTick()
     expect(minuteCells()).toHaveLength(64)
 
-    settingsStore.applySettings({ startTime: '09:00', endTime: '12:00', slotMinutes: 30 })
+    settingsStore.applySettings({
+      startTime: '09:00',
+      endTime: '12:00',
+      slotMinutes: 30,
+      showHourlyHeadcount: false,
+    })
     await nextTick()
     expect(minuteCells()).toHaveLength(6)
 
-    settingsStore.applySettings({ startTime: '09:00', endTime: '12:00', slotMinutes: 15 })
+    settingsStore.applySettings({
+      startTime: '09:00',
+      endTime: '12:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: false,
+    })
     await nextTick()
     expect(minuteCells()).toHaveLength(12)
+  })
+
+  it('shows hourly headcount chips when the setting is enabled', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada, bo])
+    workspace.setShiftsForWeek('2026-11-02', [mondayShift])
+    const settingsStore = useSchedulerSettingsStore()
+    settingsStore.applySettings({
+      startTime: '09:00',
+      endTime: '12:00',
+      slotMinutes: 30,
+      showHourlyHeadcount: true,
+    })
+    const wrapper = mountView()
+
+    const chips = wrapper.findAll('[data-test="hour-headcount"]')
+    expect(chips).toHaveLength(3)
+    expect(chips.map((chip) => chip.text())).toEqual(['1', '1', '1'])
   })
 
   it('combines selected day and restart button in the day header', () => {
@@ -442,6 +476,25 @@ describe('SchedulerView', () => {
     grid.vm.$emit('remove', shift.id)
     await nextTick()
     expect(workspace.currentWeekShifts).toHaveLength(0)
+  })
+
+  it('wires grid move events to the store', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada, bo])
+    workspace.setShiftsForWeek('2026-11-02', [mondayShift])
+    const wrapper = mountView()
+    const grid = wrapper.findComponent(ShiftGrid)
+
+    grid.vm.$emit('move', {
+      id: mondayShift.id,
+      memberId: 'member-2',
+      startMinute: 540,
+      endMinute: 720,
+    })
+    await nextTick()
+
+    expect(workspace.currentWeekShifts).toEqual([{ ...mondayShift, memberId: 'member-2' }])
   })
 
   it('renders the weekly hours table at the bottom with computed values', () => {

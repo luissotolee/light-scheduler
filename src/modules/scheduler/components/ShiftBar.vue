@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Duty, Shift } from '@/types'
-import type { ShiftResizeInput } from '@/modules/scheduler/types'
+import type { ShiftMoveDrag, ShiftResizeInput } from '@/modules/scheduler/types'
 import type { MinuteRange, SchedulingWindow } from '@/shared/utils/shifts'
 import {
   DEFAULT_SCHEDULING_WINDOW,
@@ -77,6 +77,10 @@ const props = withDefaults(
 const emit = defineEmits<{
   resize: [input: ShiftResizeInput]
   remove: [id: string]
+  moveStart: [id: string]
+  moveDrag: [payload: ShiftMoveDrag]
+  moveEnd: [payload: ShiftMoveDrag]
+  moveCancel: []
 }>()
 
 type DragMode = 'move' | 'resize-start' | 'resize-end'
@@ -141,6 +145,8 @@ function beginDrag(mode: DragMode, event: PointerEvent): void {
     startMinute: props.shift.startMinute,
     endMinute: props.shift.endMinute,
   }
+
+  if (mode === 'move') emit('moveStart', props.shift.id)
 }
 
 function updateDrag(event: PointerEvent): void {
@@ -163,6 +169,11 @@ function updateDrag(event: PointerEvent): void {
     const maxStart = Math.max(props.limits.startMinute, props.limits.endMinute - duration)
     const startMinute = Math.min(Math.max(rawStart, props.limits.startMinute), maxStart)
     draftRange.value = { startMinute, endMinute: startMinute + duration }
+    emit('moveDrag', {
+      id: props.shift.id,
+      ...draftRange.value,
+      clientY: event.clientY,
+    })
     return
   }
 
@@ -188,7 +199,7 @@ function updateDrag(event: PointerEvent): void {
   draftRange.value = { startMinute: state.originStartMinute, endMinute }
 }
 
-function endDrag(): void {
+function endDrag(event: PointerEvent): void {
   const state = drag.value
   if (!state) return
 
@@ -200,12 +211,18 @@ function endDrag(): void {
   draftRange.value = null
 
   if (!range) return
+  if (state.mode === 'move') {
+    emit('moveEnd', { id: props.shift.id, ...range, clientY: event.clientY })
+    return
+  }
   emit('resize', { id: props.shift.id, ...range })
 }
 
 function cancelDrag(): void {
+  const wasMoving = drag.value?.mode === 'move'
   drag.value = null
   draftRange.value = null
+  if (wasMoving) emit('moveCancel')
 }
 
 function handleContextMenu(): void {

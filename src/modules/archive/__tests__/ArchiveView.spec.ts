@@ -198,7 +198,12 @@ describe('ArchiveView', () => {
       wrapper,
       await makeBackupFile({
         locale: 'es',
-        scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+        scheduler: {
+          startTime: '08:00',
+          endTime: '16:00',
+          slotMinutes: 15,
+          showHourlyHeadcount: true,
+        },
       }),
     )
     await vi.waitFor(() => {
@@ -212,6 +217,7 @@ describe('ArchiveView', () => {
       startTime: '08:00',
       endTime: '16:00',
       slotMinutes: 15,
+      showHourlyHeadcount: true,
     })
     expect(wrapper.find('[data-test="status"]').text()).toBe(
       'Copia de seguridad restaurada',

@@ -1,6 +1,19 @@
 <template>
   <fieldset class="time-picker">
-    <legend class="time-picker__label">{{ label }}</legend>
+    <legend class="time-picker__label">
+      {{ label }}
+      <span
+        v-if="tooltip"
+        v-tooltip.top="tooltip"
+        class="time-picker__info"
+        role="img"
+        :aria-label="tooltip"
+        tabindex="0"
+        :data-test="`${idPrefix}-info`"
+      >
+        <i class="pi pi-info-circle" aria-hidden="true" />
+      </span>
+    </legend>
     <div class="time-picker__controls">
       <Select
         :model-value="hourValue"
@@ -37,6 +50,7 @@ const props = defineProps<{
   label: string
   minuteStep: SlotMinutes
   idPrefix: string
+  tooltip?: string
 }>()
 
 const emit = defineEmits<{
@@ -106,6 +120,28 @@ function updateMinute(value: unknown): void {
   color: var(--color-text);
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.time-picker__info {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.3rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 400;
+  vertical-align: middle;
+  cursor: help;
+}
+
+.time-picker__info:hover,
+.time-picker__info:focus-visible {
+  color: var(--color-accent);
+}
+
+.time-picker__info:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .time-picker__controls {

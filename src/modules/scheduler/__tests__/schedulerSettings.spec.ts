@@ -36,6 +36,7 @@ describe('scheduler settings store', () => {
       startTime: '09:15',
       endTime: '12:00',
       slotMinutes: 15,
+      showHourlyHeadcount: false,
     })
 
     expect(applied).toBe(true)
@@ -43,6 +44,7 @@ describe('scheduler settings store', () => {
       startTime: '09:15',
       endTime: '12:00',
       slotMinutes: 15,
+      showHourlyHeadcount: false,
     })
     expect(store.schedulingWindow).toEqual({
       startMinute: 555,
@@ -52,6 +54,31 @@ describe('scheduler settings store', () => {
     expect(storedScheduler()).toEqual(store.settings)
   })
 
+  it('persists and rehydrates the hourly headcount setting', () => {
+    const store = useSchedulerSettingsStore()
+    store.applySettings({
+      startTime: '08:00',
+      endTime: '16:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: true,
+    })
+
+    expect(storedScheduler()).toEqual({
+      startTime: '08:00',
+      endTime: '16:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: true,
+    })
+
+    const rehydrated = useSchedulerSettingsStore()
+    rehydrated.hydrate()
+
+    expect(rehydrated.settings.showHourlyHeadcount).toBe(true)
+
+    setActivePinia(createPinia())
+    expect(useSchedulerSettingsStore().settings.showHourlyHeadcount).toBe(true)
+  })
+
   it('rejects invalid settings without changing state or storage', () => {
     const store = useSchedulerSettingsStore()
 
@@ -59,6 +86,7 @@ describe('scheduler settings store', () => {
       startTime: '09:10',
       endTime: '01:00',
       slotMinutes: 30,
+      showHourlyHeadcount: false,
     })
 
     expect(applied).toBe(false)
@@ -77,7 +105,12 @@ describe('scheduler settings store', () => {
 
     const store = useSchedulerSettingsStore()
 
-    expect(store.settings).toEqual({ startTime: '08:00', endTime: '16:00', slotMinutes: 15 })
+    expect(store.settings).toEqual({
+      startTime: '08:00',
+      endTime: '16:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: false,
+    })
     expect(store.schedulingWindow).toEqual({
       startMinute: 480,
       endMinute: 960,
@@ -106,7 +139,12 @@ describe('scheduler settings store', () => {
 
   it('resets to defaults', () => {
     const store = useSchedulerSettingsStore()
-    store.applySettings({ startTime: '08:00', endTime: '16:00', slotMinutes: 15 })
+    store.applySettings({
+      startTime: '08:00',
+      endTime: '16:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: false,
+    })
 
     store.resetSettings()
 
@@ -124,12 +162,18 @@ describe('scheduler settings store', () => {
       startTime: '08:00',
       endTime: '16:00',
       slotMinutes: 15,
+      showHourlyHeadcount: false,
     })
   })
 
   it('hydrate picks up externally restored storage values', () => {
     const store = useSchedulerSettingsStore()
-    store.applySettings({ startTime: '08:00', endTime: '16:00', slotMinutes: 15 })
+    store.applySettings({
+      startTime: '08:00',
+      endTime: '16:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: true,
+    })
 
     localStorage.setItem(
       USER_SETTINGS_STORAGE_KEY,

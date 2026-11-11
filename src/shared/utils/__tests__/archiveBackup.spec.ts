@@ -193,14 +193,24 @@ describe('buildBackup', () => {
       '2026-11-02',
       {
         locale: 'es',
-        scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+        scheduler: {
+          startTime: '08:00',
+          endTime: '16:00',
+          slotMinutes: 15,
+          showHourlyHeadcount: true,
+        },
       },
       new Date('2026-11-09T20:57:00.000Z'),
     )
 
     expect(backup.settings).toEqual({
       locale: 'es',
-      scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+      scheduler: {
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
+        showHourlyHeadcount: true,
+      },
     })
     expect(backup.exportedAt).toBe('2026-11-09T20:57:00.000Z')
   })
@@ -289,7 +299,12 @@ describe('parseBackup', () => {
       backupRecord({
         settings: {
           locale: 'es',
-          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+          scheduler: {
+            startTime: '08:00',
+            endTime: '16:00',
+            slotMinutes: 15,
+            showHourlyHeadcount: true,
+          },
         },
       }),
     )
@@ -298,7 +313,53 @@ describe('parseBackup', () => {
     if (!parsed.ok) return
     expect(parsed.data.settings).toEqual({
       locale: 'es',
-      scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+      scheduler: {
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
+        showHourlyHeadcount: true,
+      },
+    })
+  })
+
+  it('restores a legacy scheduler section without the headcount setting', () => {
+    const parsed = parseBackup(
+      backupRecord({
+        settings: {
+          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+        },
+      }),
+    )
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.settings?.scheduler?.showHourlyHeadcount).toBe(false)
+
+    const reexported = buildBackup([ada], {}, {}, '2026-11-02', parsed.data.settings)
+    expect(reexported.settings?.scheduler?.showHourlyHeadcount).toBe(false)
+  })
+
+  it('ignores unknown scheduler settings fields', () => {
+    const parsed = parseBackup(
+      backupRecord({
+        settings: {
+          scheduler: {
+            startTime: '08:00',
+            endTime: '16:00',
+            slotMinutes: 15,
+            futureSetting: 'ignored',
+          },
+        },
+      }),
+    )
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.settings?.scheduler).toEqual({
+      startTime: '08:00',
+      endTime: '16:00',
+      slotMinutes: 15,
+      showHourlyHeadcount: false,
     })
   })
 
@@ -311,14 +372,24 @@ describe('parseBackup', () => {
     const schedulerOnly = parseBackup(
       backupRecord({
         settings: {
-          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+          scheduler: {
+            startTime: '08:00',
+            endTime: '16:00',
+            slotMinutes: 15,
+            showHourlyHeadcount: false,
+          },
         },
       }),
     )
     expect(schedulerOnly.ok).toBe(true)
     if (!schedulerOnly.ok) return
     expect(schedulerOnly.data.settings).toEqual({
-      scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+      scheduler: {
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
+        showHourlyHeadcount: false,
+      },
     })
   })
 
@@ -335,6 +406,20 @@ describe('parseBackup', () => {
       parseBackup(
         backupRecord({
           settings: { scheduler: { startTime: '09:00', endTime: '09:00', slotMinutes: 30 } },
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'archive.invalidBackup' })
+    expect(
+      parseBackup(
+        backupRecord({
+          settings: {
+            scheduler: {
+              startTime: '08:00',
+              endTime: '16:00',
+              slotMinutes: 15,
+              showHourlyHeadcount: 'yes',
+            },
+          },
         }),
       ),
     ).toEqual({ ok: false, error: 'archive.invalidBackup' })

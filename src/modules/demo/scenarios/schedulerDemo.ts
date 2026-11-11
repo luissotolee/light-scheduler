@@ -69,6 +69,13 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 3100,
     },
     {
+      id: 'scheduler-move-between-rows',
+      action: 'spotlight',
+      target: { testId: 'shift-track', within: 'shift-row-emp-mock-02' },
+      narrationKey: 'demo.scenario.scheduler.moveBetweenRows',
+      pauseMs: 3100,
+    },
+    {
       id: 'scheduler-remove-shift',
       action: 'press',
       target: { testId: 'shift-bar', within: 'shift-row-emp-mock-01', index: 1 },
@@ -126,10 +133,24 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 3100,
     },
     {
+      id: 'scheduler-settings-tooltips',
+      action: 'spotlight',
+      target: { testId: 'settings-start-info' },
+      narrationKey: 'demo.scenario.scheduler.settingsTooltips',
+      pauseMs: 3100,
+    },
+    {
       id: 'scheduler-settings-slot',
       action: 'click',
       target: { testId: 'settings-rate-15' },
       narrationKey: 'demo.scenario.scheduler.settingsSlot',
+      pauseMs: 3100,
+    },
+    {
+      id: 'scheduler-settings-headcount',
+      action: 'spotlight',
+      target: { testId: 'settings-headcount-info' },
+      narrationKey: 'demo.scenario.scheduler.settingsHeadcount',
       pauseMs: 3100,
     },
     {

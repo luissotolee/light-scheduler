@@ -268,7 +268,12 @@ describe('demoSession', () => {
   })
 })
 describe('demoSession scheduler settings', () => {
-  const customSettings = { startTime: '08:00', endTime: '16:00', slotMinutes: 15 as const }
+  const customSettings = {
+    startTime: '08:00',
+    endTime: '16:00',
+    slotMinutes: 15 as const,
+    showHourlyHeadcount: true,
+  }
 
   beforeEach(() => {
     localStorage.clear()

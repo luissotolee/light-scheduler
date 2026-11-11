@@ -839,6 +839,7 @@ describe('archive store', () => {
         startTime: '08:00',
         endTime: '16:00',
         slotMinutes: 15,
+        showHourlyHeadcount: true,
       })
       const store = useArchiveStore()
 
@@ -848,7 +849,12 @@ describe('archive store', () => {
       expect(backup).toMatchObject({
         settings: {
           locale: 'es',
-          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+          scheduler: {
+            startTime: '08:00',
+            endTime: '16:00',
+            slotMinutes: 15,
+            showHourlyHeadcount: true,
+          },
         },
       })
     })
@@ -861,7 +867,12 @@ describe('archive store', () => {
       await store.prepareBackupImport(
         await makeBackupFile({
           locale: 'es',
-          scheduler: { startTime: '08:00', endTime: '16:00', slotMinutes: 15 },
+          scheduler: {
+            startTime: '08:00',
+            endTime: '16:00',
+            slotMinutes: 15,
+            showHourlyHeadcount: true,
+          },
         }),
       )
       store.confirmBackupImport()
@@ -871,6 +882,34 @@ describe('archive store', () => {
         startTime: '08:00',
         endTime: '16:00',
         slotMinutes: 15,
+        showHourlyHeadcount: true,
+      })
+    })
+
+    it('restores a legacy scheduler section without the headcount setting', async () => {
+      const workspace = useWorkspaceStore()
+      workspace.setMembers([ada])
+      useSchedulerSettingsStore().applySettings({
+        startTime: '08:00',
+        endTime: '16:00',
+        slotMinutes: 15,
+        showHourlyHeadcount: true,
+      })
+      const store = useArchiveStore()
+      const legacy = buildBackup([ada], {}, {}, '2026-11-02', {
+        scheduler: { startTime: '08:00', endTime: '12:00', slotMinutes: 30 },
+      } as unknown as BackupSettings)
+
+      await store.prepareBackupImport(
+        new File([await gzipJson(legacy)], 'backup.json.gz', { type: 'application/gzip' }),
+      )
+      store.confirmBackupImport()
+
+      expect(useSchedulerSettingsStore().settings).toEqual({
+        startTime: '08:00',
+        endTime: '12:00',
+        slotMinutes: 30,
+        showHourlyHeadcount: false,
       })
     })
 
@@ -882,6 +921,7 @@ describe('archive store', () => {
         startTime: '08:00',
         endTime: '16:00',
         slotMinutes: 15,
+        showHourlyHeadcount: true,
       })
       const store = useArchiveStore()
 
@@ -893,6 +933,7 @@ describe('archive store', () => {
         startTime: '08:00',
         endTime: '16:00',
         slotMinutes: 15,
+        showHourlyHeadcount: true,
       })
     })
   })
