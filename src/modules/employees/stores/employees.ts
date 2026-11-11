@@ -33,6 +33,7 @@ export const useEmployeesStore = defineStore('employees', () => {
   const pendingAction = ref<PendingAction | null>(null)
   const detailsVisible = ref(false)
   const detailsTargetId = ref<string | null>(null)
+  const hideInactive = ref(false)
 
   function workspace() {
     return useWorkspaceStore()
@@ -42,12 +43,21 @@ export const useEmployeesStore = defineStore('employees', () => {
     status.value = { loading: false, error }
   }
 
+  function setHideInactive(value: boolean): void {
+    hideInactive.value = value
+  }
+
+  const activeCount = computed(() => workspace().members.filter((member) => member.active).length)
+  const totalCount = computed(() => workspace().members.length)
+
   const count = computed(() => workspace().members.length)
 
   const filteredMembers = computed(() => {
     const query = search.value.trim().toLowerCase()
-    if (!query) return workspace().members
-    return workspace().members.filter((member) => member.name.toLowerCase().includes(query))
+    return workspace().members.filter((member) => {
+      if (hideInactive.value && !member.active) return false
+      return !query || member.name.toLowerCase().includes(query)
+    })
   })
 
   const selectedMember = computed(() => {
@@ -335,6 +345,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     closeForm()
     closeHolidays()
     closeDetails()
+    hideInactive.value = false
   }
 
   return {
@@ -349,6 +360,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     pendingAction,
     detailsVisible,
     detailsTargetId,
+    hideInactive,
     count,
     filteredMembers,
     selectedMember,
@@ -356,6 +368,8 @@ export const useEmployeesStore = defineStore('employees', () => {
     holidayTarget,
     detailsTarget,
     pendingMember,
+    activeCount,
+    totalCount,
     addMember,
     updateMember,
     setHolidays,
@@ -379,5 +393,6 @@ export const useEmployeesStore = defineStore('employees', () => {
     closeHolidays,
     loadMembers,
     resetUi,
+    setHideInactive,
   }
 })

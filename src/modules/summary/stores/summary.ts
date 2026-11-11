@@ -10,6 +10,7 @@ import {
   isoDateToDate,
   weekdayDayOfMonth,
 } from '@/shared/utils/calendar'
+import type { WeekKey } from '@/types'
 import type { SummaryDayHeader } from '@/modules/summary/types'
 import { buildSummaryRows, computeSummaryPrintZoom, summaryRowUnits } from '@/modules/summary/utils/rows'
 
@@ -58,6 +59,10 @@ export const useSummaryStore = defineStore('summary', () => {
     workspaceStore.setCurrentWeekKey(getWeekKey(new Date()))
   }
 
+  function setWeekKey(weekKey: WeekKey): void {
+    workspaceStore.setCurrentWeekKey(weekKey)
+  }
+
   return {
     currentWeekKey,
     weekRangeLabel,
@@ -67,5 +72,6 @@ export const useSummaryStore = defineStore('summary', () => {
     goToPreviousWeek,
     goToNextWeek,
     goToCurrentWeek,
+    setWeekKey,
   }
 })

@@ -30,5 +30,6 @@ Load the `backup-import-export` skill for the `.json.gz` build/parse/compress/do
 
 - Commit messages use `(type) summary`; see `.kilo/skills/commit/SKILL.md` and `/commit`.
 - Pushing a branch and opening a GitHub PR is a separate step; use `.kilo/skills/pull-request/SKILL.md` and `/pr`.
-- The PR skill requires a clean tracked working tree, pushes the current branch, skips creation when an open PR already exists, and builds the description from `git diff origin/<base>...HEAD`.
+- The PR skill requires a clean tracked working tree, pushes the current branch, creates a PR when none is open, and refreshes the description of an existing open PR from `git diff origin/<base>...HEAD`. A push to a branch with an open PR must leave its description updated.
+- Every PR description follows `.github/pull_request_template.md`: `## Summary` with exactly two main sections, `### Core Implementation` and `### Impact`. Keep this structure when creating or modifying a description; do not add other sections.
 - Use the workspace **GitHub MCP server** for GitHub operations (branches, PRs, issues, reviews, etc.). Do **not** use `gh`. Never print tokens or remote URLs that contain credentials.

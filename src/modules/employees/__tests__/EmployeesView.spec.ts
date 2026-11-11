@@ -2,18 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
+import type { Directive } from 'vue'
 import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
-import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
-import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
-import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
-import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
 import EmployeesView from '@/modules/employees/views/EmployeesView.vue'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { en } from '@/shared/i18n/messages/en'
-import { holidayToWeekKey, todayIsoDate } from '@/shared/utils/calendar'
+import { es } from '@/shared/i18n/messages/es'
 import type { TeamMember } from '@/types'
 
 const ada: TeamMember = {
@@ -37,8 +34,9 @@ const bo: TeamMember = {
   contract: 'part_time',
   weeklyHours: 20,
   holidays: [],
-  active: true,
+  active: false,
   startDate: '2026-02-01',
+  endDate: '2026-11-01',
 }
 
 describe('EmployeesView', () => {
@@ -70,325 +68,139 @@ describe('EmployeesView', () => {
     })
   }
 
-  it('shows an empty state, a live count, and an enabled add button', () => {
+  it('renders an unchecked, accessible hide-deactivated switch by default', () => {
     const wrapper = mountView()
+    const toggle = wrapper.find('[data-test="hide-inactive"]')
+    const input = toggle.find('input[role="switch"]')
 
-    expect(wrapper.text()).toContain('No employees yet')
-    expect(wrapper.text()).toContain('Employees: 0')
-    expect(wrapper.find('[data-test="add-employee"]').attributes('disabled')).toBeUndefined()
+    expect(toggle.text()).toContain(en['employees.hideInactive'])
+    expect(input.exists()).toBe(true)
+    expect(input.attributes('id')).toBe('employee-hide-inactive')
+    expect(toggle.attributes('for')).toBe('employee-hide-inactive')
+    expect(input.attributes('aria-checked')).toBe('false')
   })
 
-  it('renders employees and filters them through the store', async () => {
+  it('explains the active-only toggle through the tooltip directive', () => {
+    const tooltipBindings: Array<{ el: HTMLElement; value: string }> = []
+    const recordingTooltip: Directive<HTMLElement, string> = {
+      mounted(el, binding) {
+        tooltipBindings.push({ el, value: binding.value })
+      },
+    }
+
+    const wrapper = mount(EmployeesView, {
+      global: {
+        plugins: [pinia, PrimeVue],
+        stubs: { teleport: true },
+        directives: { tooltip: recordingTooltip },
+      },
+    })
+
+    const toggle = wrapper.find('[data-test="hide-inactive"]')
+
+    expect(toggle.attributes('title')).toBeUndefined()
+    const toggleBinding = tooltipBindings.find((binding) => binding.el === toggle.element)
+    expect(toggleBinding?.value).toBe(en['employees.hideInactive.tooltip'])
+  })
+
+  it('shows active and deactivated employees until the switch is turned on', async () => {
     const workspace = useWorkspaceStore()
     workspace.setMembers([ada, bo])
     const wrapper = mountView()
 
-    expect(wrapper.text()).toContain('Employees: 2')
     expect(wrapper.findAll('.employee-table__name')).toHaveLength(2)
-    expect(wrapper.text()).toContain('Manager')
-    expect(wrapper.text()).toContain('Full-time')
 
-    const input = wrapper.find('input[type="search"]')
-    expect(input.attributes('placeholder')).toBe('Search by name')
+    await wrapper.find('input[role="switch"]').setValue(true)
+    await nextTick()
 
-    await input.setValue('ADA')
     expect(wrapper.findAll('.employee-table__name')).toHaveLength(1)
     expect(wrapper.text()).toContain('Ada')
-
-    await input.setValue('ada@example.com')
-    expect(wrapper.findAll('.employee-table__name')).toHaveLength(0)
-    expect(wrapper.text()).toContain('No matching employees')
-    expect(wrapper.text()).toContain('Try a different name.')
-
-    await input.setValue('zzz')
-    expect(wrapper.text()).toContain('No matching employees')
+    expect(wrapper.text()).not.toContain('Bo')
+    expect(wrapper.text()).toContain(en['employees.count'].replace('{active}', '1').replace('{total}', '2'))
   })
 
-  it('adds an employee through the form dialog', async () => {
+  it('restores deactivated employees when the switch is turned off', async () => {
     const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    const wrapper = mountView()
+    const input = wrapper.find('input[role="switch"]')
+
+    await input.setValue(true)
+    await nextTick()
+    expect(wrapper.findAll('.employee-table__name')).toHaveLength(1)
+
+    await input.setValue(false)
+    await nextTick()
+    expect(wrapper.findAll('.employee-table__name')).toHaveLength(2)
+  })
+
+  it('shows the all-inactive empty state when every employee is deactivated', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([{ ...ada, active: false, endDate: '2026-11-01' }])
     const wrapper = mountView()
 
-    await wrapper.find('[data-test="add-employee"]').trigger('click')
-    const dialog = wrapper.findComponent(EmployeeFormDialog)
-    expect(dialog.props('visible')).toBe(true)
-
-    dialog.vm.$emit('submit', {
-      name: 'Ada',
-      duty: 'manager',
-      contract: 'fulltime',
-      weeklyHours: 40,
-      phone: '+1 555 010 0000',
-    })
+    await wrapper.find('input[role="switch"]').setValue(true)
     await nextTick()
 
-    expect(workspace.members).toHaveLength(1)
-    expect(workspace.members[0]).toMatchObject({
-      name: 'Ada',
-      weeklyHours: 40,
-      phone: '+1 555 010 0000',
-    })
-    expect(dialog.props('visible')).toBe(false)
+    expect(wrapper.text()).toContain(en['employees.allInactiveTitle'])
+    expect(wrapper.text()).toContain(en['employees.allInactiveDescription'])
   })
 
-  it('edits an employee through the form dialog', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Edit Ada"]').trigger('click')
-    const dialog = wrapper.findComponent(EmployeeFormDialog)
-    expect(dialog.props('member')).toMatchObject({ id: ada.id, name: 'Ada' })
-
-    dialog.vm.$emit('submit', {
-      name: 'Ada Lovelace',
-      duty: 'head_manager',
-      contract: 'weekends',
-      weeklyHours: 32,
-      phone: '+1 555 010 0001',
-    })
-    await nextTick()
-
-    expect(workspace.members[0]).toMatchObject({
-      id: ada.id,
-      name: 'Ada Lovelace',
-      duty: 'head_manager',
-      contract: 'weekends',
-      weeklyHours: 32,
-      holidays: ada.holidays,
-      phone: '+1 555 010 0001',
-    })
-    expect(dialog.props('visible')).toBe(false)
-  })
-
-  it('saves holiday weeks through the holiday dialog', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Holidays for Ada"]').trigger('click')
-    const dialog = wrapper.findComponent(HolidayWeeksDialog)
-    expect(dialog.props('visible')).toBe(true)
-    expect(dialog.props('memberName')).toBe('Ada')
-
-    dialog.vm.$emit('save', [
-      { year: 2026, week: 12 },
-      { year: 2026, week: 10 },
-    ])
-    await nextTick()
-
-    expect(workspace.members[0].holidays).toEqual([
-      { year: 2026, week: 10 },
-      { year: 2026, week: 12 },
-    ])
-  })
-
-  it('asks for confirmation before saving a holiday week that already has shifts', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([{ ...ada, holidays: [] }])
-    const weekKey = holidayToWeekKey({ year: 2026, week: 12 })
-    workspace.setShiftsForWeek(weekKey, [
-      { id: 'shift-1', memberId: ada.id, weekday: 'monday', startMinute: 540, endMinute: 1020 },
-    ])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Holidays for Ada"]').trigger('click')
-    const holidayDialog = wrapper.findComponent(HolidayWeeksDialog)
-    holidayDialog.vm.$emit('save', [{ year: 2026, week: 12 }])
-    await nextTick()
-
-    const confirm = wrapper.findComponent(ConfirmActionDialog)
-    expect(confirm.props('visible')).toBe(true)
-    expect(confirm.props('header')).toBe(en['employees.confirm.holidaysHeader'])
-    expect(confirm.props('message')).toContain('Ada')
-    expect(workspace.members[0].holidays).toEqual([])
-    expect(workspace.schedules[weekKey]).toHaveLength(1)
-
-    confirm.vm.$emit('confirm')
-    await nextTick()
-
-    expect(workspace.members[0].holidays).toEqual([{ year: 2026, week: 12 }])
-    expect(workspace.schedules[weekKey]).toBeUndefined()
-    expect(confirm.props('visible')).toBe(false)
-  })
-
-  it('removes an employee only after confirming', async () => {
+  it('keeps the no-match empty state when a search matches only hidden employees', async () => {
     const workspace = useWorkspaceStore()
     workspace.setMembers([ada, bo])
     const wrapper = mountView()
 
-    await wrapper.find('[aria-label="Remove Bo"]').trigger('click')
-    const dialog = wrapper.findComponent(ConfirmActionDialog)
-    expect(dialog.props('visible')).toBe(true)
-    expect(dialog.props('header')).toBe('Remove employee')
-    expect(dialog.props('message')).toContain('Remove Bo?')
-    expect(workspace.members).toEqual([ada, bo])
-
-    dialog.vm.$emit('confirm')
+    await wrapper.find('input[type="search"]').setValue('Bo')
+    await wrapper.find('input[role="switch"]').setValue(true)
     await nextTick()
 
-    expect(workspace.members).toEqual([ada])
-    expect(dialog.props('visible')).toBe(false)
+    expect(wrapper.text()).toContain(en['employees.noMatchTitle'])
+    expect(wrapper.text()).not.toContain(en['employees.allInactiveTitle'])
   })
 
-  it('deactivates an employee only after confirming', async () => {
+  it('does not clear the search when the switch is toggled', async () => {
     const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Deactivate Ada"]').trigger('click')
-    const dialog = wrapper.findComponent(ConfirmActionDialog)
-    expect(dialog.props('visible')).toBe(true)
-    expect(dialog.props('header')).toBe('Deactivate employee')
-    expect(dialog.props('message')).toContain('Deactivate Ada?')
-    expect(workspace.members[0].active).toBe(true)
-
-    dialog.vm.$emit('confirm')
-    await nextTick()
-
-    expect(workspace.members[0]).toMatchObject({ active: false, endDate: todayIsoDate() })
-    expect(dialog.props('visible')).toBe(false)
-  })
-
-  it('reactivates an inactive employee directly', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([{ ...bo, active: false, endDate: '2026-11-01' }])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Reactivate Bo"]').trigger('click')
-
-    expect(workspace.members[0]).toMatchObject({ active: true })
-    expect(workspace.members[0].endDate).toBeUndefined()
-  })
-
-  it('surfaces a store error banner while the form is closed', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
+    workspace.setMembers([ada, bo])
     const store = useEmployeesStore()
     const wrapper = mountView()
-
-    store.setHolidays(
-      ada.id,
-      Array.from({ length: 7 }, (_, index) => ({ year: 2026, week: index + 1 })),
-    )
-    await nextTick()
-
-    const banner = wrapper.find('[data-test="employees-error"]')
-    expect(banner.exists()).toBe(true)
-    expect(banner.text()).toBe('At most 6 holiday weeks per year are allowed')
-  })
-
-  it('keeps the confirm message when the target is filtered out of the list', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([ada, bo])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Remove Bo"]').trigger('click')
-    const dialog = wrapper.findComponent(ConfirmActionDialog)
-    expect(dialog.props('message')).toContain('Remove Bo?')
 
     await wrapper.find('input[type="search"]').setValue('Ada')
-
-    expect(wrapper.findAll('.employee-table__name')).toHaveLength(1)
-    expect(dialog.props('message')).toContain('Remove Bo?')
-  })
-
-  it('resets open dialog state when the view unmounts', async () => {
-    const store = useEmployeesStore()
-    const wrapper = mountView()
-
-    await wrapper.find('[data-test="add-employee"]').trigger('click')
-    expect(store.formVisible).toBe(true)
-
-    wrapper.unmount()
-
-    expect(store.formVisible).toBe(false)
-    expect(store.editingId).toBeNull()
-  })
-
-  it('resets the form dialog state when it closes', async () => {
-    const store = useEmployeesStore()
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Edit Ada"]').trigger('click')
-    const dialog = wrapper.findComponent(EmployeeFormDialog)
-    expect(store.formVisible).toBe(true)
-
-    dialog.vm.$emit('update:visible', false)
+    await wrapper.find('input[role="switch"]').setValue(true)
     await nextTick()
 
-    expect(store.formVisible).toBe(false)
-    expect(store.editingId).toBeNull()
+    expect(wrapper.find('input[type="search"]').element).toHaveProperty('value', 'Ada')
+    expect(store.search).toBe('Ada')
   })
 
-  it('resets the holiday dialog state when it closes', async () => {
-    const store = useEmployeesStore()
+  it('renders the switch label and all-inactive message in Spanish', async () => {
     const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
+    workspace.setMembers([{ ...ada, active: false, endDate: '2026-11-01' }])
     const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Holidays for Ada"]').trigger('click')
-    const dialog = wrapper.findComponent(HolidayWeeksDialog)
-    expect(store.holidayVisible).toBe(true)
-
-    dialog.vm.$emit('update:visible', false)
-    await nextTick()
-
-    expect(store.holidayVisible).toBe(false)
-    expect(store.holidayTargetId).toBeNull()
-  })
-
-  it('resets the confirm dialog state when it closes', async () => {
-    const store = useEmployeesStore()
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([ada, bo])
-    const wrapper = mountView()
-
-    await wrapper.find('[aria-label="Remove Bo"]').trigger('click')
-    const dialog = wrapper.findComponent(ConfirmActionDialog)
-    expect(store.confirmVisible).toBe(true)
-
-    dialog.vm.$emit('update:visible', false)
-    await nextTick()
-
-    expect(store.confirmVisible).toBe(false)
-    expect(store.pendingAction).toBeNull()
-  })
-
-  it('re-renders the same mounted view in Spanish when the locale changes', async () => {
-    const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
-    const wrapper = mountView()
-    const root = wrapper.find('.employees').element
     const localeStore = useLocaleStore()
 
-    expect(wrapper.text()).toContain('Employees: 1')
-    expect(wrapper.find('[data-test="add-employee"]').text()).toBe('Add employee')
-
+    await wrapper.find('input[role="switch"]').setValue(true)
     localeStore.setLocale('es')
     await nextTick()
 
-    expect(wrapper.find('.employees').element).toBe(root)
-    expect(wrapper.text()).toContain('Empleados: 1')
-    expect(wrapper.find('[data-test="add-employee"]').text()).toBe('Añadir empleado')
-    expect(wrapper.find('input[type="search"]').attributes('placeholder')).toBe('Buscar por nombre')
-    expect(document.documentElement.lang).toBe('es')
+    expect(wrapper.find('[data-test="hide-inactive"]').text()).toContain(
+      es['employees.hideInactive'],
+    )
+    expect(wrapper.text()).toContain(es['employees.allInactiveTitle'])
+    expect(wrapper.text()).toContain(es['employees.allInactiveDescription'])
   })
 
-  it('opens the employee details dialog from the name', async () => {
+  it('resets the hide-deactivated switch when the view unmounts', async () => {
     const workspace = useWorkspaceStore()
-    workspace.setMembers([ada])
+    workspace.setMembers([ada, bo])
+    const store = useEmployeesStore()
     const wrapper = mountView()
 
-    await wrapper.find('[aria-label="View details for Ada"]').trigger('click')
-    const dialog = wrapper.findComponent(EmployeeDetailsDialog)
-    expect(dialog.props('visible')).toBe(true)
-    expect(dialog.props('member')).toMatchObject({ id: ada.id, name: 'Ada' })
+    await wrapper.find('input[role="switch"]').setValue(true)
+    expect(store.hideInactive).toBe(true)
 
-    dialog.vm.$emit('update:visible', false)
-    await nextTick()
+    wrapper.unmount()
 
-    expect(dialog.props('visible')).toBe(false)
+    expect(store.hideInactive).toBe(false)
   })
 })

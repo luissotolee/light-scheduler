@@ -33,7 +33,7 @@
         />
       </div>
 
-      <p class="holiday-dialog__counter" data-test="counter">
+      <p v-if="!isWeekPicker" class="holiday-dialog__counter" data-test="counter">
         {{ t('holidays.counter', { count, max: MAX_HOLIDAY_WEEKS_PER_YEAR, year }) }}
       </p>
 
@@ -44,10 +44,11 @@
           type="button"
           class="holiday-dialog__week"
           :class="{ 'holiday-dialog__week--selected': isSelected(option) }"
-          :aria-pressed="isSelected(option)"
+          :aria-pressed="isWeekPicker ? undefined : isSelected(option)"
+          :aria-current="isWeekPicker && isSelected(option) ? 'true' : undefined"
           :disabled="isDisabled(option)"
           :data-test="`week-${option.week}`"
-          @click="toggle(option)"
+          @click="handleWeekClick(option)"
         >
           {{ option.label }}
         </button>
@@ -61,7 +62,13 @@
           data-test="cancel-holidays"
           @click="emit('update:visible', false)"
         />
-        <Button type="button" :label="t('common.save')" data-test="save-holidays" @click="save" />
+        <Button
+          v-if="!isWeekPicker"
+          type="button"
+          :label="t('common.save')"
+          data-test="save-holidays"
+          @click="save"
+        />
       </div>
     </div>
   </Dialog>
@@ -71,21 +78,34 @@
 import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import type { HolidayWeek, HolidayWeekOption } from '@/types'
+import type { HolidayWeek, HolidayWeekOption, WeekKey } from '@/types'
 import { useI18n } from '@/shared/i18n'
-import { getIsoWeek, getIsoWeeksForYear } from '@/shared/utils/calendar'
-import { MAX_HOLIDAY_WEEKS_PER_YEAR, countHolidaysInYear, holidayKey, normalizeHolidays } from '@/shared/utils/employee'
+import {
+  getIsoWeek,
+  getIsoWeeksForYear,
+  holidayToWeekKey,
+  isoDateToDate,
+} from '@/shared/utils/calendar'
+import {
+  MAX_HOLIDAY_WEEKS_PER_YEAR,
+  countHolidaysInYear,
+  holidayKey,
+  normalizeHolidays,
+} from '@/shared/utils/employee'
 
 const props = defineProps<{
   visible: boolean
-  memberName: string
-  selected: HolidayWeek[]
+  mode?: 'holidays' | 'week'
+  memberName?: string
+  selected?: HolidayWeek[]
+  currentWeek?: WeekKey
   initialYear?: number
 }>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
   save: [holidays: HolidayWeek[]]
+  select: [weekKey: WeekKey]
 }>()
 
 const { t, locale } = useI18n()
@@ -93,15 +113,26 @@ const { t, locale } = useI18n()
 const year = ref(getIsoWeek(new Date()).year)
 const selectedKeys = ref<Set<string>>(new Set())
 
+const isWeekPicker = computed(() => props.mode === 'week')
 const weeks = computed(() => getIsoWeeksForYear(year.value, locale.value))
-const count = computed(() =>
-  countHolidaysInYear([...selectedKeys.value].map(parseKey), year.value),
+const count = computed(() => countHolidaysInYear([...selectedKeys.value].map(parseKey), year.value))
+const title = computed(() =>
+  isWeekPicker.value
+    ? t('weekPicker.title')
+    : t('holidays.title', { name: props.memberName ?? '' }),
 )
-const title = computed(() => t('holidays.title', { name: props.memberName }))
+const currentIsoWeek = computed(() =>
+  props.currentWeek ? getIsoWeek(isoDateToDate(props.currentWeek)) : null,
+)
 
 function reset(): void {
-  year.value = props.initialYear ?? props.selected[0]?.year ?? getIsoWeek(new Date()).year
-  selectedKeys.value = new Set(props.selected.map(holidayKey))
+  if (isWeekPicker.value) {
+    year.value = currentIsoWeek.value?.year ?? getIsoWeek(new Date()).year
+    return
+  }
+
+  year.value = props.initialYear ?? props.selected?.[0]?.year ?? getIsoWeek(new Date()).year
+  selectedKeys.value = new Set((props.selected ?? []).map(holidayKey))
 }
 
 watch(
@@ -113,11 +144,28 @@ watch(
 )
 
 function isSelected(option: HolidayWeekOption): boolean {
+  if (isWeekPicker.value) {
+    return (
+      currentIsoWeek.value !== null &&
+      currentIsoWeek.value.year === option.year &&
+      currentIsoWeek.value.week === option.week
+    )
+  }
   return selectedKeys.value.has(holidayKey(option))
 }
 
 function isDisabled(option: HolidayWeekOption): boolean {
+  if (isWeekPicker.value) return false
   return !isSelected(option) && count.value >= MAX_HOLIDAY_WEEKS_PER_YEAR
+}
+
+function handleWeekClick(option: HolidayWeekOption): void {
+  if (isWeekPicker.value) {
+    emit('select', holidayToWeekKey(option))
+    emit('update:visible', false)
+    return
+  }
+  toggle(option)
 }
 
 function toggle(option: HolidayWeekOption): void {
@@ -205,7 +253,8 @@ function save(): void {
   font-size: 0.85rem;
 }
 
-.holiday-dialog__week[aria-pressed='true'] {
+.holiday-dialog__week[aria-pressed='true'],
+.holiday-dialog__week[aria-current='true'] {
   border-color: var(--color-accent);
   background: var(--color-surface-alt);
   color: var(--color-accent);

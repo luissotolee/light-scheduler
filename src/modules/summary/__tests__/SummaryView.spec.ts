@@ -6,6 +6,7 @@ import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
 import SummaryView from '@/modules/summary/views/SummaryView.vue'
 import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
+import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { Shift, TeamMember } from '@/types'
@@ -178,6 +179,24 @@ describe('SummaryView', () => {
     await nextTick()
 
     expect(dialog.props('visible')).toBe(false)
+  })
+
+  it('opens the week picker from the week label and jumps to the chosen week', async () => {
+    const workspace = seed()
+    const wrapper = mountView()
+
+    await wrapper.get('[data-test="summary-week-label"]').trigger('click')
+
+    const dialog = wrapper.findComponent(HolidayWeeksDialog)
+    expect(dialog.props('visible')).toBe(true)
+    expect(dialog.props('mode')).toBe('week')
+    expect(dialog.props('currentWeek')).toBe(weekKey)
+
+    dialog.vm.$emit('select', '2026-03-02')
+    await nextTick()
+
+    expect(workspace.currentWeekKey).toBe('2026-03-02')
+    expect(wrapper.get('[data-test="summary-week-label"]').text()).toBe('Mar 2 – Mar 8, 2026')
   })
 
   it('opens the browser print dialog', async () => {

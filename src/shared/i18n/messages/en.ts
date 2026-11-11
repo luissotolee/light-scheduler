@@ -108,7 +108,7 @@ export const en = {
   'employees.add': 'Add employee',
   'employees.searchLabel': 'Search employees',
   'employees.searchPlaceholder': 'Search by name',
-  'employees.count': 'Employees: {count}',
+  'employees.count': 'Active Employees: {active}/{total}',
   'employees.emptyTitle': 'No employees yet',
   'employees.emptyDescription': 'Add your first employee to start building schedules.',
   'employees.noMatchTitle': 'No matching employees',
@@ -123,6 +123,11 @@ export const en = {
   'employees.confirm.holidaysMessage':
     '{name} already has shifts in the selected holiday weeks. Saving the holiday will remove those shifts.',
   'employees.confirm.removeShifts': 'Remove shifts and save',
+  'employees.hideInactive': 'Active only',
+  'employees.hideInactive.tooltip': 'Show only active employees (those not deactivated). Deactivated employees are excluded from schedules.',
+  'employees.allInactiveTitle': 'No active employees',
+  'employees.allInactiveDescription':
+    'All employees are deactivated. Turn off "Active only" to see them.',
   'employees.column.name': 'Name',
   'employees.column.duty': 'Duty',
   'employees.column.contract': 'Contract',
@@ -176,6 +181,8 @@ export const en = {
   'holidays.nextYear': 'Next year',
   'holidays.counter': '{count} of {max} selected in {year}',
   'holidays.group': 'ISO weeks',
+  'weekPicker.title': 'Select week',
+  'weekPicker.open': 'Select week to view',
   'calendar.weekLabel': 'Week {week} — {range}',
 
   'summary.title': 'Summary',

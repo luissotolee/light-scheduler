@@ -1,12 +1,15 @@
 <template>
   <DataTable
-    :value="members"
+    :value="rows"
     :row-class="rowClass"
     size="small"
+    sort-field="name"
+    :sort-order="1"
+    :removable-sort="false"
     data-test="employee-table"
     class="employee-table"
   >
-    <Column field="name" :header="t('employees.column.name')">
+    <Column field="name" :header="t('employees.column.name')" sortable>
       <template #body="{ data }">
         <button
           type="button"
@@ -28,7 +31,12 @@
       </template>
     </Column>
 
-    <Column field="duty" :header="t('employees.column.duty')">
+    <Column
+      field="duty"
+      sort-field="dutySortRank"
+      :header="t('employees.column.duty')"
+      sortable
+    >
       <template #body="{ data }">
         <Chip
           :label="dutyLabel(data.duty)"
@@ -37,7 +45,12 @@
       </template>
     </Column>
 
-    <Column field="contract" :header="t('employees.column.contract')">
+    <Column
+      field="contract"
+      sort-field="contractSortRank"
+      :header="t('employees.column.contract')"
+      sortable
+    >
       <template #body="{ data }">
         <Chip
           :label="contractLabel(data.contract)"
@@ -155,13 +168,33 @@ import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
+import { computed } from 'vue'
 import type { TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
-import { dutyModifier, isContract, isDuty } from '@/shared/utils/employee'
+import {
+  CONTRACTS,
+  dutyModifier,
+  dutyRank,
+  isContract,
+  isDuty,
+} from '@/shared/utils/employee'
 
-defineProps<{
+type EmployeeTableRow = TeamMember & {
+  dutySortRank: number
+  contractSortRank: number
+}
+
+const props = defineProps<{
   members: TeamMember[]
 }>()
+
+const rows = computed<EmployeeTableRow[]>(() =>
+  props.members.map((member) => ({
+    ...member,
+    dutySortRank: dutyRank(member.duty),
+    contractSortRank: CONTRACTS.indexOf(member.contract),
+  })),
+)
 
 const emit = defineEmits<{
   edit: [id: string]

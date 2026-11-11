@@ -37,9 +37,17 @@
           data-test="summary-previous-week"
           @click="store.goToPreviousWeek"
         />
-        <p class="summary__week" aria-live="polite" data-test="summary-week-label">
+        <button
+          v-tooltip.top="t('weekPicker.open')"
+          type="button"
+          class="summary__week"
+          :aria-label="t('weekPicker.open')"
+          aria-live="polite"
+          data-test="summary-week-label"
+          @click="weekPickerVisible = true"
+        >
           {{ weekRangeLabel }}
-        </p>
+        </button>
         <Button
           v-tooltip.top="t('summary.nextWeekTooltip')"
           type="button"
@@ -86,6 +94,14 @@
       :member="detailsTarget"
       @update:visible="handleDetailsVisibility"
     />
+
+    <HolidayWeeksDialog
+      mode="week"
+      :visible="weekPickerVisible"
+      :current-week="currentWeekKey"
+      @update:visible="weekPickerVisible = $event"
+      @select="store.setWeekKey"
+    />
   </section>
 </template>
 
@@ -95,6 +111,7 @@ import { storeToRefs } from 'pinia'
 import Button from 'primevue/button'
 import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
+import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import SummaryTable from '@/modules/summary/components/SummaryTable.vue'
 import { useSummaryStore } from '@/modules/summary/stores/summary'
@@ -108,6 +125,7 @@ const { rows, dayHeaders, weekRangeLabel, printZoom, currentWeekKey } = storeToR
 const { t, locale } = useI18n()
 
 const detailsTargetId = ref<string | null>(null)
+const weekPickerVisible = ref(false)
 const detailsTarget = computed(() =>
   detailsTargetId.value ? (workspaceStore.findMember(detailsTargetId.value) ?? null) : null,
 )
@@ -153,9 +171,25 @@ function savePdf(): void {
 .summary__week {
   margin: 0;
   min-width: 14rem;
+  padding: 0.125rem 0.5rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
   text-align: center;
   font-size: 1.05rem;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.summary__week:hover {
+  color: var(--color-accent);
+}
+
+.summary__week:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .summary__sheet {

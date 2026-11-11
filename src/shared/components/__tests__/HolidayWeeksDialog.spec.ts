@@ -4,8 +4,9 @@ import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
-import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
+import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import type { HolidayWeek } from '@/types'
+import { getIsoWeekStart, getWeekKey } from '@/shared/utils/calendar'
 
 enableAutoUnmount(afterEach)
 
@@ -31,6 +32,15 @@ describe('HolidayWeeksDialog', () => {
   async function mountDialog(visible = true, selected: HolidayWeek[] = [], initialYear?: number) {
     const wrapper = mount(HolidayWeeksDialog, {
       props: { visible, memberName: 'Ada', selected, initialYear },
+      global: { plugins: [PrimeVue], directives: { tooltip: Tooltip } },
+    })
+    await nextTick()
+    return wrapper
+  }
+
+  async function mountPicker(currentWeek?: string, visible = true) {
+    const wrapper = mount(HolidayWeeksDialog, {
+      props: { visible, mode: 'week', currentWeek },
       global: { plugins: [PrimeVue], directives: { tooltip: Tooltip } },
     })
     await nextTick()
@@ -159,5 +169,49 @@ describe('HolidayWeeksDialog', () => {
     await dialogBody().find('[data-test="cancel-holidays"]').trigger('click')
 
     expect(wrapper.emitted('update:visible')).toEqual([[false]])
+  })
+
+  it('renders the week picker without the counter or save action', async () => {
+    await mountPicker('2026-03-02')
+
+    expect(dialogBody().text()).toContain('Select week')
+    expect(dialogBody().find('[data-test="counter"]').exists()).toBe(false)
+    expect(dialogBody().find('[data-test="save-holidays"]').exists()).toBe(false)
+    expect(dialogBody().find('[data-test="cancel-holidays"]').exists()).toBe(true)
+  })
+
+  it('highlights the current week in the week picker', async () => {
+    await mountPicker('2026-03-02')
+
+    const current = dialogBody().find('[data-test="week-10"]')
+    expect(dialogBody().find('[data-test="current-year"]').text()).toBe('2026')
+    expect(current.attributes('aria-current')).toBe('true')
+    expect(current.attributes('aria-pressed')).toBeUndefined()
+    expect(current.attributes('disabled')).toBeUndefined()
+  })
+
+  it('does not highlight any week without a current week', async () => {
+    await mountPicker()
+
+    expect(dialogBody().find('[aria-current="true"]').exists()).toBe(false)
+  })
+
+  it('selects a week and closes the week picker', async () => {
+    const wrapper = await mountPicker('2026-03-02')
+
+    await dialogBody().find('[data-test="next-year"]').trigger('click')
+    await dialogBody().find('[data-test="week-1"]').trigger('click')
+
+    expect(wrapper.emitted('select')).toEqual([[getWeekKey(getIsoWeekStart(2027, 1))]])
+    expect(wrapper.emitted('update:visible')).toEqual([[false]])
+  })
+
+  it('opens the week picker on the year of the current week', async () => {
+    const wrapper = await mountPicker('2025-01-06', false)
+
+    await wrapper.setProps({ visible: true })
+
+    expect(dialogBody().find('[data-test="current-year"]').text()).toBe('2025')
+    expect(dialogBody().find('[data-test="week-2"]').attributes('aria-current')).toBe('true')
   })
 })

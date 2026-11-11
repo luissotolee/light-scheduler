@@ -1,13 +1,44 @@
 ---
 name: pull-request
-description: Push the current branch and open a GitHub pull request with a generated summary when no open PR exists. Use when the user asks to push changes, open/create a PR, publish the branch for review, or check whether a PR already exists.
+description: Push the current branch and create a GitHub pull request, or refresh an existing open PR's description, using the required Summary structure. Use when the user asks to push changes, open/create a PR, update a PR description, publish the branch for review, or check whether a PR already exists.
 ---
 
 # Pull Request Skill
 
-Take the commits already on the current branch, push them, and create a GitHub pull request against the default base branch with a description derived from the branch diff. This skill never commits source changes, never force-pushes, and never prints credentials.
+Take the commits already on the current branch, push them, and either create a GitHub pull request or refresh the description of the existing open one. The description is derived from the branch diff and always follows the required structure below. This skill never commits source changes, never force-pushes, and never prints credentials.
 
 Use the `commit` skill first if there are uncommitted tracked changes.
+
+## Required PR description structure
+
+Every PR body this skill creates or modifies uses exactly this structure:
+
+```markdown
+## Summary
+
+<One or two sentences describing what this PR does and why.>
+
+### Core Implementation
+
+- <Main code changes: modules, files, types, stores, utilities, architecture.>
+- <Data/model changes and how they are implemented.>
+
+### Impact
+
+- <User-visible behavior and workflow changes.>
+- <Persistence/backup/schema compatibility and migration notes.>
+- <Verification results (lint, typecheck, test, coverage, build).>
+```
+
+Rules:
+
+- Always keep the `## Summary` heading with exactly two main subsections: `### Core Implementation` and `### Impact`.
+- `Core Implementation` explains what changed in the code and how. Reference concrete paths and symbols where useful.
+- `Impact` explains the consequences: user-visible behavior, persisted data/backup compatibility, performance, and verification.
+- Do not add other top-level or sibling sections such as "Changes Summary", "Test Coverage", "Supporting Features", "Files Changed", or "Verification". Fold that content into the two sections.
+- When modifying an existing description, rewrite it into this structure from the current branch diff. Never append to a stale description or leave old-format sections in place.
+- Keep bullets concise and factual. Never fabricate changes or verification results.
+- The same structure is mirrored in `.github/pull_request_template.md`; keep the two in sync if the structure changes.
 
 ## Step 0 — Preconditions
 
@@ -50,9 +81,10 @@ Run these before touching the remote:
   - `behind > 0`: **stop**. Do not force-push; ask the user to rebase or merge.
   - `ahead > 0`: run `git push`.
   - `ahead == 0`: nothing to push.
+- Remember whether this step pushed any commits (`ahead > 0` or a new upstream push). That determines whether an existing PR's description must be refreshed.
 - Never use `--force` or `--force-with-lease` unless the user explicitly requests it and the branch is not shared. Default to stopping on divergence.
 
-## Step 3 — Check for an existing PR
+## Step 3 — Find an existing PR
 
 Use the GitHub MCP server tool `github_list_pull_requests` directly (it is a tool call, not a shell command). Resolve `owner`/`repo` from the `origin` remote, then call it with:
 
@@ -60,18 +92,16 @@ Use the GitHub MCP server tool `github_list_pull_requests` directly (it is a too
 - `repo`: repository name (e.g. `light-scheduler`)
 - `state`: `open`
 - `head`: `<owner>:<current branch>` (e.g. `luissotolee:feat/improvements`)
-- `fields`: `["number", "title", "html_url", "state", "draft", "base", "head"]`
+- `fields`: `["number", "title", "body", "html_url", "state", "draft", "base", "head"]`
 
 - If an open PR exists:
-  - Report its number, URL, base branch, and draft state.
-  - If commits were pushed in Step 2, say the PR was updated.
-  - **Stop.** Do not create a duplicate.
+  - Record its number, URL, title, body, base branch, and draft state.
+  - **Do not create a duplicate.**
+  - Continue to Step 4 so the description can be refreshed from the current diff. Refresh is required when Step 2 pushed new commits, and also when the existing body does not match the required structure above.
 - Optionally repeat with `state: merged` / `state: closed`; if the branch previously had a closed or merged PR, note it but allow a new PR.
 - If the tool reports the repository is not found or access is denied, stop and report the MCP error.
 
 ## Step 4 — Evaluate the branch changes
-
-Same as Step 4 in original version:
 
 Use three-dot diffs so only the branch's changes are summarized:
 
@@ -81,7 +111,7 @@ git diff --stat "origin/$BASE"...HEAD
 git diff --name-status "origin/$BASE"...HEAD
 ```
 
-- If `git log "origin/$BASE"..HEAD` is empty, stop: there is nothing to open a PR for.
+- If `git log "origin/$BASE"..HEAD` is empty, stop: there is nothing to open or update a PR for.
 - Group changed paths by area using `workspace.md`:
   - `src/modules/<module>/` — feature behavior
   - `src/shared/` — cross-cutting code, components, stores, utils
@@ -96,8 +126,6 @@ git diff --name-status "origin/$BASE"...HEAD
 
 ## Step 5 — Verify
 
-Same as Step 5 in original version:
-
 Run the repo verification commands from `AGENTS.md`:
 
 ```bash
@@ -108,31 +136,55 @@ npm run test:coverage
 npm run build
 ```
 
-Record which commands passed. If any fail, **stop** and report the failures instead of opening the PR, unless the user explicitly asks to open it anyway. Never claim a check passed if it was not run.
+Record which commands passed. If any fail, **stop** and report the failures instead of creating or updating the PR, unless the user explicitly asks to proceed anyway. Never claim a check passed if it was not run.
 
 ## Step 6 — Compose the PR title and body
 
-Same as Step 6 in original version.
+### Title
 
-## Step 7 — Create the PR
+- For a new PR: derive a concise title from the dominant change and follow the repo's `(type) summary` convention, using the same `type` rules as the `commit` skill.
+- For an existing PR: keep the current title unless it clearly no longer describes the branch.
 
-Use the GitHub MCP server tool `github_create_pull_request` directly (it is a tool call, not a shell command) with:
+### Body
 
-- `owner`: repository owner
-- `repo`: repository name
-- `base`: `$BASE`
-- `head`: current branch name
-- `title`: `$TITLE`
-- `body`: `$BODY`
-- `draft`: `true` only when the user asks for a draft
+Build the body from the diff using the required structure:
 
-- If the MCP server reports that a PR already exists, return to Step 3 and report the existing PR instead of retrying.
+- `## Summary` — one or two sentences on what the PR does and why.
+- `### Core Implementation` — the main code changes and how they implement it, grouped by area (modules, shared code, types/stores/utils, i18n, config).
+- `### Impact` — what changes for users and stored data: behavior, workflow, persistence/backup and schema compatibility, performance, and the verification commands that passed.
+
+Return the body with the headings and order shown above. Do not add extra sections.
+
+## Step 7 — Create or update the PR
+
+- If Step 3 found an open PR:
+  - If Step 2 pushed commits, or the existing body does not follow the required structure, update it:
+    - Call `github_update_pull_request` directly (it is a tool call, not a shell command) with:
+      - `owner`, `repo`, `pullNumber`
+      - `body`: the composed body from Step 6
+      - `title`: only when the title should change
+    - Report that the existing PR description was refreshed to include all branch commits.
+  - If nothing was pushed and the body already matches the required structure, report the PR and stop without writing.
+- If no open PR exists:
+  - Call `github_create_pull_request` directly with:
+    - `owner`, `repo`, `base`, `head`, `title`, `body`
+    - `draft`: `true` only when the user asks for a draft
+  - If the MCP server reports that a PR already exists, return to Step 3 instead of retrying.
 - Do not ask the MCP server to fill the description for you; the description must come from the evaluated diff.
 - Do not merge, approve, or close the PR.
 
 ## Step 8 — Report
 
-Same as Step 8 in original version.
+Report concisely:
+
+- PR number, URL, base branch, and draft state.
+- Whether the PR was created or its description was updated.
+- Which commits the description covers (`origin/$BASE..HEAD`).
+- Verification commands that passed, or explicitly state which were not run.
+
+## Updating an existing PR after a commit and push
+
+When commits are pushed to a branch with an open PR, the PR description must reflect the complete branch diff, not just the newest commit. Run the normal flow: find the open PR (Step 3), re-evaluate `origin/$BASE...HEAD` (Step 4), re-run verification (Step 5), rewrite the body into the required structure (Step 6), and update the PR with `github_update_pull_request` (Step 7). Rewrite old-format descriptions into the required structure rather than appending to them.
 
 ## Edge cases
 
@@ -143,7 +195,9 @@ Same as Step 8 in original version.
 | Current branch is the base branch | Stop; no self-PR |
 | No upstream branch | `git push -u origin HEAD` |
 | Local behind upstream | Stop; rebase/merge instead of force-push |
-| Open PR already exists | Report it and stop; do not duplicate |
+| Open PR already exists | Refresh its description from the current diff; never duplicate |
+| Open PR exists and its description already matches the required structure | Report it and stop |
+| New commits pushed to an open PR | Update the PR body to the required structure |
 | Closed/merged PR exists | Note it; a new PR is allowed |
 | No commits vs base | Stop; nothing to review |
 | GitHub MCP server not configured | Stop with setup guidance |
@@ -156,6 +210,8 @@ Same as Step 8 in original version.
 - Never stage, commit, amend, or rewrite history.
 - Never force-push by default.
 - Never create a PR when an open PR already exists.
+- Never leave an open PR's description stale after pushing new commits.
+- Never drop the `## Summary` / `### Core Implementation` / `### Impact` structure when creating or modifying a description.
 - Never print a remote URL containing credentials, or raw MCP server output.
 - Never fabricate verification results or diff summaries.
 

@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Review the current git changes (staged, unstaged, and unpushed commits) and generate a commit message in `(type) summary` format. Use when the user wants to commit, write a commit message, or review changes before pushing. This skill never stages, commits, pushes, or opens a PR.
+description: Review the current git changes (staged, unstaged, and unpushed commits) and generate a commit message in `(type) summary` format. Use when the user wants to commit, write a commit message, or review changes before pushing. This skill never stages, commits, pushes, or opens a PR; after a push, the `pull-request` skill refreshes an open PR's description.
 ---
 
 # Commit Skill
@@ -63,3 +63,25 @@ Prefer `fix` over `bug` when the change addresses a defect; use the most specifi
 2. Give a one-line justification for the chosen `type` and the files it covers.
 
 3. Do **not** commit, stage, or push automatically. If the user wants to proceed, ask whether to stage and commit now.
+
+## Step 5 — Keep an open PR's description current
+
+This skill never stages, commits, pushes, or edits a PR. However, when the committed changes are pushed to a branch that already has an open PR, the PR description must be refreshed so it reflects the complete branch diff, not just the latest commit.
+
+After a commit is pushed, load the `pull-request` skill (or tell the user to run `/pr`) so the open PR's body is rewritten into the required structure:
+
+```markdown
+## Summary
+
+...
+
+### Core Implementation
+
+...
+
+### Impact
+
+...
+```
+
+The `pull-request` skill owns the update path and keeps the description in sync with `origin/<base>...HEAD`.

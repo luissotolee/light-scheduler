@@ -114,7 +114,7 @@ export const es: Messages = {
   'employees.add': 'Añadir empleado',
   'employees.searchLabel': 'Buscar empleados',
   'employees.searchPlaceholder': 'Buscar por nombre',
-  'employees.count': 'Empleados: {count}',
+  'employees.count': 'Empleados activos: {active}/{total}',
   'employees.emptyTitle': 'Aún no hay empleados',
   'employees.emptyDescription': 'Añade tu primer empleado para empezar a crear planificaciones.',
   'employees.noMatchTitle': 'No hay empleados coincidentes',
@@ -129,6 +129,11 @@ export const es: Messages = {
   'employees.confirm.holidaysMessage':
     '{name} ya tiene turnos en las semanas de vacaciones seleccionadas. Guardar las vacaciones eliminará esos turnos.',
   'employees.confirm.removeShifts': 'Eliminar turnos y guardar',
+  'employees.hideInactive': 'Solo activos',
+  'employees.hideInactive.tooltip': 'Mostrar solo empleados activos (aquellos no desactivados). Los empleados desactivados se excluyen de las planificaciones.',
+  'employees.allInactiveTitle': 'No hay empleados activos',
+  'employees.allInactiveDescription':
+    'Todos los empleados están desactivados. Desactiva «Solo activos» para verlos.',
   'employees.column.name': 'Nombre',
   'employees.column.duty': 'Puesto',
   'employees.column.contract': 'Contrato',
@@ -182,6 +187,8 @@ export const es: Messages = {
   'holidays.nextYear': 'Año siguiente',
   'holidays.counter': '{count} de {max} seleccionadas en {year}',
   'holidays.group': 'Semanas ISO',
+  'weekPicker.title': 'Seleccionar semana',
+  'weekPicker.open': 'Seleccionar semana para ver',
   'calendar.weekLabel': 'Semana {week} — {range}',
 
   'summary.title': 'Horario',
