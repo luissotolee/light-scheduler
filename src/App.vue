@@ -14,7 +14,13 @@
       <RouterView />
     </main>
 
-    <footer class="app__footer">{{ t('app.footer') }}</footer>
+    <footer class="app__footer">
+      <a class="app__footer-contact" :href="CONTACT_EMAIL">
+        <i class="pi pi-envelope app__footer-contact-icon" aria-hidden="true" />
+        {{ t('app.contact') }}
+      </a>
+      <p class="app__footer-text">{{ t('app.footer') }}</p>
+    </footer>
 
     <DemoOverlay v-if="demoStore.status !== 'idle' || demoStore.showRestoredFlag" />
   </div>
@@ -34,6 +40,8 @@ import { NAV_ITEMS } from '@/router/nav'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
+
+const CONTACT_EMAIL = 'mailto:luissotolee@gmail.com?subject=Light%20Scheduler'
 
 onMounted(() => {
   demoStore.checkRecovery()
@@ -89,11 +97,39 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
 }
 
 .app__footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: 1rem;
   padding: var(--footer-padding-y) var(--space-page-x);
   border-top: 1px solid var(--color-border);
   color: var(--color-muted);
   font-size: var(--footer-font-size);
   text-align: center;
+}
+
+.app__footer-text {
+  grid-column: 2;
+  margin: 0;
+}
+
+.app__footer-contact {
+  justify-self: start;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.app__footer-contact-icon {
+  margin-right: 0.35rem;
+}
+
+.app__footer-contact:hover {
+  text-decoration: underline;
+}
+
+.app__footer-contact:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 @media (max-width: 480px) {

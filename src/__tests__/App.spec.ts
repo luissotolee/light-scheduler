@@ -46,7 +46,12 @@ describe('App', () => {
     expect(wrapper.find('.app__brand').text()).toBe('Light Scheduler')
     const links = wrapper.findAll('.app-nav__link').map((link) => link.text())
     expect(links).toEqual(NAV_ITEMS.map((item) => en[item.labelKey]))
-    expect(wrapper.find('.app__footer').text()).toBe(en['app.footer'])
+    expect(wrapper.find('.app__footer-text').text()).toBe(en['app.footer'])
+    const contact = wrapper.find('.app__footer-contact')
+    expect(contact.text()).toBe(en['app.contact'])
+    expect(contact.attributes('href')).toBe(
+      'mailto:luissotolee@gmail.com?subject=Light%20Scheduler',
+    )
   })
 
   it('marks exactly one active navigation link', async () => {
@@ -75,7 +80,8 @@ describe('App', () => {
 
     expect(wrapper.find('.app__brand').element).toBe(brand)
     expect(wrapper.find('.app-nav__link').text()).toBe(es['nav.home'])
-    expect(wrapper.find('.app__footer').text()).toBe(es['app.footer'])
+    expect(wrapper.find('.app__footer-text').text()).toBe(es['app.footer'])
+    expect(wrapper.find('.app__footer-contact').text()).toBe(es['app.contact'])
     expect(document.documentElement.lang).toBe('es')
   })
 
