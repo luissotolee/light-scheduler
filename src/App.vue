@@ -14,7 +14,10 @@
       <RouterView />
     </main>
 
-    <footer class="app__footer">{{ t('app.footer') }}</footer>
+    <footer class="app__footer">
+      <p class="app__footer-text">{{ t('app.footer') }}</p>
+      <KoFiButton />
+    </footer>
 
     <DemoOverlay v-if="demoStore.status !== 'idle' || demoStore.showRestoredFlag" />
   </div>
@@ -26,6 +29,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import { defineAsyncComponent } from 'vue'
 import AppNav from '@/shared/components/AppNav.vue'
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
+import KoFiButton from '@/shared/components/KoFiButton.vue'
 import DemoModeButton from '@/modules/demo/components/DemoModeButton.vue'
 import DemoBanner from '@/modules/demo/components/DemoBanner.vue'
 import { useI18n } from '@/shared/i18n'
@@ -89,11 +93,24 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
 }
 
 .app__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: var(--footer-padding-y) var(--space-page-x);
   border-top: 1px solid var(--color-border);
   color: var(--color-muted);
   font-size: var(--footer-font-size);
-  text-align: center;
+  text-align: left;
+}
+
+.app__footer-text {
+  margin: 0;
+}
+
+.app__footer .ko-fi-button {
+  margin-left: auto;
 }
 
 @media (max-width: 480px) {

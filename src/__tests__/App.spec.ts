@@ -46,7 +46,17 @@ describe('App', () => {
     expect(wrapper.find('.app__brand').text()).toBe('Light Scheduler')
     const links = wrapper.findAll('.app-nav__link').map((link) => link.text())
     expect(links).toEqual(NAV_ITEMS.map((item) => en[item.labelKey]))
-    expect(wrapper.find('.app__footer').text()).toBe(en['app.footer'])
+    expect(wrapper.find('.app__footer-text').text()).toBe(en['app.footer'])
+  })
+
+  it('links to Ko-fi from the footer', async () => {
+    const wrapper = await mountApp('/')
+    const link = wrapper.find('[data-test="ko-fi-button"]')
+
+    expect(link.attributes('href')).toBe('https://ko-fi.com/J8C02AHRYD')
+    expect(link.attributes('target')).toBe('_blank')
+    expect(link.attributes('rel')).toBe('noopener noreferrer')
+    expect(link.text()).toBe(en['app.supportOnKoFi'])
   })
 
   it('marks exactly one active navigation link', async () => {
@@ -75,7 +85,7 @@ describe('App', () => {
 
     expect(wrapper.find('.app__brand').element).toBe(brand)
     expect(wrapper.find('.app-nav__link').text()).toBe(es['nav.home'])
-    expect(wrapper.find('.app__footer').text()).toBe(es['app.footer'])
+    expect(wrapper.find('.app__footer-text').text()).toBe(es['app.footer'])
     expect(document.documentElement.lang).toBe('es')
   })
 
