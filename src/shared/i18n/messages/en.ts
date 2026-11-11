@@ -12,6 +12,7 @@ export const en = {
   'app.navPrimary': 'Primary',
   'app.footer':
     'Light Scheduler — a frontend-only weekly shift scheduler. We recommend backing up your work locally through Archive.',
+  'app.contact': 'Contact the creator',
 
   'nav.home': 'Home',
   'nav.scheduler': 'Scheduler',
