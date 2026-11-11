@@ -1,15 +1,24 @@
 import type { TeamMember, Shift, DayOff, WeekKey } from '@/types'
 import type { PersistedWorkspace } from '@/shared/utils/persistence'
 import { WORKSPACE_SCHEMA_VERSION } from '@/shared/utils/persistence'
-import { getWeekKey, addWeeks } from '@/shared/utils/calendar'
+import { addWeeks, getIsoWeek, getWeekKey } from '@/shared/utils/calendar'
+import { normalizeHolidays } from '@/shared/utils/employee'
 import { createId } from '@/shared/utils/id'
 import { MOCK_EMPLOYEES } from '@/shared/fixtures/employees'
 
-function buildShiftsForWeek(_weekKey: WeekKey, baseMembers: TeamMember[]): Shift[] {
+const HOLIDAY_MEMBER_ID = 'emp-mock-05'
+
+function buildShiftsForWeek(
+  _weekKey: WeekKey,
+  baseMembers: TeamMember[],
+  holidayMemberIds: ReadonlySet<string> = new Set(),
+): Shift[] {
   const shifts: Shift[] = []
   const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 
   baseMembers.forEach((member, memberIndex) => {
+    if (holidayMemberIds.has(member.id)) return
+
     allDays.forEach((weekday, dayIndex) => {
       if (memberIndex === 3 && weekday === 'saturday') return
       if (memberIndex === 4 && weekday === 'friday') return
@@ -59,10 +68,19 @@ export function buildDemoWorkspace(now: Date = new Date()): PersistedWorkspace {
   const prevWeekKey = getWeekKey(addWeeks(now, -1))
   const nextWeekKey = getWeekKey(addWeeks(now, 1))
 
-  const activeMembers = MOCK_EMPLOYEES.filter((m) => m.active)
+  const members = MOCK_EMPLOYEES.map((member) =>
+    member.id === HOLIDAY_MEMBER_ID
+      ? {
+          ...member,
+          holidays: normalizeHolidays([...member.holidays, getIsoWeek(now)]),
+        }
+      : member,
+  )
+  const activeMembers = members.filter((m) => m.active)
+  const holidayMemberIds = new Set([HOLIDAY_MEMBER_ID])
 
   const schedules: Record<WeekKey, Shift[]> = {
-    [currentWeekKey]: buildShiftsForWeek(currentWeekKey, activeMembers),
+    [currentWeekKey]: buildShiftsForWeek(currentWeekKey, activeMembers, holidayMemberIds),
     [prevWeekKey]: buildShiftsForWeek(prevWeekKey, activeMembers),
     [nextWeekKey]: buildShiftsForWeek(nextWeekKey, activeMembers),
   }
@@ -75,7 +93,7 @@ export function buildDemoWorkspace(now: Date = new Date()): PersistedWorkspace {
 
   return {
     version: WORKSPACE_SCHEMA_VERSION,
-    members: MOCK_EMPLOYEES,
+    members,
     schedules,
     dayOffs,
     currentWeekKey,

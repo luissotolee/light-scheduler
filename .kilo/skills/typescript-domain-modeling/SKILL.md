@@ -95,7 +95,7 @@ if (result.ok) {
 
 Do not add a redundant `success` boolean or use exceptions for control flow.
 
-Error and message fields that are shown to the user are `MessageKey` (from `@/shared/i18n/messages/en`), not localized literals — `RowError.message`, `CsvParseResult.error`, `EmployeeFormErrors`, and store `error` refs all use it. The view translates the key via `t()`. Add any new `errors.*` key to **both** `en.ts` and `es.ts` (see the `i18n` skill).
+Error and message fields that are shown to the user are `MessageKey` (from `@/shared/i18n/messages/en`), not localized literals — `RowError.message`, `BackupParseResult.error`, `EmployeeFormErrors`, and store `error` refs all use it. The view translates the key via `t()`. Add any new `errors.*` key to **both** `en.ts` and `es.ts` (see the `i18n` skill).
 
 ## 5. `TeamMember` domain model
 

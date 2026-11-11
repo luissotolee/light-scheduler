@@ -9,9 +9,10 @@ import type {
   RowError,
   TeamMember,
   Validated,
+  WeekKey,
 } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
-import { getIsoWeeksInYear, parseIsoDate } from '@/shared/utils/calendar'
+import { getIsoWeeksInYear, holidayToWeekKey, parseIsoDate } from '@/shared/utils/calendar'
 
 export const MAX_HOLIDAY_WEEKS_PER_YEAR = 6
 
@@ -446,6 +447,10 @@ export function isMemberInWeek(
   if (member.startDate > weekEnd) return false
   if (member.endDate !== undefined && member.endDate < weekStart) return false
   return true
+}
+
+export function isMemberOnHoliday(member: Pick<TeamMember, 'holidays'>, weekKey: WeekKey): boolean {
+  return member.holidays.some((holiday) => holidayToWeekKey(holiday) === weekKey)
 }
 
 export function createEmpId(existing: string[]): string {

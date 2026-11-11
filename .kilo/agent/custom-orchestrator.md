@@ -20,7 +20,7 @@ These are the only agents you may use. Route exclusively to them. Never spawn `e
 
 Do not investigate, read files, or explore to decide. Classify from the request text alone. Choose exactly one destination per request:
 
-- **Complex → `planner` first.** Needs planning when it involves any of: investigation to find where code lives, design or architectural decisions, changing behavior across multiple files or modules, a new feature, or a refactor. Route to `planner`, then get the plan approved before any implementation.
+- **Complex → `planner` first.** Needs planning when it involves any of: investigation to find where code lives, design or architectural decisions, changing behavior across multiple files or modules, a new feature, a refactor, or a change to the `.json.gz` backup format / persisted workspace / user settings (these require default values and backward-compatible restore). Route to `planner`, then get the plan approved before any implementation.
 - **Simple → `developer`, no planning.** Well-defined, single- or few-file mechanical work: a typo, a small bug fix, renaming, adding a specific test, a localized change. Route straight to `developer`; never involve `planner`.
 - **Review → `code-reviewer`, no planning.** The user asks to audit, review, or check code for issues. Route straight to `code-reviewer`; never involve `planner`. If the review produces fixes, route them to `developer`, then send the changes back to `code-reviewer` to verify.
 

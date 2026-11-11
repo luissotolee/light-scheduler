@@ -34,6 +34,20 @@ export const employeesDemoScenario: DemoScenario = {
       pauseMs: 1500,
     },
     {
+      id: 'employees-sort-duty',
+      action: 'click',
+      target: { testId: 'sort-duty' },
+      narrationKey: 'demo.scenario.employees.sortDuty',
+      pauseMs: 1800,
+    },
+    {
+      id: 'employees-sort-name',
+      action: 'click',
+      target: { testId: 'sort-name' },
+      narrationKey: 'demo.scenario.employees.sortName',
+      pauseMs: 1800,
+    },
+    {
       id: 'employees-add',
       action: 'click',
       target: { testId: 'add-employee' },
@@ -241,6 +255,27 @@ export const employeesDemoScenario: DemoScenario = {
       target: { testId: 'confirm-accept' },
       narrationKey: 'demo.scenario.employees.deactivated',
       pauseMs: 1600,
+    },
+    {
+      id: 'employees-hide-inactive',
+      action: 'spotlight',
+      target: { testId: 'hide-inactive' },
+      narrationKey: 'demo.scenario.employees.hideInactive',
+      pauseMs: 1800,
+    },
+    {
+      id: 'employees-hide-inactive-toggle',
+      action: 'click',
+      target: { testId: 'hide-inactive' },
+      narrationKey: 'demo.scenario.employees.hideInactiveOn',
+      pauseMs: 1800,
+    },
+    {
+      id: 'employees-hide-inactive-restore',
+      action: 'click',
+      target: { testId: 'hide-inactive' },
+      narrationKey: 'demo.scenario.employees.hideInactiveOff',
+      pauseMs: 1800,
     },
     {
       id: 'employees-reactivate',

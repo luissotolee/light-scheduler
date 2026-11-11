@@ -2,7 +2,13 @@
   <div class="shift-row" :data-test="`shift-row-${row.member.id}`">
     <div
       class="shift-row__name"
-      :class="`shift-row__name--${dutyModifier(row.member.duty)}`"
+      :class="[
+        `shift-row__name--${dutyModifier(row.member.duty)}`,
+        {
+          'shift-row__name--disabled': row.isOff || row.isHoliday,
+          'shift-row__name--holiday': row.isHoliday,
+        },
+      ]"
       :title="row.member.name"
     >
       <button
@@ -12,12 +18,14 @@
         :title="row.member.name"
         :aria-pressed="row.isOff"
         :aria-label="toggleAriaLabel"
+        :disabled="row.isHoliday"
         data-test="shift-row-name-toggle"
         @click="emit('toggleOff', row.member.id)"
       >
         {{ displayName }}
       </button>
       <span
+        v-if="!row.isHoliday"
         v-tooltip.top="
           t('shiftRow.daysOffTooltip', {
             count: row.daysOffCount,
@@ -40,10 +48,10 @@
     <div
       ref="track"
       class="shift-row__track"
-      :class="{ 'shift-row__track--disabled': row.isOff }"
+      :class="{ 'shift-row__track--disabled': disabled }"
       data-test="shift-track"
-      :tabindex="row.isOff ? -1 : 0"
-      :aria-disabled="row.isOff"
+      :tabindex="disabled ? -1 : 0"
+      :aria-disabled="disabled"
       :aria-label="t('shiftRow.trackAria', { name: row.member.name })"
       @pointerdown="startSelection"
       @pointermove="updateSelection"
@@ -67,7 +75,7 @@
         :member-name="row.member.name"
         :duty="row.member.duty"
         :limits="limits"
-        :disabled="row.isOff"
+        :disabled="disabled"
         @resize="emit('resize', $event)"
         @remove="emit('remove', $event)"
       />
@@ -121,6 +129,8 @@ const emit = defineEmits<{
   toggleOff: [memberId: string]
 }>()
 
+const disabled = computed(() => props.row.isOff || props.row.isHoliday)
+
 const toggleAriaLabel = computed(() =>
   props.row.isOff
     ? t('shiftRow.markOn', { name: props.row.member.name })
@@ -162,7 +172,7 @@ function releasePointer(event: PointerEvent): void {
 }
 
 function startSelection(event: PointerEvent): void {
-  if (props.row.isOff) return
+  if (disabled.value) return
   if (event.button > 0) return
 
   const minute = minuteAt(event.clientX)
@@ -234,7 +244,7 @@ function cancelSelection(): void {
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-  if (props.row.isOff) return
+  if (disabled.value) return
   if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return
 
   event.preventDefault()
@@ -304,6 +314,10 @@ function handleKeydown(event: KeyboardEvent): void {
   text-decoration: line-through;
 }
 
+.shift-row__name-toggle:disabled {
+  cursor: not-allowed;
+}
+
 .shift-row__day-off-chip {
   flex-shrink: 0;
   padding: 0.05rem 0.35rem;
@@ -336,6 +350,14 @@ function handleKeydown(event: KeyboardEvent): void {
 
 .shift-row__name--employee {
   color: var(--color-duty-employee);
+}
+
+.shift-row__name--disabled {
+  color: var(--color-muted);
+}
+
+.shift-row__name--holiday {
+  opacity: 0.6;
 }
 
 .shift-row__hours {

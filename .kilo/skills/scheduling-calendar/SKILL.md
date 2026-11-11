@@ -109,18 +109,7 @@ export function getWeekKey(date: Date): string {
 
 The scheduler store exposes `currentWeekShifts` and week navigation, computed from the shared `workspace` store's `schedules` and `currentWeekKey`.
 
-## 5. CSV integration
-
-Import/export shifts through the `csv-import-export` skill with a fixed header:
-
-```csv
-member,weekday,start,end
-ada,monday,09:00,17:00
-```
-
-Validate and convert each `'HH:mm'` value with `parseTimeToMinutes`; reject rows with invalid times or `start >= end`, reporting row-numbered errors. Export canonical minute values back to `'HH:mm'` in the CSV, not raw numbers.
-
-## 6. Testing
+## 5. Testing
 
 Pure helpers are the test surface; no DOM is needed:
 

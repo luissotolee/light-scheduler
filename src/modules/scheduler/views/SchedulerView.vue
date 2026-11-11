@@ -21,7 +21,16 @@
         />
 
         <div class="scheduler__week">
-          <strong>{{ weekRangeLabel }}</strong>
+          <button
+            v-tooltip.top="t('weekPicker.open')"
+            type="button"
+            class="scheduler__week-button"
+            :aria-label="t('weekPicker.open')"
+            data-test="scheduler-week-label"
+            @click="weekPickerVisible = true"
+          >
+            <strong>{{ weekRangeLabel }}</strong>
+          </button>
         </div>
 
         <Button
@@ -93,6 +102,14 @@
 
     <WeeklyHoursTable :groups="weeklyHoursGroups" />
 
+    <HolidayWeeksDialog
+      mode="week"
+      :visible="weekPickerVisible"
+      :current-week="currentWeekKey"
+      @update:visible="weekPickerVisible = $event"
+      @select="store.setWeekKey"
+    />
+
     <ConfirmActionDialog
       :visible="resetDialogVisible"
       :header="t('scheduler.confirm.restartHeader')"
@@ -118,6 +135,7 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import Button from 'primevue/button'
 import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
+import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import WeekdayTabs from '@/modules/scheduler/components/WeekdayTabs.vue'
 import ShiftGrid from '@/modules/scheduler/components/ShiftGrid.vue'
@@ -167,6 +185,7 @@ const errorMessage = computed(() =>
 const slots = computed(() => buildDaySlots(schedulingWindow.value))
 const resetDialogVisible = ref(false)
 const settingsDialogVisible = ref(false)
+const weekPickerVisible = ref(false)
 
 function handleSaveSettings(next: SchedulerSettings): void {
   if (settingsStore.applySettings(next)) {
@@ -224,6 +243,25 @@ function handleRemove(id: string): void {
   flex-direction: column;
   gap: 0.25rem;
   text-align: center;
+}
+
+.scheduler__week-button {
+  padding: 0.125rem 0.5rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.scheduler__week-button:hover {
+  color: var(--color-accent);
+}
+
+.scheduler__week-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .scheduler__error {

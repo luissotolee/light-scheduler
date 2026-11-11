@@ -4,6 +4,7 @@ import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { DayOff, NewShift, Shift, TeamMember } from '@/types'
+import { getIsoWeek } from '@/shared/utils/calendar'
 
 const baseShift: NewShift = {
   memberId: 'member-1',
@@ -307,6 +308,45 @@ describe('scheduler weekday grid', () => {
       'employee-a',
       'employee-b',
     ])
+  })
+
+  it('keeps holiday members visible but blocks scheduling on their row', () => {
+    const holiday = getIsoWeek(new Date(2026, 10, 2))
+    workspace.setMembers([
+      makeMember({ id: 'ada', holidays: [holiday] }),
+      makeMember({ id: 'bo', name: 'Bo' }),
+    ])
+
+    expect(store.dayRows.map((row) => [row.member.id, row.isHoliday])).toEqual([
+      ['ada', true],
+      ['bo', false],
+    ])
+    expect(
+      store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 }),
+    ).toBeNull()
+    expect(
+      store.addShift({ memberId: 'ada', weekday: 'monday', start: '09:00', end: '10:00' }),
+    ).toBeNull()
+    expect(store.currentWeekShifts).toHaveLength(0)
+
+    store.toggleDayOff('ada')
+
+    expect(store.currentWeekDayOffs).toHaveLength(0)
+
+    const holidayShift: Shift = {
+      id: 'holiday-shift',
+      memberId: 'ada',
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 600,
+    }
+    workspace.setShiftsForWeek('2026-11-02', [holidayShift])
+
+    store.removeShift(holidayShift.id)
+    store.updateShiftRange({ id: holidayShift.id, startMinute: 600, endMinute: 660 })
+    store.updateShift(holidayShift.id, { start: '10:00', end: '11:00' })
+
+    expect(store.currentWeekShifts).toEqual([holidayShift])
   })
 
   it('builds day rows with only the selected weekday bars', () => {
@@ -963,6 +1003,27 @@ describe('scheduler weekly hours groups', () => {
     expect(store.weeklyHoursGroups).toHaveLength(1)
     expect(store.weeklyHoursGroups[0].duty).toBe('manager')
     expect(store.weeklyHoursGroups[0].rows.map((row) => row.memberId)).toEqual(['ada'])
+  })
+
+  it('excludes members on holiday from the weekly hours table', () => {
+    const holiday = getIsoWeek(new Date(2026, 10, 2))
+    workspace.setMembers([
+      makeMember({ id: 'ada', name: 'Ada Lovelace', duty: 'manager', holidays: [holiday] }),
+      makeMember({ id: 'bo', name: 'Bo Chen', duty: 'assistant' }),
+    ])
+
+    expect(store.weekMembers.map((member) => member.id)).toEqual(['bo'])
+    expect(store.weeklyHoursGroups.map((group) => group.rows.map((row) => row.memberId))).toEqual([
+      ['bo'],
+    ])
+
+    store.goToNextWeek()
+
+    expect(store.weekMembers.map((member) => member.id)).toEqual(['ada', 'bo'])
+    expect(store.weeklyHoursGroups.map((group) => group.rows.map((row) => row.memberId))).toEqual([
+      ['bo'],
+      ['ada'],
+    ])
   })
 
   it('reacts to shifts added through the grid', () => {

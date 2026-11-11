@@ -11,9 +11,13 @@ Before exploring, read `workspace.md` for the module map and where files belong.
 
 ## Load the matching skill
 
-Load the skill that matches the task area via the `skill` tool; each skill's `description` (in its frontmatter) is the trigger. Load at most one skill per task — the most specific match. If none matches, proceed without one.
+Load the skill(s) that match the task area via the `skill` tool; each skill's `description` (in its frontmatter) is the trigger. If none matches, proceed without one.
 
 If the plan introduces or changes any label, message, error, `aria-label`, or other user-visible text, load the `i18n` skill and plan for updating **both** `src/shared/i18n/messages/en.ts` and `src/shared/i18n/messages/es.ts` in the same change.
+
+If the plan implements or changes backup export/import, gzip handling, archive restore wiring, or backup downloads, load the `backup-import-export` skill.
+
+If the plan adds or changes any field in the backup format, the persisted workspace, or stored user settings, load the `backup-compatibility` skill. Plan for an exported default, tolerant parsing (missing → default), unknown-field ignoring, additive changes without a version bump (or a migration for breaking changes), and a legacy-fixture test proving an older backup still restores.
 
 ## Your job
 

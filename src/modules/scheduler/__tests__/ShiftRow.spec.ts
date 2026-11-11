@@ -38,6 +38,7 @@ function makeRow(bars: Shift[] = [], overrides: Partial<DayRow> = {}): DayRow {
     bars,
     dailyHours: minutes / 60,
     isOff: false,
+    isHoliday: false,
     daysOffCount: 0,
     ...overrides,
   }
@@ -121,7 +122,7 @@ describe('ShiftRow', () => {
   ] as const)('applies the %s modifier to the name cell', (duty, modifier) => {
     const wrapper = mount(ShiftRow, {
       props: {
-        row: { member: { ...member, duty }, bars: [], dailyHours: 0, isOff: false, daysOffCount: 0 },
+        row: { member: { ...member, duty }, bars: [], dailyHours: 0, isOff: false, isHoliday: false, daysOffCount: 0 },
         slots: buildDaySlots(),
       },
     })
@@ -144,6 +145,7 @@ describe('ShiftRow', () => {
           bars: [],
           dailyHours: 0,
           isOff: false,
+          isHoliday: false,
           daysOffCount: 0,
         },
         slots: buildDaySlots(),
@@ -255,6 +257,28 @@ describe('ShiftRow', () => {
     expect(track.attributes('aria-disabled')).toBe('false')
     expect(track.attributes('tabindex')).toBe('0')
     expect(wrapper.findComponent(ShiftBar).props('disabled')).toBe(false)
+  })
+
+  it('disables a holiday row and hides the day off chip', async () => {
+    const wrapper = mountRow([bar], { isHoliday: true, daysOffCount: 1 })
+    const toggle = wrapper.find('[data-test="shift-row-name-toggle"]')
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    expect(wrapper.find('[data-test="day-off-count"]').exists()).toBe(false)
+    expect(toggle.attributes('disabled')).toBeDefined()
+    expect(track.classes()).toContain('shift-row__track--disabled')
+    expect(track.attributes('aria-disabled')).toBe('true')
+    expect(track.attributes('tabindex')).toBe('-1')
+    expect(wrapper.findComponent(ShiftBar).props('disabled')).toBe(true)
+
+    await toggle.trigger('click')
+    await pointer(track.element, 'pointerdown', { clientX: 48 })
+    await pointer(track.element, 'pointerup', { clientX: 48 })
+    await track.trigger('keydown', { key: 'Enter' })
+
+    expect(wrapper.emitted('toggleOff')).toBeUndefined()
+    expect(wrapper.find('[data-test="shift-draft"]').exists()).toBe(false)
+    expect(wrapper.emitted('create')).toBeUndefined()
   })
 
   it('creates a 3-hour shift when a cell is clicked', async () => {

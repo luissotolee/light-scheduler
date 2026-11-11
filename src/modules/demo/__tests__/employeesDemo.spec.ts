@@ -5,8 +5,11 @@ import { es } from '@/shared/i18n/messages/es'
 
 const knownTargets = [
   'employee-search',
+  'sort-name',
+  'sort-duty',
   'add-employee',
   'employee-table',
+  'hide-inactive',
   'employee-form',
   'employee-name-input',
   'employee-phone-input',
@@ -91,7 +94,10 @@ describe('employeesDemo scenario', () => {
     expect(actions).toContain('fill')
     expect(actions).toContain('click')
     expect(targets).toContain('employee-search')
+    expect(targets).toContain('sort-duty')
+    expect(targets).toContain('sort-name')
     expect(targets).toContain('add-employee')
+    expect(targets).toContain('hide-inactive')
     expect(targets).toContain('employee-comment-input')
     expect(targets).toContain('details-comment')
     expect(targets).toContain('edit-emp-mock-03')

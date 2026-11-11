@@ -14,9 +14,13 @@ Before changing code, read `workspace.md` for the module map and where files bel
 
 ## Load the matching skill
 
-Load the skill that matches the task area via the `skill` tool; each skill's `description` (in its frontmatter) is the trigger. Load at most one skill per task — the most specific match. If none matches, proceed without one. Loading a skill injects its full body into your context; that is intentional and cheaper than guessing at conventions or repairing a misimplemented feature.
+Load the skill(s) that match the task area via the `skill` tool; each skill's `description` (in its frontmatter) is the trigger. If none matches, proceed without one. Loading a skill injects its full body into your context; that is intentional and cheaper than guessing at conventions or repairing a misimplemented feature.
 
 If the task adds, changes, or removes any label, message, error, `aria-label`, or other user-visible text, load the `i18n` skill and follow its golden rule: the app ships two languages (English and Spanish), so update **both** `src/shared/i18n/messages/en.ts` and `src/shared/i18n/messages/es.ts` in the same change.
+
+If the task implements or changes backup export/import, gzip handling, archive restore wiring, or backup downloads, load the `backup-import-export` skill.
+
+If the task adds or changes any field in the backup format, the persisted workspace, or stored user settings, load the `backup-compatibility` skill and follow it: export a default constant, parse missing fields with that default, ignore unknown fields, keep additive changes non-breaking, and add a legacy-fixture test proving an older backup still restores. Do not make a missing new field fail restore.
 
 ## Your job
 

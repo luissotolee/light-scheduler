@@ -114,7 +114,7 @@ export const es: Messages = {
   'employees.add': 'Añadir empleado',
   'employees.searchLabel': 'Buscar empleados',
   'employees.searchPlaceholder': 'Buscar por nombre',
-  'employees.count': 'Empleados: {count}',
+  'employees.count': 'Empleados activos: {active}/{total}',
   'employees.emptyTitle': 'Aún no hay empleados',
   'employees.emptyDescription': 'Añade tu primer empleado para empezar a crear planificaciones.',
   'employees.noMatchTitle': 'No hay empleados coincidentes',
@@ -129,6 +129,11 @@ export const es: Messages = {
   'employees.confirm.holidaysMessage':
     '{name} ya tiene turnos en las semanas de vacaciones seleccionadas. Guardar las vacaciones eliminará esos turnos.',
   'employees.confirm.removeShifts': 'Eliminar turnos y guardar',
+  'employees.hideInactive': 'Solo activos',
+  'employees.hideInactive.tooltip': 'Mostrar solo empleados activos (aquellos no desactivados). Los empleados desactivados se excluyen de las planificaciones.',
+  'employees.allInactiveTitle': 'No hay empleados activos',
+  'employees.allInactiveDescription':
+    'Todos los empleados están desactivados. Desactiva «Solo activos» para verlos.',
   'employees.column.name': 'Nombre',
   'employees.column.duty': 'Puesto',
   'employees.column.contract': 'Contrato',
@@ -182,6 +187,8 @@ export const es: Messages = {
   'holidays.nextYear': 'Año siguiente',
   'holidays.counter': '{count} de {max} seleccionadas en {year}',
   'holidays.group': 'Semanas ISO',
+  'weekPicker.title': 'Seleccionar semana',
+  'weekPicker.open': 'Seleccionar semana para ver',
   'calendar.weekLabel': 'Semana {week} — {range}',
 
   'summary.title': 'Horario',
@@ -190,7 +197,9 @@ export const es: Messages = {
   'summary.off': 'LIBRE',
   'summary.vacations': 'VACACIONES',
   'summary.previousWeek': 'Semana anterior',
+  'summary.previousWeekTooltip': 'Ver resumen de la semana anterior',
   'summary.nextWeek': 'Semana siguiente',
+  'summary.nextWeekTooltip': 'Ver resumen de la semana siguiente',
   'summary.thisWeek': 'Esta semana',
   'summary.caption': 'Horario semanal de {range}',
   'summary.emptyTitle': 'No hay empleados esta semana',
@@ -302,6 +311,9 @@ export const es: Messages = {
   'demo.picker.description':
     'Elige una página para explorar con datos de ejemplo. Tus datos guardados se restauran al salir de la demostración.',
   'demo.picker.optionsAria': 'Páginas de la demostración',
+  'demo.picker.archive': 'Archivo',
+  'demo.picker.archiveDescription':
+    'Exporta una copia comprimida de todos los empleados, turnos, días libres y ajustes, y restaura desde un archivo de copia de seguridad.',
   'demo.picker.employees': 'Empleados',
   'demo.picker.employeesDescription':
     'Busca, añade, edita, desactiva, reactiva y elimina miembros del equipo, y gestiona sus semanas de vacaciones.',
@@ -318,6 +330,10 @@ export const es: Messages = {
   'demo.scenario.employees.searchTyping':
     'La lista ahora muestra solo los empleados que coinciden.',
   'demo.scenario.employees.searchClear': 'Borra la búsqueda para ver de nuevo todo el equipo.',
+  'demo.scenario.employees.sortDuty':
+    'Haz clic en la cabecera de una columna para ordenar la lista, por ejemplo por rol.',
+  'demo.scenario.employees.sortName':
+    'Haz clic en la cabecera del nombre para volver a ordenar por nombre.',
   'demo.scenario.employees.add':
     'Selecciona Añadir empleado para crear un nuevo miembro del equipo.',
   'demo.scenario.employees.formIntro':
@@ -362,6 +378,12 @@ export const es: Messages = {
   'demo.scenario.employees.confirmDeactivate':
     'Confirma para desactivar. El empleado sigue en la lista pero queda inactivo.',
   'demo.scenario.employees.deactivated': 'Los empleados inactivos se muestran con su fecha de fin.',
+  'demo.scenario.employees.hideInactive':
+    'Activa Solo activos para ocultar de la lista a los empleados desactivados.',
+  'demo.scenario.employees.hideInactiveOn':
+    'La lista ahora muestra solo empleados activos y el contador refleja el filtro.',
+  'demo.scenario.employees.hideInactiveOff':
+    'Desactívalo para volver a ver a todos los empleados antes de reactivar a uno.',
   'demo.scenario.employees.reactivate':
     'Usa la acción de reactivar para volver a activar al empleado.',
   'demo.scenario.employees.remove':
@@ -390,6 +412,8 @@ export const es: Messages = {
   'demo.scenario.scheduler.dayOffMarked':
     'La fila queda deshabilitada y el contador de días libres se actualiza.',
   'demo.scenario.scheduler.dayOffRestored': 'Selecciona el nombre de nuevo para restaurar el día.',
+  'demo.scenario.scheduler.holiday':
+    'Los miembros de vacaciones aparecen deshabilitados y se excluyen de la tabla de horas semanales.',
   'demo.scenario.scheduler.hours':
     'La tabla de horas semanales compara las horas planificadas con las del contrato.',
   'demo.scenario.scheduler.settingsOpen':
@@ -405,6 +429,11 @@ export const es: Messages = {
   'demo.scenario.scheduler.confirmRestart':
     'Confirma para vaciar la semana. Solo afecta a los datos de la demostración.',
   'demo.scenario.scheduler.restarted': 'La semana actual ya está vacía.',
+  'demo.scenario.scheduler.weekPicker':
+    'Abre el selector de semanas para saltar directamente a cualquier semana del año.',
+  'demo.scenario.scheduler.weekPickerDialog':
+    'Elige cualquier semana del calendario. La semana actual aparece resaltada.',
+  'demo.scenario.scheduler.weekPickerSelected': 'El planificador ahora muestra la semana elegida.',
   'demo.scenario.scheduler.finish':
     'Esto cubre la página del Planificador. Sal para restaurar tus datos.',
   'demo.scenario.summary.intro': 'El resumen muestra la semana de un vistazo.',
@@ -412,9 +441,29 @@ export const es: Messages = {
   'demo.scenario.summary.weekPrevious': 'Pasa a la semana anterior.',
   'demo.scenario.summary.weekNext': 'Pasa a la semana siguiente.',
   'demo.scenario.summary.thisWeek': 'Vuelve a la semana actual.',
+  'demo.scenario.summary.weekPicker': 'Abre el selector de semanas para saltar a cualquier semana.',
+  'demo.scenario.summary.weekPickerDialog':
+    'Elige una semana del calendario. El resumen se actualiza al instante.',
+  'demo.scenario.summary.weekPickerSelected': 'El resumen ahora muestra la semana seleccionada.',
+  'demo.scenario.summary.backToThisWeek': 'Usa Esta semana para volver a la semana actual.',
   'demo.scenario.summary.table':
     'Cada fila es un miembro del equipo y cada columna es un día, con turnos y vacaciones en un solo lugar.',
+  'demo.scenario.summary.vacation':
+    'Los empleados de vacaciones toda la semana aparecen como una única fila de vacaciones.',
+  'demo.scenario.summary.details':
+    'Selecciona un nombre para abrir los detalles del empleado desde el resumen.',
+  'demo.scenario.summary.detailsDialog':
+    'El mismo diálogo de detalles se abre aquí, con la información de contacto y vacaciones.',
+  'demo.scenario.summary.detailsClose': 'Ciérralo para volver al resumen.',
   'demo.scenario.summary.print': 'Imprime el resumen con el diálogo de impresión del navegador.',
   'demo.scenario.summary.pdf': 'Guarda el resumen como archivo PDF.',
   'demo.scenario.summary.finish': 'Esto cubre la página de Resumen. Sal para restaurar tus datos.',
+  'demo.scenario.archive.intro':
+    'La página de archivo guarda y restaura todo tu espacio de trabajo en un único archivo comprimido.',
+  'demo.scenario.archive.export':
+    'Descarga una copia .json.gz con todos los empleados, planificaciones, días libres y ajustes.',
+  'demo.scenario.archive.import':
+    'Restaura desde un archivo de copia de seguridad aquí. Se te pedirá confirmación antes de reemplazar tus datos.',
+  'demo.scenario.archive.finish':
+    'Esto cubre la página de Archivo. Sal para restaurar tus datos.',
 }

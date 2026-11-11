@@ -35,7 +35,7 @@ Dot-namespaced by area, grouped and alphabetized within each area. Existing name
 - `weekday.*`, `duty.*`, `contract.*`
 - `scheduler.*`, `shiftGrid.*`, `shiftBar.*`, `shiftRow.*`, `weeklyHours.*`, `hours.group.*`
 - `employees.*`, `holidays.*`, `calendar.*`
-- `summary.*`, `csv.*`
+- `summary.*`, `archive.*`
 - `errors.*` — all validation/error messages
 
 Keep keys under the module they belong to; reuse `common.*` keys for shared button/label text.
@@ -74,7 +74,7 @@ Missing params leave the placeholder intact; extra params are ignored.
 Use `tc(oneKey, otherKey, count, params)` for the two-form contract (singular at exactly 1, plural otherwise):
 
 ```ts
-tc('csv.importedOne', 'csv.importedMany', count, { count })
+tc('archive.importedOne', 'archive.importedMany', count, { count })
 ```
 
 Only the two-form contract is supported; a locale with zero/few/many rules would need `Intl.PluralRules`.
@@ -84,16 +84,16 @@ Only the two-form contract is supported; a locale with zero/few/many rules would
 Domain code (utils, stores, validators) returns a `MessageKey`, **never** a localized literal. The view translates at the boundary:
 
 ```ts
-// src/shared/utils/csv.ts — returns a key
-export type CsvParseResult =
-  | { ok: true; headers: string[]; rows: string[][] }
+// src/shared/utils/archiveBackup.ts — returns a key
+export type BackupParseResult =
+  | { ok: true; data: BackupData }
   | { ok: false; error: MessageKey }
 
 // view — translates the key
 const errorMessage = computed(() => (status.value.error ? t(status.value.error) : ''))
 ```
 
-`RowError.message`, `CsvParseResult.error`, `EmployeeFormErrors`, and store `error` refs are all `MessageKey`. When you add an error condition, add its `errors.*` key to **both** catalogs.
+`RowError.message`, `BackupParseResult.error`, `EmployeeFormErrors`, and store `error` refs are all `MessageKey`. When you add an error condition, add its `errors.*` key to **both** catalogs.
 
 ## 7. PrimeVue locale
 

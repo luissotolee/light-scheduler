@@ -40,8 +40,8 @@ const shift: Shift = {
 }
 
 const rows: DayRow[] = [
-  { member: ada, bars: [shift], dailyHours: 2, isOff: false, daysOffCount: 0 },
-  { member: bo, bars: [], dailyHours: 0, isOff: false, daysOffCount: 0 },
+  { member: ada, bars: [shift], dailyHours: 2, isOff: false, isHoliday: false, daysOffCount: 0 },
+  { member: bo, bars: [], dailyHours: 0, isOff: false, isHoliday: false, daysOffCount: 0 },
 ]
 
 describe('ShiftGrid', () => {

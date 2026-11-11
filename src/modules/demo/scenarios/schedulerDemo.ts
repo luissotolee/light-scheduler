@@ -98,6 +98,13 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 2900,
     },
     {
+      id: 'scheduler-holiday',
+      action: 'spotlight',
+      target: { testId: 'shift-row-emp-mock-05' },
+      narrationKey: 'demo.scenario.scheduler.holiday',
+      pauseMs: 2400,
+    },
+    {
       id: 'scheduler-weekly-hours',
       action: 'spotlight',
       target: { testId: 'weekly-hours' },
@@ -152,6 +159,27 @@ export const schedulerDemoScenario: DemoScenario = {
       target: { testId: 'confirm-accept' },
       narrationKey: 'demo.scenario.scheduler.restarted',
       pauseMs: 3100,
+    },
+    {
+      id: 'scheduler-week-picker-open',
+      action: 'click',
+      target: { testId: 'scheduler-week-label' },
+      narrationKey: 'demo.scenario.scheduler.weekPicker',
+      pauseMs: 2400,
+    },
+    {
+      id: 'scheduler-week-picker-dialog',
+      action: 'wait',
+      waitFor: 'week-1',
+      narrationKey: 'demo.scenario.scheduler.weekPickerDialog',
+      pauseMs: 2000,
+    },
+    {
+      id: 'scheduler-week-picker-select',
+      action: 'click',
+      target: { testId: 'week-1' },
+      narrationKey: 'demo.scenario.scheduler.weekPickerSelected',
+      pauseMs: 2400,
     },
     {
       id: 'scheduler-finish',

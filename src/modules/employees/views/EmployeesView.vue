@@ -18,19 +18,35 @@
     </PageHeader>
 
     <div class="employees__toolbar">
-      <label class="employees__search-label" for="employee-search">
-        {{ t('employees.searchLabel') }}
+      <div class="employees__filters">
+        <label class="employees__search-label" for="employee-search">
+          {{ t('employees.searchLabel') }}
+        </label>
+        <input
+          id="employee-search"
+          class="employees__search"
+          type="search"
+          :placeholder="t('employees.searchPlaceholder')"
+          :value="search"
+          data-test="employee-search"
+          @input="handleSearch"
+        />
+        <span class="employees__count">{{ t('employees.count', { active: activeCount, total: totalCount }) }}</span>
+      </div>
+
+      <label
+        v-tooltip.top="t('employees.hideInactive.tooltip')"
+        class="employees__toggle"
+        for="employee-hide-inactive"
+        data-test="hide-inactive"
+      >
+        <span>{{ t('employees.hideInactive') }}</span>
+        <ToggleSwitch
+          input-id="employee-hide-inactive"
+          :model-value="hideInactive"
+          @update:model-value="store.setHideInactive"
+        />
       </label>
-      <input
-        id="employee-search"
-        class="employees__search"
-        type="search"
-        :placeholder="t('employees.searchPlaceholder')"
-        :value="search"
-        data-test="employee-search"
-        @input="handleSearch"
-      />
-      <span class="employees__count">{{ t('employees.count', { count }) }}</span>
     </div>
 
     <p
@@ -44,8 +60,8 @@
 
     <EmptyState
       v-if="filteredMembers.length === 0"
-      :title="t(count === 0 ? 'employees.emptyTitle' : 'employees.noMatchTitle')"
-      :description="t(count === 0 ? 'employees.emptyDescription' : 'employees.noMatchDescription')"
+      :title="t(emptyTitle)"
+      :description="t(emptyDescription)"
     />
 
     <EmployeeTable
@@ -100,16 +116,20 @@ import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
-import HolidayWeeksDialog from '@/modules/employees/components/HolidayWeeksDialog.vue'
+import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
+import ToggleSwitch from 'primevue/toggleswitch'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useI18n } from '@/shared/i18n'
+import type { MessageKey } from '@/shared/i18n/messages/en'
 import type { HolidayWeek, NewTeamMember } from '@/types'
 
 const store = useEmployeesStore()
 const {
   search,
   count,
+  activeCount,
+  totalCount,
   status,
   filteredMembers,
   formVisible,
@@ -121,8 +141,21 @@ const {
   pendingMember,
   detailsVisible,
   detailsTarget,
+  hideInactive,
 } = storeToRefs(store)
 const { t } = useI18n()
+
+const emptyTitle = computed<MessageKey>(() => {
+  if (count.value === 0) return 'employees.emptyTitle'
+  if (search.value.trim() !== '') return 'employees.noMatchTitle'
+  return 'employees.allInactiveTitle'
+})
+
+const emptyDescription = computed<MessageKey>(() => {
+  if (count.value === 0) return 'employees.emptyDescription'
+  if (search.value.trim() !== '') return 'employees.noMatchDescription'
+  return 'employees.allInactiveDescription'
+})
 
 const errorMessage = computed(() => (status.value.error ? t(status.value.error) : ''))
 
@@ -197,11 +230,21 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+}
+
+.employees__filters {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  max-width: 34rem;
 }
 
 .employees__search-label {
@@ -210,8 +253,8 @@ onUnmounted(() => {
 }
 
 .employees__search {
-  flex: 1;
-  min-width: 12rem;
+  flex: 1 1 12rem;
+  min-width: 10rem;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -226,6 +269,19 @@ onUnmounted(() => {
 }
 
 .employees__count {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.employees__toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  white-space: nowrap;
+  cursor: pointer;
   color: var(--color-muted);
   font-size: 0.9rem;
 }

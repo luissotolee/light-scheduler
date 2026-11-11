@@ -87,6 +87,13 @@ const options: DemoPickerOption[] = [
     titleKey: 'demo.picker.summary',
     descriptionKey: 'demo.picker.summaryDescription',
   },
+  {
+    id: 'archive-demo',
+    key: 'archive',
+    icon: 'pi pi-file-export',
+    titleKey: 'demo.picker.archive',
+    descriptionKey: 'demo.picker.archiveDescription',
+  },
 ]
 
 const { t } = useI18n()

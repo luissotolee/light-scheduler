@@ -13,14 +13,14 @@ describe('translate', () => {
   })
 
   it('interpolates named parameters', () => {
-    expect(translate(en, 'employees.count', { count: 3 })).toBe('Employees: 3')
+    expect(translate(en, 'employees.count', { active: 3, total: 5 })).toBe('Active Employees: 3/5')
     expect(translate(es, 'archive.rowError', { row: 2, message: 'Fila inválida' })).toBe(
       'Fila 2: Fila inválida',
     )
   })
 
   it('keeps unknown placeholders intact', () => {
-    expect(translate(en, 'employees.count')).toBe('Employees: {count}')
+    expect(translate(en, 'employees.count')).toBe('Active Employees: {active}/{total}')
   })
 
   it('falls back to the English catalog and then the raw key', () => {

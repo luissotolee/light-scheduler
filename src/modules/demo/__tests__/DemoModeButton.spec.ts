@@ -69,7 +69,7 @@ describe('DemoModeButton', () => {
     expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-pressed')).toBe('true')
   })
 
-  it('opens the picker with the three demo options', async () => {
+  it('opens the picker with all demo options', async () => {
     const wrapper = mountButton()
 
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
@@ -85,6 +85,9 @@ describe('DemoModeButton', () => {
     )
     expect(body().find('[data-test="demo-option-summary"]').text()).toContain(
       en['demo.picker.summary'],
+    )
+    expect(body().find('[data-test="demo-option-archive"]').text()).toContain(
+      en['demo.picker.archive'],
     )
     expect(startDemo).not.toHaveBeenCalled()
   })
@@ -132,6 +135,21 @@ describe('DemoModeButton', () => {
     await nextTick()
 
     expect(startDemo).toHaveBeenCalledWith('summary-demo')
+  })
+
+  it('starts the archive scenario from its option', async () => {
+    vi.mocked(startDemo).mockResolvedValue(true)
+    const wrapper = mountButton()
+
+    await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
+
+    body().find('[data-test="demo-option-archive"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
+
+    expect(startDemo).toHaveBeenCalledWith('archive-demo')
   })
 
   it('closes the picker without starting a demo when cancelled', async () => {

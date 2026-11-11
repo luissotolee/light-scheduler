@@ -24,7 +24,7 @@ import {
   minutesToHours,
   sumShiftMinutes,
 } from '@/modules/scheduler/utils/hours'
-import { compareMembersByDuty, isMemberInWeek } from '@/shared/utils/employee'
+import { compareMembersByDuty, isMemberInWeek, isMemberOnHoliday } from '@/shared/utils/employee'
 import { countDaysOffByMember } from '@/modules/scheduler/utils/off'
 import { closestShiftIndex, MAX_SHIFTS_PER_ROW } from '@/modules/scheduler/utils/grid'
 
@@ -73,8 +73,10 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   )
   const weekEndDate = computed(() => weekdayIsoDate(currentWeekKey.value, 'sunday'))
   const weekMembers = computed(() =>
-    workspace().activeMembers.filter((member) =>
-      isMemberInWeek(member, currentWeekKey.value, weekEndDate.value),
+    workspace().activeMembers.filter(
+      (member) =>
+        isMemberInWeek(member, currentWeekKey.value, weekEndDate.value) &&
+        !isMemberOnHoliday(member, currentWeekKey.value),
     ),
   )
   const dayMembers = computed(() =>
@@ -97,6 +99,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
           bars,
           dailyHours: minutesToHours(sumShiftMinutes(bars)),
           isOff,
+          isHoliday: isMemberOnHoliday(member, currentWeekKey.value),
           daysOffCount: dayOffCounts.value.get(member.id) ?? 0,
         }
       })
@@ -105,6 +108,11 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   const weeklyHoursGroups = computed(() =>
     buildWeeklyHoursGroups(weekMembers.value, currentWeekShifts.value),
   )
+
+  function memberIsOnHoliday(memberId: string): boolean {
+    const member = workspace().findMember(memberId)
+    return member ? isMemberOnHoliday(member, currentWeekKey.value) : false
+  }
 
   function selectWeekday(weekday: Weekday): void {
     selectedWeekday.value = weekday
@@ -180,6 +188,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       setError('errors.shiftTimes')
       return null
     }
+    if (memberIsOnHoliday(payload.memberId)) return null
 
     const candidate: Shift = {
       id: createId(),
@@ -201,6 +210,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       setShiftRangeError()
       return null
     }
+    if (memberIsOnHoliday(input.memberId)) return null
 
     const candidate: Shift = {
       id: createId(),
@@ -215,6 +225,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   function updateShiftRange(input: ShiftResizeInput): Shift | null {
     const existing = currentWeekShifts.value.find((shift) => shift.id === input.id)
     if (!existing) return null
+    if (memberIsOnHoliday(existing.memberId)) return null
 
     const range = normalizeGridRange(
       input.startMinute,
@@ -232,6 +243,10 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   }
 
   function removeShift(id: string): void {
+    const existing = currentWeekShifts.value.find((shift) => shift.id === id)
+    if (!existing) return
+    if (memberIsOnHoliday(existing.memberId)) return
+
     workspace().setShiftsForWeek(
       currentWeekKey.value,
       currentWeekShifts.value.filter((shift) => shift.id !== id),
@@ -247,6 +262,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   function updateShift(id: string, patch: Partial<NewShift>): void {
     const existing = currentWeekShifts.value.find((shift) => shift.id === id)
     if (!existing) return
+    if (memberIsOnHoliday(existing.memberId)) return
 
     const start = patch.start ?? formatMinutesToHhmm(existing.startMinute)
     const end = patch.end ?? formatMinutesToHhmm(existing.endMinute)
@@ -277,6 +293,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   function toggleDayOff(memberId: string): void {
     const member = workspace().members.find((item) => item.id === memberId)
     if (!member || !member.active) return
+    if (isMemberOnHoliday(member, currentWeekKey.value)) return
 
     const current = currentWeekDayOffs.value
     const alreadyOff = current.some(
