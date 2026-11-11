@@ -1,7 +1,11 @@
 import type { DayOff, Shift, TeamMember, WeekKey, Weekday } from '@/types'
 import type { SummaryCell, SummaryRow } from '@/modules/summary/types'
-import { WEEKDAY_ORDER, holidayToWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
-import { compareMembersByDuty, isMemberInWeek } from '@/shared/utils/employee'
+import { WEEKDAY_ORDER, weekdayIsoDate } from '@/shared/utils/calendar'
+import {
+  compareMembersByDuty,
+  isMemberInWeek,
+  isMemberOnHoliday,
+} from '@/shared/utils/employee'
 import { formatExtendedMinutes } from '@/shared/utils/shifts'
 
 export const SUMMARY_PRINT_MAX_ROW_UNITS = 30
@@ -12,7 +16,7 @@ export function formatShiftRange(shift: Pick<Shift, 'startMinute' | 'endMinute'>
 }
 
 export function isVacationWeek(member: Pick<TeamMember, 'holidays'>, weekKey: WeekKey): boolean {
-  return member.holidays.some((holiday) => holidayToWeekKey(holiday) === weekKey)
+  return isMemberOnHoliday(member, weekKey)
 }
 
 function cellKey(memberId: string, weekday: Weekday): string {

@@ -20,6 +20,7 @@ export interface DayRow {
   bars: Shift[]
   dailyHours: number
   isOff: boolean
+  isHoliday: boolean
   daysOffCount: number
 }
 

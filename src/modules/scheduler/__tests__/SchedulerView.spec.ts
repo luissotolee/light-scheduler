@@ -11,7 +11,7 @@ import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerS
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import type { Shift, TeamMember } from '@/types'
-import { formatWeekRange, getWeekKey } from '@/shared/utils/calendar'
+import { formatWeekRange, getIsoWeek, getWeekKey } from '@/shared/utils/calendar'
 
 const ada: TeamMember = {
   id: 'member-1',
@@ -456,6 +456,24 @@ describe('SchedulerView', () => {
 
     expect(wrapper.find('[data-test="weekly-hours-row-member-1"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="weekly-hours-row-member-3"]').exists()).toBe(false)
+  })
+
+  it('disables holiday members in the grid and omits them from weekly hours', () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([
+      { ...ada, holidays: [getIsoWeek(new Date(2026, 10, 2))] },
+      bo,
+    ])
+    const wrapper = mountView()
+
+    const row = wrapper.find('[data-test="shift-row-member-1"]')
+    expect(row.exists()).toBe(true)
+    expect(row.find('[data-test="day-off-count"]').exists()).toBe(false)
+    expect(row.find('[data-test="shift-row-name-toggle"]').attributes('disabled')).toBeDefined()
+    expect(row.find('[data-test="shift-track"]').attributes('aria-disabled')).toBe('true')
+    expect(wrapper.find('[data-test="weekly-hours-row-member-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="weekly-hours-row-member-2"]').exists()).toBe(true)
   })
 
   it('renders Spanish weekday labels and dates live', async () => {
