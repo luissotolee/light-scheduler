@@ -41,8 +41,8 @@ function yearTotal(year: string, count: number): string {
     .replace('{count}', String(count))
 }
 
-function importedTooltip(years: string): string {
-  return en['calendar.publicHolidaysImportedTooltip'].replace('{years}', years)
+function importedAriaLabel(years: string): string {
+  return `${en['calendar.importedSuccessfully']} — ${years}`
 }
 
 describe('CalendarView', () => {
@@ -85,20 +85,24 @@ describe('CalendarView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain(en['calendar.title'])
+    expect(wrapper.text()).toContain(en['calendar.importTitle'])
     expect(wrapper.text()).toContain(en['calendar.emptyTitle'])
     expect(wrapper.find('[data-test="calendar-country"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="calendar-region"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="calendar-year"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="calendar-fetch"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="calendar-fetch"]').text()).toBe('')
+    expect(wrapper.find('[data-test="calendar-fetch"]').text()).toContain(en['calendar.fetch'])
     expect(wrapper.find('[data-test="calendar-fetch"]').attributes('aria-label')).toBe(
       en['calendar.fetch'],
     )
-    expect(wrapper.find('[data-test="calendar-clear-fetched"]').text()).toBe('')
+    expect(wrapper.find('[data-test="calendar-clear-fetched"]').text()).toContain(
+      en['calendar.clearFetched'],
+    )
     expect(wrapper.find('[data-test="calendar-clear-fetched"]').attributes('aria-label')).toBe(
       en['calendar.clearFetched'],
     )
     expect(wrapper.find('[data-test="calendar-add-entry"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="calendar-today"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="calendar-month-grid"]').exists()).toBe(true)
   })
 
@@ -126,10 +130,12 @@ describe('CalendarView', () => {
     })
     expect(wrapper.find('[data-test="calendar-fetch-status"]').exists()).toBe(false)
     const year = String(new Date().getFullYear())
-    expect(wrapper.find('[data-test="calendar-public-holiday-count"]').text()).toBe('')
+    expect(wrapper.find('[data-test="calendar-public-holiday-count"]').text()).toContain(
+      en['calendar.importedSuccessfully'],
+    )
     expect(
       wrapper.find('[data-test="calendar-public-holiday-count"]').attributes('aria-label'),
-    ).toBe(importedTooltip(yearTotal(year, 1)))
+    ).toBe(importedAriaLabel(yearTotal(year, 1)))
   })
 
   it('summarizes imported public holidays per year in the indicator tooltip', async () => {
@@ -148,7 +154,7 @@ describe('CalendarView', () => {
 
     expect(
       wrapper.find('[data-test="calendar-public-holiday-count"]').attributes('aria-label'),
-    ).toBe(importedTooltip(`${yearTotal('2025', 2)}, ${yearTotal('2026', 1)}`))
+    ).toBe(importedAriaLabel(`${yearTotal('2025', 2)}, ${yearTotal('2026', 1)}`))
   })
 
   it('shows a fetch error', async () => {

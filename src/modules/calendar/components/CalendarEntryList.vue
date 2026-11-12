@@ -22,6 +22,7 @@
       <div class="calendar-entry-list__actions">
         <Button
           v-if="entry.kind !== 'public_holiday'"
+          v-tooltip.top="t('calendar.entry.editAria', { name: entry.name })"
           type="button"
           icon="pi pi-pencil"
           size="small"
@@ -32,6 +33,7 @@
           @click="emit('edit', entry.id)"
         />
         <Button
+          v-tooltip.top="t('calendar.entry.removeAria', { name: entry.name })"
           type="button"
           icon="pi pi-trash"
           size="small"

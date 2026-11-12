@@ -13,7 +13,7 @@ export const es: Messages = {
 
   'app.navPrimary': 'Principal',
   'app.footer':
-    'Light Scheduler — un planificador semanal de turnos solo de frontend. Recomendamos respaldar tu trabajo localmente a través de Archivo.',
+    'Light Scheduler — un planificador semanal de turnos ligero y moderno. Recomendamos respaldar tu trabajo localmente a través de Archivo.',
   'app.contact': 'Contacta al creador',
   'app.supportOnKoFi': 'Apóyame en Ko-fi',
 
@@ -28,9 +28,9 @@ export const es: Messages = {
   'languageSwitcher.menuLabel': 'Seleccionar idioma',
 
   'home.description':
-    'Un planificador semanal de turnos ligero y moderno para equipos. Es solo de frontend: todos los datos permanecen en tu navegador y se intercambian mediante archivos CSV para que puedas continuar donde lo dejaste.',
+    'Un planificador semanal de turnos ligero y moderno para equipos. Todos tus datos permanecen en tu navegador para que puedas continuar justo donde lo dejaste.',
   'home.intro':
-    'Planifica turnos diarios durante una semana para muchos empleados y revisa el resultado sin backend.',
+    'Planifica turnos diarios durante una semana para muchos empleados y revisa el resultado en un solo lugar.',
   'home.demo.badge': 'Primer paso recomendado',
   'home.demo.title': 'Recomendamos encarecidamente empezar con la demostración guiada',
   'home.demo.description':
@@ -50,7 +50,7 @@ export const es: Messages = {
   'home.feature.archive.title': 'Archivo',
   'home.feature.archive.description':
     'Exporta tus datos como archivos o impórtalos para restaurar tu información.',
-  'home.cta': 'Empezar a planificar',
+  'home.cta': 'Empezar añadiendo empleados',
 
   'scheduler.title': 'Planificador',
   'scheduler.description':
@@ -214,25 +214,25 @@ export const es: Messages = {
   'calendar.title': 'Calendario',
   'calendar.description':
     'Importa días festivos de un país y una región y añade festivos o eventos personalizados que aparecen en el planificador.',
+  'calendar.importTitle': 'Importar días festivos',
   'calendar.country': 'País',
   'calendar.countryPlaceholder': 'Selecciona un país',
   'calendar.region': 'Región',
   'calendar.regionNone': 'Todo el país',
   'calendar.regionPlaceholder': 'Selecciona una región',
   'calendar.year': 'Año',
-  'calendar.fetch': 'Importar festivos',
+  'calendar.fetch': 'Importar',
   'calendar.fetching': 'Importando festivos…',
   'calendar.fetchTooltip':
     'Importa los días festivos públicos del país, la región y el año seleccionados',
   'calendar.clearFetchedTooltip': 'Borra todos los días festivos importados',
-  'calendar.publicHolidaysImportedTooltip': 'Festivos públicos importados — {years}',
   'calendar.publicHolidayYearCount': '{year}: {count}',
   'calendar.fetched': 'Se importaron {count} días festivos públicos para {year}.',
   'calendar.noneFound': 'No se encontraron días festivos para ese país, región y año.',
   'calendar.fetchFailed':
     'No se pudieron cargar los festivos. Revisa el país y la región e inténtalo de nuevo.',
   'calendar.noCountry': 'Selecciona primero un país.',
-  'calendar.clearFetched': 'Borrar festivos importados',
+  'calendar.clearFetched': 'Borrar todo',
   'calendar.cleared': 'Se borraron los días festivos importados.',
   'calendar.clearFetchedHeader': 'Borrar festivos importados',
   'calendar.clearFetchedMessage':
@@ -244,7 +244,6 @@ export const es: Messages = {
   'calendar.addEntry': 'Añadir festivo o evento',
   'calendar.month.previous': 'Mes anterior',
   'calendar.month.next': 'Mes siguiente',
-  'calendar.month.today': 'Este mes',
   'calendar.list.title': 'Entradas de {month}',
   'calendar.list.empty': 'No hay entradas este mes.',
   'calendar.countOne': '{count} entrada',
@@ -254,6 +253,7 @@ export const es: Messages = {
   'calendar.kind.custom_event': 'Evento personalizado',
   'calendar.entry.editAria': 'Editar {name}',
   'calendar.entry.removeAria': 'Eliminar {name}',
+  'calendar.importedSuccessfully': 'Importado correctamente',
   'calendar.fetchedBadge': 'Importado',
   'calendar.dayAria': '{date}: {entries}',
   'calendar.loadingOptions': 'Cargando opciones…',
@@ -539,7 +539,7 @@ export const es: Messages = {
   'demo.scenario.calendar.intro':
     'El calendario guarda días festivos y eventos personalizados para tu planificación.',
   'demo.scenario.calendar.toolbar':
-    'Elige un país, una región y un año, y luego importa los días festivos.',
+    'En la sección de importación, elige un país, una región y un año, y luego importa los días festivos.',
   'demo.scenario.calendar.fetch': 'Importa los festivos para guardarlos en tu espacio de trabajo.',
   'demo.scenario.calendar.fetched':
     'Los festivos importados aparecen en el calendario y la insignia de estrella muestra el total importado por año al pasar el cursor.',

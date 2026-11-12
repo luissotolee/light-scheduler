@@ -6,83 +6,97 @@
       description-tooltip
     />
 
-    <div class="calendar__toolbar">
-      <div class="calendar__field">
-        <label class="calendar__label" for="calendar-country">{{ t('calendar.country') }}</label>
-        <Select
-          v-model="countryDraft"
-          input-id="calendar-country"
-          :options="countryOptions"
-          option-label="label"
-          option-value="value"
-          filter
-          :placeholder="
-            countries.length === 0 ? t('calendar.loadingOptions') : t('calendar.countryPlaceholder')
-          "
-          data-test="calendar-country"
-          @change="handleCountryChange"
-        />
-      </div>
+    <section class="calendar__import" aria-labelledby="calendar-import-title">
+      <h2 id="calendar-import-title" class="calendar__import-title">
+        {{ t('calendar.importTitle') }}
+      </h2>
 
-      <div class="calendar__field">
-        <label class="calendar__label" for="calendar-region">{{ t('calendar.region') }}</label>
-        <Select
-          v-model="regionDraft"
-          input-id="calendar-region"
-          :options="regionOptions"
-          option-label="label"
-          option-value="value"
-          :disabled="!countryDraft"
-          :placeholder="t('calendar.regionPlaceholder')"
-          data-test="calendar-region"
-        />
-      </div>
+      <div class="calendar__toolbar">
+        <div class="calendar__field">
+          <label class="calendar__label" for="calendar-country">{{ t('calendar.country') }}</label>
+          <Select
+            v-model="countryDraft"
+            input-id="calendar-country"
+            :options="countryOptions"
+            option-label="label"
+            option-value="value"
+            filter
+            :placeholder="
+              countries.length === 0
+                ? t('calendar.loadingOptions')
+                : t('calendar.countryPlaceholder')
+            "
+            data-test="calendar-country"
+            @change="handleCountryChange"
+          />
+        </div>
 
-      <div class="calendar__field">
-        <label class="calendar__label" for="calendar-year">{{ t('calendar.year') }}</label>
-        <Select
-          v-model="yearDraft"
-          input-id="calendar-year"
-          :options="yearOptions"
-          option-label="label"
-          option-value="value"
-          data-test="calendar-year"
-        />
-      </div>
+        <div class="calendar__field">
+          <label class="calendar__label" for="calendar-region">{{ t('calendar.region') }}</label>
+          <Select
+            v-model="regionDraft"
+            input-id="calendar-region"
+            :options="regionOptions"
+            option-label="label"
+            option-value="value"
+            :disabled="!countryDraft"
+            :placeholder="t('calendar.regionPlaceholder')"
+            data-test="calendar-region"
+          />
+        </div>
 
-      <div class="calendar__actions">
+        <div class="calendar__field">
+          <label class="calendar__label" for="calendar-year">{{ t('calendar.year') }}</label>
+          <Select
+            v-model="yearDraft"
+            input-id="calendar-year"
+            :options="yearOptions"
+            option-label="label"
+            option-value="value"
+            data-test="calendar-year"
+          />
+        </div>
+
         <span
           v-if="publicEntries.length > 0"
           v-tooltip.top="publicHolidaysTooltip"
           class="calendar__holiday-count"
           tabindex="0"
-          :aria-label="publicHolidaysTooltip"
+          :aria-label="publicHolidaysAriaLabel"
           data-test="calendar-public-holiday-count"
         >
           <i class="pi pi-star-fill" aria-hidden="true" />
+          <span class="calendar__holiday-count-label">
+            {{ t('calendar.importedSuccessfully') }}
+          </span>
         </span>
-        <Button
-          v-tooltip.top="isFetching ? t('calendar.fetching') : t('calendar.fetchTooltip')"
-          type="button"
-          icon="pi pi-download"
-          :aria-label="isFetching ? t('calendar.fetching') : t('calendar.fetch')"
-          :disabled="isFetching || !countryDraft"
-          data-test="calendar-fetch"
-          @click="handleFetch"
-        />
-        <Button
-          v-tooltip.top="t('calendar.clearFetchedTooltip')"
-          type="button"
-          icon="pi pi-trash"
-          severity="secondary"
-          outlined
-          :aria-label="t('calendar.clearFetched')"
-          :disabled="!hasPublicEntries"
-          data-test="calendar-clear-fetched"
-          @click="clearFetchedVisible = true"
-        />
+
+        <div class="calendar__actions">
+          <Button
+            v-tooltip.top="isFetching ? t('calendar.fetching') : t('calendar.fetchTooltip')"
+            type="button"
+            icon="pi pi-globe"
+            :label="isFetching ? t('calendar.fetching') : t('calendar.fetch')"
+            :aria-label="isFetching ? t('calendar.fetching') : t('calendar.fetch')"
+            :disabled="isFetching || !countryDraft"
+            data-test="calendar-fetch"
+            @click="handleFetch"
+          />
+          <Button
+            v-tooltip.top="t('calendar.clearFetchedTooltip')"
+            type="button"
+            icon="pi pi-trash"
+            :label="t('calendar.clearFetched')"
+            severity="secondary"
+            outlined
+            :aria-label="t('calendar.clearFetched')"
+            :disabled="!hasPublicEntries"
+            data-test="calendar-clear-fetched"
+            @click="clearFetchedVisible = true"
+          />
+        </div>
       </div>
-    </div>
+    </section>
 
     <p
       v-if="status.state === 'error' && statusMessage"
@@ -125,15 +139,6 @@
             />
           </div>
           <div class="calendar__month-actions">
-            <Button
-              type="button"
-              :label="t('calendar.month.today')"
-              severity="secondary"
-              text
-              size="small"
-              data-test="calendar-today"
-              @click="goToday"
-            />
             <Button
               type="button"
               :label="t('calendar.addEntry')"
@@ -296,8 +301,9 @@ const publicHolidayYearTotals = computed(() => {
     .join(', ')
 })
 
-const publicHolidaysTooltip = computed(() =>
-  t('calendar.publicHolidaysImportedTooltip', { years: publicHolidayYearTotals.value }),
+const publicHolidaysTooltip = computed(() => publicHolidayYearTotals.value)
+const publicHolidaysAriaLabel = computed(
+  () => `${t('calendar.importedSuccessfully')} — ${publicHolidaysTooltip.value}`,
 )
 
 const statusMessage = computed(() =>
@@ -388,12 +394,6 @@ function shiftMonth(delta: number): void {
   visibleMonth.value = toLocalIsoDate(next)
 }
 
-function goToday(): void {
-  const today = new Date()
-  visibleMonth.value = toLocalIsoDate(new Date(today.getFullYear(), today.getMonth(), 1))
-  selectedDate.value = todayIsoDate()
-}
-
 function selectDay(isoDate: string): void {
   selectedDate.value = isoDate
   const month = `${isoDate.slice(0, 7)}-01`
@@ -480,6 +480,17 @@ watch(locale, () => {
   gap: 0.75rem;
 }
 
+.calendar__import {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calendar__import-title {
+  margin: 0;
+  font-size: var(--font-size-section-title);
+}
+
 .calendar__toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -513,6 +524,7 @@ watch(locale, () => {
 
 .calendar__holiday-count {
   display: inline-flex;
+  align-self: flex-end;
   align-items: center;
   gap: 0.35rem;
   padding: 0.3rem 0.65rem;

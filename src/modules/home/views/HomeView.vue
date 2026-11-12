@@ -47,7 +47,7 @@
       </li>
     </ul>
 
-    <RouterLink class="home__cta" to="/scheduler">{{ t('home.cta') }}</RouterLink>
+    <RouterLink class="home__cta" to="/employees">{{ t('home.cta') }}</RouterLink>
   </section>
 </template>
 

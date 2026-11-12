@@ -11,7 +11,7 @@ export const en = {
 
   'app.navPrimary': 'Primary',
   'app.footer':
-    'Light Scheduler — a frontend-only weekly shift scheduler. We recommend backing up your work locally through Archive.',
+    'Light Scheduler — a light, modern weekly shift scheduler. We recommend backing up your work locally through Archive.',
   'app.contact': 'Contact the creator',
   'app.supportOnKoFi': 'Support me on Ko-fi',
 
@@ -26,9 +26,9 @@ export const en = {
   'languageSwitcher.menuLabel': 'Select language',
 
   'home.description':
-    'A light, modern weekly shift scheduler for teams. It is frontend-only: all data stays in your browser and round-trips through CSV files so you can pick up where you left off.',
+    'A light, modern weekly shift scheduler for teams. All your data stays in your browser so you can pick up right where you left off.',
   'home.intro':
-    'Plan daily shifts across a week for many employees and review the result without a backend.',
+    'Plan daily shifts across a week for many employees and review the result in one place.',
   'home.demo.badge': 'Recommended first step',
   'home.demo.title': 'We strongly recommend starting with the guided demo',
   'home.demo.description':
@@ -46,7 +46,7 @@ export const en = {
   'home.feature.archive.title': 'Archive',
   'home.feature.archive.description':
     'Export your data as files or import them to restore your information.',
-  'home.cta': 'Start scheduling',
+  'home.cta': 'Start adding employees',
 
   'scheduler.title': 'Scheduler',
   'scheduler.description':
@@ -208,23 +208,23 @@ export const en = {
   'calendar.title': 'Calendar',
   'calendar.description':
     'Fetch public holidays for a country and region, then add custom holidays or events that appear in the scheduler.',
+  'calendar.importTitle': 'Import public holidays',
   'calendar.country': 'Country',
   'calendar.countryPlaceholder': 'Select a country',
   'calendar.region': 'Region',
   'calendar.regionNone': 'Country-wide',
   'calendar.regionPlaceholder': 'Select a region',
   'calendar.year': 'Year',
-  'calendar.fetch': 'Fetch holidays',
+  'calendar.fetch': 'Import',
   'calendar.fetching': 'Fetching holidays…',
   'calendar.fetchTooltip': 'Fetch public holidays for the selected country, region and year',
   'calendar.clearFetchedTooltip': 'Clear all fetched public holidays',
-  'calendar.publicHolidaysImportedTooltip': 'Public holidays imported — {years}',
   'calendar.publicHolidayYearCount': '{year}: {count}',
   'calendar.fetched': 'Imported {count} public holidays for {year}.',
   'calendar.noneFound': 'No public holidays found for that country, region and year.',
   'calendar.fetchFailed': 'Could not load holidays. Check the country and region and try again.',
   'calendar.noCountry': 'Select a country first.',
-  'calendar.clearFetched': 'Clear fetched holidays',
+  'calendar.clearFetched': 'Clear all',
   'calendar.cleared': 'Fetched public holidays were cleared.',
   'calendar.clearFetchedHeader': 'Clear fetched holidays',
   'calendar.clearFetchedMessage':
@@ -235,7 +235,6 @@ export const en = {
   'calendar.addEntry': 'Add holiday or event',
   'calendar.month.previous': 'Previous month',
   'calendar.month.next': 'Next month',
-  'calendar.month.today': 'This month',
   'calendar.list.title': 'Entries in {month}',
   'calendar.list.empty': 'No entries this month.',
   'calendar.countOne': '{count} entry',
@@ -245,6 +244,7 @@ export const en = {
   'calendar.kind.custom_event': 'Custom event',
   'calendar.entry.editAria': 'Edit {name}',
   'calendar.entry.removeAria': 'Remove {name}',
+  'calendar.importedSuccessfully': 'Imported successfully',
   'calendar.fetchedBadge': 'Fetched',
   'calendar.dayAria': '{date}: {entries}',
   'calendar.loadingOptions': 'Loading options…',
@@ -515,10 +515,10 @@ export const en = {
   'demo.scenario.calendar.intro':
     'The calendar keeps public holidays and custom events for your schedule.',
   'demo.scenario.calendar.toolbar':
-    'Choose a country, region, and year, then fetch the public holidays.',
-  'demo.scenario.calendar.fetch': 'Fetch holidays to store them in your workspace.',
+    'In the import section, choose a country, region, and year, then import the public holidays.',
+  'demo.scenario.calendar.fetch': 'Use the Import button to store the holidays in your workspace.',
   'demo.scenario.calendar.fetched':
-    'The fetched holidays appear in the calendar, and the star badge shows the imported total per year on hover.',
+    'The imported holidays appear in the calendar, and the star badge shows the imported total per year on hover.',
   'demo.scenario.calendar.month':
     'Browse months with the centered controls, or double-click a day to add an entry.',
   'demo.scenario.calendar.add': 'Add a custom holiday or event.',

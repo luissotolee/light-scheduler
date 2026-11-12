@@ -20,15 +20,17 @@ describe('HomeView', () => {
     setActivePinia(createPinia())
   })
 
-  it('describes the application purpose', () => {
+  it('describes the application purpose without technical jargon', () => {
     const wrapper = mountView()
 
     expect(wrapper.text()).toContain('Light Scheduler')
-    expect(wrapper.text()).toContain('frontend-only')
-    expect(wrapper.text()).toContain('CSV files')
+    expect(wrapper.text()).toContain(en['home.description'])
+    expect(wrapper.text()).toContain(en['home.intro'])
+    expect(wrapper.text()).not.toMatch(/backend/i)
+    expect(wrapper.text()).not.toMatch(/CSV/i)
   })
 
-  it('links to every feature page and the scheduler CTA', () => {
+  it('links to every feature page and the employees CTA', () => {
     const wrapper = mountView()
     const links = wrapper.findAllComponents(RouterLinkStub)
     const paths = links.map((link) => link.props('to'))
@@ -38,6 +40,10 @@ describe('HomeView', () => {
     expect(paths).toContain('/employees')
     expect(paths).toContain('/summary')
     expect(paths).toContain('/archive')
+
+    const cta = links.find((link) => link.classes().includes('home__cta'))
+    expect(cta?.props('to')).toBe('/employees')
+    expect(cta?.text()).toBe(en['home.cta'])
   })
 
   it('shows feature cards in the same order as the top navigation', () => {
