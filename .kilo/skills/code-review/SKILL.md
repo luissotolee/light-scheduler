@@ -103,7 +103,7 @@ Read `workspace.md` for the module map. The conventions this checklist checks li
 - Coverage thresholds: statements/functions/lines >= 80, branches >= 75; excludes `src/main.ts`, `*.d.ts`, `src/router/**`.
 
 ### 14. Guided demo parity
-- The demoed modules are `employees`, `scheduler`, `summary`, and `archive`; each maps to a scenario in `src/modules/demo/scenarios/` (`employeesDemo.ts`, `schedulerDemo.ts`, `summaryDemo.ts`, `archiveDemo.ts`).
+- The demoed modules are `employees`, `scheduler`, `calendar`, and `summary`; each maps to a scenario in `src/modules/demo/scenarios/` (`employeesDemo.ts`, `schedulerDemo.ts`, `calendarDemo.ts`, `summaryDemo.ts`).
 - Any behavior or functionality change in those modules updates the matching scenario in the same change: steps added/edited/removed, narration under `demo.scenario.*` in both `en.ts` and `es.ts`.
 - Any layout/visual change re-validates each affected step's `target` (`testId`, `within`, `index`); a step that resolves but highlights the wrong element is a finding.
 - `data-test` renames/removals are reflected in every scenario step and spec.

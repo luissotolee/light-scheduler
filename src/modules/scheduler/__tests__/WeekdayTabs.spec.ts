@@ -60,7 +60,7 @@ describe('WeekdayTabs', () => {
     expect(wrapper.emitted('update:modelValue')).toEqual([['tuesday']])
   })
 
-  it('shows a marker after the weekday label when the day has calendar entries', () => {
+  it('shows a marker before the weekday label when the day has calendar entries', () => {
     const withEntries = [
       {
         ...weekdays[0],
@@ -90,6 +90,12 @@ describe('WeekdayTabs', () => {
     const mondayMarker = wrapper.find('[data-test="weekday-calendar-marker-monday"]')
     const tuesdayMarker = wrapper.find('[data-test="weekday-calendar-marker-tuesday"]')
 
+    expect(wrapper.find('[data-test="weekday-tab-monday"]').element.firstElementChild).toBe(
+      mondayMarker.element,
+    )
+    expect(wrapper.find('[data-test="weekday-tab-tuesday"]').element.firstElementChild).toBe(
+      tuesdayMarker.element,
+    )
     expect(mondayMarker.exists()).toBe(true)
     expect(mondayMarker.find('.pi-star-fill').exists()).toBe(true)
     expect(mondayMarker.attributes('title')).toBe('Public holiday: Bank holiday')

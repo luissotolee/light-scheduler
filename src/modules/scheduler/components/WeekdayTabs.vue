@@ -18,7 +18,7 @@
       :data-test="`weekday-tab-${weekday.value}`"
       @click="emit('update:modelValue', weekday.value)"
     >
-      {{ weekday.label }}<span
+      <span
         v-if="weekday.entries.length > 0"
         class="weekday-tabs__calendar"
         :title="markerTitle(weekday)"
@@ -35,7 +35,7 @@
       }}</span></span><span
         v-if="weekday.entries.length > 0"
         class="weekday-tabs__sr"
-      >{{ t('scheduler.calendar.markerAria', { entries: markerTitle(weekday) }) }}</span>{{ ' ' }}<span
+      >{{ t('scheduler.calendar.markerAria', { entries: markerTitle(weekday) }) }}</span>{{ weekday.label }}{{ ' ' }}<span
         class="weekday-tabs__day"
       >{{ formatOrdinal(weekday.dayOfMonth, locale) }}</span>
     </button>
@@ -136,7 +136,7 @@ function markerTitle(weekday: WeekdayTab): string {
   display: inline-flex;
   align-items: center;
   gap: 0.15rem;
-  margin-left: 0.2rem;
+  margin-right: 0.2rem;
   vertical-align: baseline;
 }
 

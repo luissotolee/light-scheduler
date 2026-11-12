@@ -20,12 +20,18 @@ const knownTargets = [
   'shift-row-name-toggle',
   'day-off-count',
   'weekly-hours',
+  'weekly-hours-metric-diff',
   'scheduler-settings',
   'scheduler-settings-form',
+  'settings-start',
+  'settings-end',
   'settings-start-info',
+  'settings-next-day',
   'settings-rate-15',
   'settings-headcount-info',
+  'settings-show-headcount',
   'settings-save',
+  'hour-headcount',
   'restart-week',
   'confirm-message',
   'confirm-accept',
@@ -110,19 +116,17 @@ describe('demoScenarios registry', () => {
     expect(demoScenarios['scheduler-demo']).toBeDefined()
     expect(demoScenarios['calendar-demo']).toBeDefined()
     expect(demoScenarios['summary-demo']).toBeDefined()
-    expect(demoScenarios['archive-demo']).toBeDefined()
     expect(getDemoScenario('scheduler-demo')).toBe(schedulerDemoScenario)
   })
 
   it('listDemoScenarios returns all scenarios', () => {
     const list = listDemoScenarios()
-    expect(list).toHaveLength(5)
+    expect(list).toHaveLength(4)
     expect(list.map((scenario) => scenario.id)).toEqual([
       'employees-demo',
       'scheduler-demo',
       'calendar-demo',
       'summary-demo',
-      'archive-demo',
     ])
   })
 })

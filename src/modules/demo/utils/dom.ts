@@ -79,7 +79,16 @@ export function pointerClickElement(element: HTMLElement): void {
 }
 
 export function pressKey(element: HTMLElement, key: string): void {
-  const event = new KeyboardEvent('keydown', { key, bubbles: true })
+  const parts = key.split('+')
+  const mainKey = parts.pop() ?? key
+  const event = new KeyboardEvent('keydown', {
+    key: mainKey,
+    shiftKey: parts.includes('Shift'),
+    ctrlKey: parts.includes('Control') || parts.includes('Ctrl'),
+    altKey: parts.includes('Alt'),
+    metaKey: parts.includes('Meta'),
+    bubbles: true,
+  })
   element.dispatchEvent(event)
 }
 
@@ -90,6 +99,17 @@ export function fillInput(element: HTMLElement, value: string): void {
       : element.querySelector<HTMLInputElement | HTMLTextAreaElement>('input, textarea')
 
   if (input) {
+    if (input instanceof HTMLInputElement && (input.type === 'checkbox' || input.type === 'radio')) {
+      const checked = value !== '' && value !== 'false'
+      if (input.checked === checked) return
+
+      input.checked = checked
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      input.dispatchEvent(new Event('blur'))
+      return
+    }
+
     input.value = value
     input.dispatchEvent(new Event('input', { bubbles: true }))
     input.dispatchEvent(new Event('change', { bubbles: true }))

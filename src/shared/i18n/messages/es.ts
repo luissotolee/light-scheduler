@@ -214,7 +214,7 @@ export const es: Messages = {
   'calendar.title': 'Calendario',
   'calendar.description':
     'Importa días festivos de un país y una región y añade festivos o eventos personalizados que aparecen en el planificador.',
-  'calendar.importTitle': 'Importar días festivos',
+  'calendar.importTitle': 'Gestionar días festivos',
   'calendar.country': 'País',
   'calendar.countryPlaceholder': 'Selecciona un país',
   'calendar.region': 'Región',
@@ -398,9 +398,6 @@ export const es: Messages = {
   'demo.picker.description':
     'Elige una página para explorar con datos de ejemplo. Tus datos guardados se restauran al salir de la demostración.',
   'demo.picker.optionsAria': 'Páginas de la demostración',
-  'demo.picker.archive': 'Archivo',
-  'demo.picker.archiveDescription':
-    'Exporta una copia comprimida de todos los empleados, turnos, días libres y ajustes, y restaura desde un archivo de copia de seguridad.',
   'demo.picker.calendar': 'Calendario',
   'demo.picker.calendarDescription':
     'Importa días festivos por país y región, añade festivos o eventos personalizados y vélos en el planificador.',
@@ -499,6 +496,8 @@ export const es: Messages = {
   'demo.scenario.scheduler.created': 'Aparece un nuevo turno en la fila.',
   'demo.scenario.scheduler.resize':
     'Arrastra los bordes del turno para redimensionarlo, o usa Mayús con las flechas.',
+  'demo.scenario.scheduler.resizeApplied':
+    'Mayús con la flecha derecha amplía el final del turno una franja.',
   'demo.scenario.scheduler.move':
     'Arrastra el turno para moverlo dentro de la fila, o usa las flechas. Pulsa Supr para eliminarlo.',
   'demo.scenario.scheduler.moveBetweenRows':
@@ -512,18 +511,30 @@ export const es: Messages = {
     'Los miembros de vacaciones aparecen deshabilitados y se excluyen de la tabla de horas semanales.',
   'demo.scenario.scheduler.hours':
     'La tabla de horas semanales compara las horas planificadas con las del contrato.',
+  'demo.scenario.scheduler.hoursDiff':
+    'La fila de diferencia resalta las horas planificadas por debajo y por encima de cada empleado.',
   'demo.scenario.scheduler.settingsOpen':
     'Abre la configuración del horario. Cada opción tiene un icono de información con los detalles.',
   'demo.scenario.scheduler.settingsWindow':
-    'Define la hora de inicio y de fin. Si la hora de fin es anterior al inicio, el horario continúa pasada la medianoche.',
+    'La configuración se abre con la franja horaria y el tramo actuales.',
+  'demo.scenario.scheduler.settingsStart':
+    'Elige la hora de inicio con los selectores de hora y minutos.',
+  'demo.scenario.scheduler.settingsEnd':
+    'Elige la hora de fin de la misma forma. La cuadrícula se amplía o se reduce según el rango.',
   'demo.scenario.scheduler.settingsTooltips':
     'Pasa el cursor o enfoca el icono de información junto a un ajuste para leer qué hace sin recargar el diálogo.',
+  'demo.scenario.scheduler.settingsOvernight':
+    'Si la hora de fin es anterior al inicio, el horario continúa pasada la medianoche.',
   'demo.scenario.scheduler.settingsSlot':
     'Cambia la franja entre 30 y 15 minutos para modificar el detalle de la cuadrícula.',
   'demo.scenario.scheduler.settingsHeadcount':
     'El interruptor de empleados por hora está junto a su etiqueta, y su icono de información explica la insignia por hora.',
+  'demo.scenario.scheduler.settingsHeadcountToggle':
+    'Activa el interruptor de empleados por hora para mostrar cuántos empleados trabajan en cada hora.',
   'demo.scenario.scheduler.settingsSaved':
     'Guarda para aplicar la nueva franja y el tamaño del tramo al planificador.',
+  'demo.scenario.scheduler.headcount':
+    'Cada insignia por hora muestra ahora cuántos empleados están planificados en esa hora.',
   'demo.scenario.scheduler.restart':
     'Usa Borrar todo para eliminar todos los turnos y días libres de la semana actual.',
   'demo.scenario.scheduler.confirmRestart':
@@ -539,17 +550,45 @@ export const es: Messages = {
   'demo.scenario.calendar.intro':
     'El calendario guarda días festivos y eventos personalizados para tu planificación.',
   'demo.scenario.calendar.toolbar':
-    'En la sección de importación, elige un país, una región y un año, y luego importa los días festivos.',
+    'En la sección de días festivos, elige un país, una región y un año, y luego importa los días festivos.',
+  'demo.scenario.calendar.region':
+    'Elige una región para acotar los festivos o mantén todo el país.',
+  'demo.scenario.calendar.year': 'Elige el año para el que quieres importar los días festivos.',
   'demo.scenario.calendar.fetch': 'Importa los festivos para guardarlos en tu espacio de trabajo.',
   'demo.scenario.calendar.fetched':
     'Los festivos importados aparecen en el calendario y la insignia de estrella muestra el total importado por año al pasar el cursor.',
   'demo.scenario.calendar.month':
-    'Recorre los meses con los controles centrados o haz doble clic en un día para añadir una entrada.',
+    'Usa las flechas junto al nombre del mes para recorrer el calendario.',
+  'demo.scenario.calendar.monthPrevious': 'Pasa al mes anterior.',
+  'demo.scenario.calendar.monthNext': 'Vuelve al mes siguiente.',
+  'demo.scenario.calendar.selectDay':
+    'Selecciona un día para fijarlo. Haz doble clic en un día para añadir una entrada en esa fecha.',
+  'demo.scenario.calendar.clear':
+    'Usa Borrar todo para eliminar los festivos importados y conservar tus propias entradas.',
+  'demo.scenario.calendar.clearConfirm':
+    'Confirma la eliminación. Los festivos y eventos personalizados permanecen en el calendario.',
+  'demo.scenario.calendar.cleared':
+    'Solo quedan tus entradas personalizadas. Ahora añade una nueva.',
   'demo.scenario.calendar.add': 'Añade un festivo o evento personalizado.',
-  'demo.scenario.calendar.form': 'Elige la fecha y el tipo, y luego ponle un nombre a la entrada.',
+  'demo.scenario.calendar.form':
+    'El formulario recopila la fecha, el nombre y el tipo de la entrada.',
+  'demo.scenario.calendar.date':
+    'La fecha parte del día seleccionado. Puedes elegir cualquier otro día.',
   'demo.scenario.calendar.name': 'Escribe el nombre del festivo o evento.',
+  'demo.scenario.calendar.kind':
+    'Elige si la entrada es un festivo personalizado o un evento personalizado.',
   'demo.scenario.calendar.save': 'Guarda la entrada para añadirla al calendario.',
   'demo.scenario.calendar.saved': 'La entrada ya está guardada y aparecerá en el planificador.',
+  'demo.scenario.calendar.edit': 'Usa la acción del lápiz para editar una entrada personalizada.',
+  'demo.scenario.calendar.editForm': 'El formulario se abre con los valores actuales.',
+  'demo.scenario.calendar.editName': 'Cambia el nombre, el tipo o la fecha, y luego guarda.',
+  'demo.scenario.calendar.editSaved':
+    'La entrada actualizada se refleja en el calendario y en el planificador.',
+  'demo.scenario.calendar.remove': 'Usa la acción de la papelera para eliminar una entrada personalizada.',
+  'demo.scenario.calendar.confirmRemove':
+    'Confirma la eliminación. Los festivos importados no se pueden editar de esta forma.',
+  'demo.scenario.calendar.removed':
+    'La entrada desaparece de la vista del mes y del planificador.',
   'demo.scenario.calendar.finish': 'Eso cubre la página Calendario. Sal para restaurar tus datos.',
   'demo.scenario.summary.intro': 'El resumen muestra la semana de un vistazo.',
   'demo.scenario.summary.week': 'Aquí se muestra la semana actual.',
@@ -573,11 +612,4 @@ export const es: Messages = {
   'demo.scenario.summary.print': 'Imprime el resumen con el diálogo de impresión del navegador.',
   'demo.scenario.summary.pdf': 'Guarda el resumen como archivo PDF.',
   'demo.scenario.summary.finish': 'Esto cubre la página de Resumen. Sal para restaurar tus datos.',
-  'demo.scenario.archive.intro':
-    'La página de archivo guarda y restaura todo tu espacio de trabajo en un único archivo comprimido.',
-  'demo.scenario.archive.export':
-    'Descarga una copia .json.gz con todos los empleados, planificaciones, días libres y ajustes.',
-  'demo.scenario.archive.import':
-    'Restaura desde un archivo de copia de seguridad aquí. Se te pedirá confirmación antes de reemplazar tus datos.',
-  'demo.scenario.archive.finish': 'Esto cubre la página de Archivo. Sal para restaurar tus datos.',
 }

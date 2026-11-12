@@ -25,7 +25,9 @@
       @click="emit('select', day.iso)"
       @dblclick="emit('add', day.iso)"
     >
-      <span class="calendar-grid__day-number">{{ day.number }}</span>
+      <span class="calendar-grid__day-number" data-test="calendar-cell">{{
+        day.number
+      }}</span>
       <span v-if="entriesFor(day.iso).length > 0" class="calendar-grid__markers" aria-hidden="true">
         <span
           v-for="entry in entriesFor(day.iso)"

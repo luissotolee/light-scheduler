@@ -224,7 +224,7 @@ describe('CalendarView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    await wrapper.find(`[data-test="calendar-edit-${existing.id}"]`).trigger('click')
+    await wrapper.find('[data-test="calendar-entry-edit"]').trigger('click')
     await nextTick()
 
     await wrapper.find('[data-test="calendar-entry-name"]').setValue('New name')
@@ -244,7 +244,7 @@ describe('CalendarView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    await wrapper.find(`[data-test="calendar-remove-${existing.id}"]`).trigger('click')
+    await wrapper.find('[data-test="calendar-entry-remove"]').trigger('click')
     await nextTick()
 
     expect(wrapper.find('[data-test="confirm-message"]').text()).toBe(

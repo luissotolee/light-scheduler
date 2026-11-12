@@ -29,7 +29,8 @@
           text
           rounded
           :aria-label="t('calendar.entry.editAria', { name: entry.name })"
-          :data-test="`calendar-edit-${entry.id}`"
+          data-test="calendar-entry-edit"
+          :data-entry-id="entry.id"
           @click="emit('edit', entry.id)"
         />
         <Button
@@ -41,7 +42,8 @@
           rounded
           severity="danger"
           :aria-label="t('calendar.entry.removeAria', { name: entry.name })"
-          :data-test="`calendar-remove-${entry.id}`"
+          data-test="calendar-entry-remove"
+          :data-entry-id="entry.id"
           @click="emit('remove', entry.id)"
         />
       </div>

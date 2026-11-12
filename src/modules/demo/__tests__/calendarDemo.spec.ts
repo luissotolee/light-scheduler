@@ -6,14 +6,27 @@ import { es } from '@/shared/i18n/messages/es'
 
 const knownTargets = [
   'calendar-country',
+  'calendar-region',
+  'calendar-year',
   'calendar-fetch',
   'calendar-public-holiday-count',
+  'calendar-month-label',
+  'calendar-previous-month',
+  'calendar-next-month',
   'calendar-month-grid',
+  'calendar-cell',
+  'calendar-clear-fetched',
   'calendar-add-entry',
   'calendar-entry-form',
+  'calendar-entry-date',
   'calendar-entry-name',
+  'calendar-entry-kind',
   'calendar-entry-save',
   'calendar-entry-list',
+  'calendar-entry-edit',
+  'calendar-entry-remove',
+  'confirm-message',
+  'confirm-accept',
 ]
 
 describe('calendarDemo scenario', () => {

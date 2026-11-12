@@ -15,7 +15,7 @@ description: Build and extend the in-app real-time guided demo (mock data, local
 - Adding or changing `data-test` selectors used by demo steps
 - Updating demo fixtures (`buildDemoWorkspace`)
 - Adding i18n keys for demo narration or controls
-- Changing behavior, functionality, or layout in any demoed module: **employees**, **scheduler**, **calendar**, **summary**, or **archive**
+- Changing behavior, functionality, or layout in any demoed module: **employees**, **scheduler**, **calendar**, or **summary**
 
 ## Keeping scenarios in sync with the app
 
@@ -24,17 +24,16 @@ The demo must mirror the current app. Every change to a demoed module updates it
 | Module | Scenario | Demoed surface |
 | ------ | -------- | -------------- |
 | `src/modules/employees/` | `scenarios/employeesDemo.ts` | search, sort, add, edit, holidays, active filter, deactivate/reactivate, remove |
-| `src/modules/scheduler/` | `scenarios/schedulerDemo.ts` | weeks, week picker, weekdays, shift CRUD, day off, holidays, calendar markers, weekly hours |
-| `src/modules/calendar/` | `scenarios/calendarDemo.ts` | country/region fetch, month grid, custom holidays/events |
+| `src/modules/scheduler/` | `scenarios/schedulerDemo.ts` | weeks, week picker, weekdays, shift CRUD/resize/move, day off, holidays, calendar markers, weekly hours, settings, hourly headcount |
+| `src/modules/calendar/` | `scenarios/calendarDemo.ts` | country/region/year fetch, month navigation, custom holidays/events add/edit/remove, clear fetched |
 | `src/modules/summary/`  | `scenarios/summaryDemo.ts`  | week navigation, summary table, details, print, PDF |
-| `src/modules/archive/`  | `scenarios/archiveDemo.ts`  | backup export and restore entry points |
 
 - **New functionality or changed behavior** (added/renamed/removed control, different flow or state) → add, edit, or remove the affected `DemoStep`, and add/update/remove its narration key in **both** `en.ts` and `es.ts`.
 - **Layout or visual change** (element moved, reordered, resized, replaced, or wrapped) → confirm the step's target still resolves to the intended element. Update `testId`, `within`, or `index` when the element's place or nesting changes, and reorder/retarget steps if the flow moved. A step that runs but highlights the wrong element is a defect.
 - **New element to demonstrate** → add a stable `data-test` in the owning component, then reference it from the step.
 - **Renamed or removed `data-test`** → update every scenario step and every spec that references it.
 - **Removed feature** → remove or reword the steps and narration that describe it; do not leave stale steps.
-- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `calendarDemo`, `summaryDemo`, `archiveDemo`); they assert unique step IDs, narration keys in both catalogs, and known `data-test` targets/routes. Manually confirm each step points at the intended element.
+- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `calendarDemo`, `summaryDemo`); they assert unique step IDs, narration keys in both catalogs, and known `data-test` targets/routes. Manually confirm each step points at the intended element.
 
 ## Architecture map
 
@@ -48,9 +47,9 @@ src/modules/demo/
 ├── scenarios/
 │   ├── index.ts                # demoScenarios registry, getDemoScenario, listDemoScenarios
 │   ├── employeesDemo.ts        # employees-demo: search, sort, add, edit, holidays, active filter, deactivate/reactivate, remove
-│   ├── schedulerDemo.ts        # scheduler-demo: weeks, week picker, weekdays, shift CRUD, day off, holidays, weekly hours, restart
-│   ├── summaryDemo.ts          # summary-demo: week navigation, week picker, summary table, details, print, PDF
-│   └── archiveDemo.ts          # archive-demo: backup export and restore entry points
+│   ├── calendarDemo.ts         # calendar-demo: country/region fetch, month grid, custom holidays/events, edit/remove, clear fetched
+│   ├── schedulerDemo.ts        # scheduler-demo: weeks, week picker, weekdays, shift CRUD, day off, holidays, weekly hours, settings, restart
+│   └── summaryDemo.ts          # summary-demo: week navigation, week picker, summary table, details, print, PDF
 ├── utils/
 │   ├── storageSnapshot.ts      # captureAppStorage, restoreAppStorage, writeDemoBackup, readDemoBackup, clearDemoBackup, recoverInterruptedDemo
 │   ├── dom.ts                  # waitForTarget, resolveTarget, getRectCenter, clickElement, pointerClickElement, pressKey, fillInput, prefersReducedMotion
@@ -61,7 +60,7 @@ src/modules/demo/
 │   └── demo.ts                 # Pinia store: status, scenarioId, stepIndex, errorKey, cursor, ring, showRestoredFlag
 ├── components/
 │   ├── DemoModeButton.vue      # Shell button that opens the scenario picker
-│   ├── DemoPickerDialog.vue    # Modal with the Employees / Scheduler / Summary / Archive scenarios
+│   ├── DemoPickerDialog.vue    # Modal with the Employees / Scheduler / Calendar / Summary scenarios
 │   ├── DemoBanner.vue          # Non-blocking banner shown during demo
 │   └── DemoOverlay.vue         # Fixed overlay: cursor, ring, narration card, controls (Prev/Next/Pause/Resume/Exit)
 ├── overlay/
@@ -143,34 +142,34 @@ interface DemoScenario {
 6. **Register** in `src/modules/demo/scenarios/index.ts` (or new scenario file).
 7. **Write tests** — unique step `id`s, narration keys exist in both catalogs, known `data-test` targets/routes.
 
-### Example: Add a step to highlight the backup download button
+### Example: Add a step to highlight the hourly headcount
 
 ```ts
-// In archiveDemo.ts (the archive scenario highlights the backup controls)
+// In schedulerDemo.ts (the scheduler scenario shows the headcount badges)
 {
-  id: 'backup-export-highlight',
+  id: 'scheduler-headcount',
   action: 'spotlight',
-  target: { testId: 'export-backup' },
-  narrationKey: 'demo.scenario.backup.exportDetail',
+  target: { testId: 'hour-headcount' },
+  narrationKey: 'demo.scenario.scheduler.headcount',
   pauseMs: 2000,
 }
 ```
 
 ```ts
 // In en.ts
-'demo.scenario.backup.exportDetail':
-  'Click here to download a compressed backup of every employee, shift, day off, and setting.'
+'demo.scenario.scheduler.headcount':
+  'Each hourly badge shows the number of employees scheduled in that hour.'
 // In es.ts
-'demo.scenario.backup.exportDetail':
-  'Haz clic aquí para descargar una copia comprimida de todos los empleados, turnos, días libres y ajustes.'
+'demo.scenario.scheduler.headcount':
+  'Cada insignia por hora muestra cuántos empleados están planificados en esa hora.'
 ```
 
-```ts
-// In ArchiveView.vue (already has data-test="export-backup")
-<button data-test="export-backup" ...>
+```html
+<!-- In ShiftGrid.vue (already renders data-test="hour-headcount") -->
+<span v-if="showHeadcount" data-test="hour-headcount" ...>
 ```
 
-The workspace backup is the `.json.gz` file produced by the archive module.
+Remember to enable the hourly headcount setting in the demo before highlighting the badges.
 
 ## Target resolution & `data-test` contract
 
@@ -248,7 +247,7 @@ npm run build
 - `dom.spec.ts` — target resolution, waitForTarget, click/pointerClick/press/fill (including nested inputs), reduced motion.
 - `DemoModeButton.spec.ts` — picker opens, each option starts its scenario, cancel does not start.
 - `DemoPickerDialog.spec.ts` (covered via `DemoModeButton.spec.ts`) — three translated options.
-- `employeesDemo.spec.ts` / `schedulerDemo.spec.ts` / `calendarDemo.spec.ts` / `summaryDemo.spec.ts` / `archiveDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
+- `employeesDemo.spec.ts` / `schedulerDemo.spec.ts` / `calendarDemo.spec.ts` / `summaryDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
 - `DemoOverlay.spec.ts` — conditional render, narration translation, progress, controls, keyboard Exit, restored toast, a11y attrs.
 
 ### Manual verification
