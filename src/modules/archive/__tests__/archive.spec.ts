@@ -111,7 +111,7 @@ describe('archive store', () => {
       state: 'success',
       message: { kind: 'simple', code: 'archive.employeesExported' },
     })
-    expect(downloadName).toBe('employees-2026-11-05T20-57-00-000Z.csv')
+    expect(downloadName).toBe('employees-2026-11-05_20-57-00.csv')
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
 
     const blob = blobs[0]
@@ -411,7 +411,7 @@ describe('archive store', () => {
       state: 'success',
       message: { kind: 'simple', code: 'archive.scheduleExported' },
     })
-    expect(downloadName).toBe('schedule-2026-11-05T20-57-00-000Z.csv')
+    expect(downloadName).toBe('schedule-2026-11-05_20-57-00.csv')
 
     const blob = blobs[0]
     expect(new Uint8Array(await blob.slice(0, 3).arrayBuffer())).toEqual(
@@ -736,7 +736,7 @@ describe('archive store', () => {
         state: 'success',
         message: { kind: 'simple', code: 'archive.backupExported' },
       })
-      expect(downloadName).toBe('backup-2026-11-05T20-57-00-000Z.json.gz')
+      expect(downloadName).toBe('backup-2026-11-05_20-57-00.json.gz')
       expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
 
       const backup = await gunzipJson(blobs[0])

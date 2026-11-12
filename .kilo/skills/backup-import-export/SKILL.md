@@ -151,12 +151,17 @@ downloadBlob(timestampedName('backup', BACKUP_EXTENSION), blob)
 
 ```ts
 export function timestampedName(base: string, ext: string): string {
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const stamp = [
+    `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`,
+    `${pad(now.getUTCHours())}-${pad(now.getUTCMinutes())}-${pad(now.getUTCSeconds())}`,
+  ].join('_')
   return `${base}-${stamp}.${ext}`
 }
 ```
 
-Output: `backup-2026-11-05T20-57-00-000Z.json.gz`. Report success/error through `MessageKey` codes (`archive.backupExported`, `archive.compressionUnsupported`, etc.), translated at the view boundary.
+Output: `backup-2026-11-05_20-57-00.json.gz` (`yyyy-mm-dd_hh24-mi-ss`). Report success/error through `MessageKey` codes (`archive.backupExported`, `archive.compressionUnsupported`, etc.), translated at the view boundary.
 
 ## 7. Restore flow
 
@@ -189,7 +194,7 @@ vi.stubGlobal('URL', {
 
 vi.useFakeTimers()
 vi.setSystemTime(new Date('2026-11-05T20:57:00Z'))
-expect(timestampedName('backup', BACKUP_EXTENSION)).toBe('backup-2026-11-05T20-57-00-000Z.json.gz')
+expect(timestampedName('backup', BACKUP_EXTENSION)).toBe('backup-2026-11-05_20-57-00.json.gz')
 ```
 
 Use `Blob.arrayBuffer()`, `gzipJson`, and `readBackupFile` to exercise the real compression path rather than mocking it. Assert user-visible messages through the i18n catalog, not hardcoded English.

@@ -18,6 +18,11 @@ export function downloadTextFile(
 }
 
 export function timestampedName(base: string, ext: string): string {
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const stamp = [
+    `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`,
+    `${pad(now.getUTCHours())}-${pad(now.getUTCMinutes())}-${pad(now.getUTCSeconds())}`,
+  ].join('_')
   return `${base}-${stamp}.${ext}`
 }
