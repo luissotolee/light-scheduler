@@ -31,6 +31,7 @@
               scope="col"
               class="weekly-hours__col weekly-hours__name"
               :title="row.name"
+              :aria-label="row.name"
               :data-test="`weekly-hours-row-${row.memberId}`"
             >
               {{ row.initials }}

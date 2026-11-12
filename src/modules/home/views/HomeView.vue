@@ -11,7 +11,6 @@
       <div class="home__demo-text">
         <span class="home__demo-badge">{{ t('home.demo.badge') }}</span>
         <h2 id="home-demo-title" class="home__demo-title">{{ t('home.demo.title') }}</h2>
-        <p class="home__demo-description">{{ t('home.demo.description') }}</p>
       </div>
       <button
         type="button"
@@ -153,12 +152,6 @@ async function handleDemoSelect(scenarioId: string): Promise<void> {
   font-size: 1.15rem;
 }
 
-.home__demo-description {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.9rem;
-}
-
 .home__demo-cta {
   display: inline-flex;
   align-items: center;
@@ -257,10 +250,6 @@ async function handleDemoSelect(scenarioId: string): Promise<void> {
     font-size: 1rem;
   }
 
-  .home__demo-description {
-    font-size: 0.82rem;
-  }
-
   .home__demo-cta {
     padding: 0.5rem 0.9rem;
   }
@@ -287,6 +276,27 @@ async function handleDemoSelect(scenarioId: string): Promise<void> {
   .home__demo {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .home__demo {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home__demo-cta {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .home__features {
+    grid-template-columns: 1fr;
+  }
+
+  .home__cta {
+    align-self: stretch;
+    text-align: center;
   }
 }
 </style>

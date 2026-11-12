@@ -9,10 +9,12 @@
         <button
           type="button"
           class="employees__button"
+          :aria-label="t('employees.add')"
           data-test="add-employee"
           @click="store.openCreate"
         >
-          {{ t('employees.add') }}
+          <i v-if="isPhone" class="pi pi-plus" aria-hidden="true" />
+          <span v-if="!isPhone">{{ t('employees.add') }}</span>
         </button>
       </template>
     </PageHeader>
@@ -48,6 +50,8 @@
         />
       </label>
     </div>
+
+    <p v-if="isPhone" class="employees__hint">{{ t('employees.hideInactive.tooltip') }}</p>
 
     <p
       v-if="errorMessage && !formVisible"
@@ -123,6 +127,7 @@ import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useI18n } from '@/shared/i18n'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import type { HolidayWeek, NewTeamMember } from '@/types'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const store = useEmployeesStore()
 const {
@@ -144,6 +149,7 @@ const {
   hideInactive,
 } = storeToRefs(store)
 const { t } = useI18n()
+const isPhone = useIsPhone()
 
 const emptyTitle = computed<MessageKey>(() => {
   if (count.value === 0) return 'employees.emptyTitle'
@@ -332,6 +338,47 @@ onUnmounted(() => {
 
   .employees__error {
     padding: 0.5rem 0.75rem;
+  }
+}
+
+.employees__hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .employees__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem;
+  }
+
+  .employees__filters {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: none;
+    gap: 0.4rem;
+  }
+
+  .employees__search {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .employees__toggle {
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .employees__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.5rem;
   }
 }
 </style>

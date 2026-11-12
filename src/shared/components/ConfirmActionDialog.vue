@@ -1,5 +1,5 @@
 <template>
-  <Dialog
+  <AppDialog
     :visible="visible"
     modal
     :header="header"
@@ -23,12 +23,12 @@
         @click="emit('confirm')"
       />
     </div>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import AppDialog from '@/shared/components/AppDialog.vue'
 import { useI18n } from '@/shared/i18n'
 
 type Severity = 'secondary' | 'success' | 'info' | 'warn' | 'danger' | 'contrast' | 'help'
@@ -64,6 +64,20 @@ const { t } = useI18n()
 @media screen and (max-height: 899px) {
   .confirm-dialog__message {
     margin-bottom: 0.75rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .confirm-dialog {
+    width: 100vw;
+  }
+
+  .confirm-dialog__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.75rem 0 calc(0.25rem + var(--safe-area-bottom));
+    background: var(--color-surface);
   }
 }
 </style>

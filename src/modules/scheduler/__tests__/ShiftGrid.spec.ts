@@ -326,4 +326,25 @@ describe('ShiftGrid', () => {
     const handoffChips = mountGrid(handoff, true).findAll('[data-test="hour-headcount"]')
     expect(handoffChips[1].text()).toBe('1')
   })
+
+  it('wraps the grid in an accessible scroller with mobile content width on phones', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountGrid()
+    await nextTick()
+
+    const scroller = wrapper.find('[data-test="shift-grid-scroller"]')
+    expect(scroller.exists()).toBe(true)
+    expect(scroller.attributes('role')).toBe('region')
+    expect(scroller.attributes('aria-label')).toBe(
+      'Scrollable schedule table. Use two fingers to pan.',
+    )
+    expect(wrapper.find('[data-test="shift-grid"]').attributes('style')).toContain(
+      '--grid-mobile-content-width',
+    )
+    expect(wrapper.findAll('.shift-grid__corner .pi-user')).toHaveLength(1)
+  })
 })

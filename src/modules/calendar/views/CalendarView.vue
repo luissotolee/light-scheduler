@@ -67,7 +67,7 @@
         >
           <i class="pi pi-star-fill" aria-hidden="true" />
           <span class="calendar__holiday-count-label">
-            {{ t('calendar.importedSuccessfully') }}
+            {{ isPhone ? publicHolidayYearTotals : t('calendar.importedSuccessfully') }}
           </span>
         </span>
 
@@ -149,6 +149,8 @@
             />
           </div>
         </div>
+
+        <p v-if="isPhone" class="calendar__hint">{{ t('calendar.touchHint') }}</p>
 
         <CalendarMonthGrid
           :month="visibleMonth"
@@ -232,11 +234,13 @@ import { holidayProvider, type HolidayRegionOption } from '@/modules/calendar/ut
 import { useI18n } from '@/shared/i18n'
 import type { CalendarEntry, NewCalendarEntry } from '@/types'
 import { intlLocale, isoDateToDate, toLocalIsoDate, todayIsoDate } from '@/shared/utils/calendar'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const store = useCalendarStore()
 const { data, isFetching, publicEntries, status } = storeToRefs(store)
 const { t, tc, locale } = useI18n()
 const toast = useToast()
+const isPhone = useIsPhone()
 
 const now = new Date()
 const visibleMonth = ref(toLocalIsoDate(new Date(now.getFullYear(), now.getMonth(), 1)))
@@ -653,6 +657,61 @@ watch(locale, () => {
   .calendar__month-actions {
     grid-column: 1;
     justify-content: center;
+  }
+}
+
+.calendar__hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .calendar__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem;
+  }
+
+  .calendar__field {
+    min-width: 0;
+  }
+
+  .calendar__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .calendar__actions :deep(.p-button) {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .calendar__holiday-count {
+    align-self: stretch;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .calendar__month-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar__month-nav,
+  .calendar__month-actions {
+    grid-column: 1;
+    justify-content: center;
+  }
+
+  .calendar__month-actions :deep(.p-button) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .calendar__month-label {
+    min-width: 0;
+    font-size: 0.95rem;
   }
 }
 </style>

@@ -201,7 +201,7 @@ function dayAria(isoDate: string): string {
   }
 
   .calendar-grid__day {
-    min-height: 2.75rem;
+    min-height: 2.9rem;
     padding: 0.25rem 0.1rem;
   }
 }

@@ -56,4 +56,20 @@ describe('AppNav', () => {
 
     expect(wrapper.find('nav').attributes('aria-label')).toBe(en['app.navPrimary'])
   })
+
+  it('renders icon-only links with accessible names on phones', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = await mountNav('/')
+    const links = wrapper.findAll('.app-nav__link')
+
+    expect(links.map((link) => link.text())).toEqual(NAV_ITEMS.map(() => ''))
+    expect(links.map((link) => link.attributes('aria-label'))).toEqual(
+      NAV_ITEMS.map((item) => en[item.labelKey]),
+    )
+    expect(links[0].find('.pi.pi-home').exists()).toBe(true)
+  })
 })

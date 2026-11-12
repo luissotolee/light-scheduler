@@ -20,6 +20,7 @@ import {
   toLocalIsoDate,
   todayIsoDate,
   weekdayDayOfMonth,
+  weekdayInitial,
   weekdayIsoDate,
 } from '@/shared/utils/calendar'
 
@@ -361,5 +362,12 @@ describe('Spanish date formatting', () => {
       week: 1,
       label: 'Semana 1 — 4 ene – 10 ene',
     })
+  })
+
+  it('shortens weekday labels to an uppercase initial', () => {
+    expect(weekdayInitial('Monday')).toBe('M')
+    expect(weekdayInitial('Miércoles')).toBe('M')
+    expect(weekdayInitial('Sábado')).toBe('S')
+    expect(weekdayInitial('')).toBe('')
   })
 })

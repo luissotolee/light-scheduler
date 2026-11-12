@@ -473,4 +473,46 @@ describe('ShiftRow', () => {
       [{ memberId: 'member-1', startMinute: 540, endMinute: 555 }],
     ])
   })
+
+  it('shows employee initials on phones while keeping the full accessible name', () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountRow()
+
+    const toggle = wrapper.find('[data-test="shift-row-name-toggle"]')
+    expect(toggle.text()).toBe('A')
+    expect(toggle.attributes('aria-label')).toContain('Ada')
+  })
+
+  it('shows a delete button after a long-press and removes the shift', async () => {
+    const wrapper = mountRow([bar])
+    const shiftBar = wrapper.findComponent(ShiftBar)
+
+    shiftBar.vm.$emit('longPress', 'shift-1')
+    await nextTick()
+
+    const remove = wrapper.find('[data-test="shift-delete"]')
+    expect(remove.exists()).toBe(true)
+    expect(remove.attributes('aria-label')).toBe('Remove this shift')
+
+    await remove.trigger('click')
+
+    expect(wrapper.emitted('remove')).toEqual([['shift-1']])
+    expect(wrapper.find('[data-test="shift-delete"]').exists()).toBe(false)
+  })
+
+  it('dismisses the delete button when tapping outside', async () => {
+    const wrapper = mountRow([bar])
+    wrapper.findComponent(ShiftBar).vm.$emit('longPress', 'shift-1')
+    await nextTick()
+    expect(wrapper.find('[data-test="shift-delete"]').exists()).toBe(true)
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await nextTick()
+
+    expect(wrapper.find('[data-test="shift-delete"]').exists()).toBe(false)
+  })
 })

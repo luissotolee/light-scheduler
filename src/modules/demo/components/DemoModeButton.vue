@@ -10,7 +10,8 @@
     data-test="demo-start-button"
     @click="openPicker"
   >
-    {{ t('demo.start') }}
+    <i v-if="isPhone" class="pi pi-play demo-mode-button__icon" aria-hidden="true" />
+    <span v-if="!isPhone">{{ t('demo.start') }}</span>
   </button>
 
   <DemoPickerDialog
@@ -26,9 +27,11 @@ import { useI18n } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { startDemo } from '@/modules/demo/utils/demoSession'
 import DemoPickerDialog from '@/modules/demo/components/DemoPickerDialog.vue'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
+const isPhone = useIsPhone()
 const starting = ref(false)
 const pickerVisible = ref(false)
 
@@ -82,6 +85,21 @@ async function handleSelect(scenarioId: string): Promise<void> {
   .demo-mode-button {
     padding: 0.35rem 0.75rem;
     font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .demo-mode-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+  }
+
+  .demo-mode-button__icon {
+    font-size: 1rem;
   }
 }
 </style>

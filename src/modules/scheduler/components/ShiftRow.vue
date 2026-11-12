@@ -82,13 +82,28 @@
         :duty="row.member.duty"
         :limits="limits"
         :disabled="disabled"
+        :pan-active="panActive"
         @resize="emit('resize', $event)"
         @remove="emit('remove', $event)"
+        @long-press="handleLongPress"
         @move-start="emit('moveStart', $event)"
         @move-drag="emit('moveDrag', $event)"
         @move-end="emit('moveEnd', $event)"
         @move-cancel="emit('moveCancel')"
       />
+
+      <button
+        v-if="removalBar"
+        type="button"
+        class="shift-row__delete"
+        :style="deleteStyle"
+        :aria-label="t('shiftBar.removeAction')"
+        data-test="shift-delete"
+        @pointerdown.stop.prevent
+        @click.stop="removeBar"
+      >
+        <i class="pi pi-times" aria-hidden="true" />
+      </button>
 
       <div v-if="draft" class="shift-row__draft" :style="draftStyle" data-test="shift-draft" />
     </div>
@@ -96,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { DaySlot, MinuteRange, SchedulingWindow } from '@/shared/utils/shifts'
 import {
   DEFAULT_SHIFT_MINUTES,
@@ -118,29 +133,103 @@ import {
 } from '@/modules/scheduler/utils/grid'
 import ShiftBar from '@/modules/scheduler/components/ShiftBar.vue'
 import { useI18n } from '@/shared/i18n'
-import { dutyModifier } from '@/shared/utils/employee'
+import { dutyModifier, initialsOf } from '@/shared/utils/employee'
 import { formatHours } from '@/modules/scheduler/utils/hours'
 import { MIN_DAYS_OFF } from '@/modules/scheduler/utils/off'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const props = withDefaults(
   defineProps<{
     row: DayRow
     slots: DaySlot[]
     dropTarget?: boolean
+    panActive?: boolean
   }>(),
   {
     dropTarget: false,
+    panActive: false,
   },
 )
 
 const { t } = useI18n()
+const isPhone = useIsPhone()
 
 const limits = computed<SchedulingWindow>(() => windowFromSlots(props.slots))
 
 const MAX_NAME_LENGTH = 20
 const displayName = computed(() => {
   const name = props.row.member.name
+  if (isPhone.value) return initialsOf(name)
   return name.length > MAX_NAME_LENGTH ? `${name.slice(0, MAX_NAME_LENGTH)}…` : name
+})
+
+const removalTargetId = ref<string | null>(null)
+const removalBar = computed(() =>
+  removalTargetId.value
+    ? (props.row.bars.find((bar) => bar.id === removalTargetId.value) ?? null)
+    : null,
+)
+const deleteStyle = computed<Record<string, string>>(() => {
+  const bar = removalBar.value
+  if (!bar) return {} as Record<string, string>
+  return {
+    left: `${minuteToPercent(bar.endMinute, limits.value)}%`,
+    top: '0.05rem',
+    transform: 'translateX(-100%)',
+  }
+})
+
+let dismissTimer: number | null = null
+
+function clearDismissTimer(): void {
+  if (dismissTimer !== null) {
+    window.clearTimeout(dismissTimer)
+    dismissTimer = null
+  }
+}
+
+function handleLongPress(id: string): void {
+  removalTargetId.value = id
+}
+
+function removeBar(): void {
+  const id = removalTargetId.value
+  removalTargetId.value = null
+  if (id) emit('remove', id)
+}
+
+function handleOutsidePointer(event: PointerEvent): void {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  if (target.closest('[data-test="shift-delete"]')) return
+  if (target.closest('[data-test="shift-bar"]')) return
+  removalTargetId.value = null
+}
+
+watch(removalTargetId, (id) => {
+  clearDismissTimer()
+  if (id) {
+    document.addEventListener('pointerdown', handleOutsidePointer, true)
+    dismissTimer = window.setTimeout(() => {
+      removalTargetId.value = null
+    }, 4000)
+    return
+  }
+  document.removeEventListener('pointerdown', handleOutsidePointer, true)
+})
+
+watch(
+  () => props.panActive,
+  (active) => {
+    if (!active) return
+    removalTargetId.value = null
+    cancelSelection()
+  },
+)
+
+onBeforeUnmount(() => {
+  clearDismissTimer()
+  document.removeEventListener('pointerdown', handleOutsidePointer, true)
 })
 
 const emit = defineEmits<{
@@ -198,6 +287,8 @@ function releasePointer(event: PointerEvent): void {
 
 function startSelection(event: PointerEvent): void {
   if (disabled.value) return
+  if (props.panActive) return
+  if (event.pointerType === 'touch' && !event.isPrimary) return
   if (event.button > 0) return
 
   const minute = minuteAt(event.clientX)
@@ -473,6 +564,54 @@ function handleKeydown(event: KeyboardEvent): void {
   .shift-row__day-off-chip {
     padding: 0.02rem 0.3rem;
     font-size: 0.62rem;
+  }
+}
+
+.shift-row__delete {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--color-danger);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.shift-row__delete:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .shift-row__name {
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+  }
+
+  .shift-row__name-toggle {
+    flex: 0 1 auto;
+    text-align: center;
+  }
+
+  .shift-row__day-off-chip {
+    padding: 0 0.2rem;
+    font-size: 0.55rem;
+  }
+
+  .shift-row__hours {
+    padding: 0;
+    font-size: 0.7rem;
   }
 }
 </style>

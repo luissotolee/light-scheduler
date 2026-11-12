@@ -54,6 +54,18 @@ describe('App', () => {
     )
   })
 
+  it('keeps the brand, nav, demo and language controls in one header row', async () => {
+    const wrapper = await mountApp('/')
+    const header = wrapper.find('.app__header')
+    const children = Array.from(header.element.children)
+
+    expect(children[0]?.classList.contains('app__brand')).toBe(true)
+    expect(children[1]?.classList.contains('app__nav')).toBe(true)
+    expect(children.at(-1)?.classList.contains('app__language')).toBe(true)
+    expect(header.find('.app__nav .app-nav').exists()).toBe(true)
+    expect(header.find('[data-test="demo-start-button"]').exists()).toBe(true)
+  })
+
   it('links to Ko-fi from the footer', async () => {
     const wrapper = await mountApp('/')
     const link = wrapper.find('[data-test="ko-fi-button"]')

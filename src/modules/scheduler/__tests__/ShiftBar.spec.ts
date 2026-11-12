@@ -342,4 +342,74 @@ describe('ShiftBar', () => {
       [{ id: 'shift-1', startMinute: 555, endMinute: 615 }],
     ])
   })
+
+  it('emits longPress after holding a shift with a touch pointer', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    vi.useFakeTimers()
+    const wrapper = mountBar()
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+      clientY: 10,
+    })
+    vi.advanceTimersByTime(500)
+    await nextTick()
+
+    expect(wrapper.emitted('longPress')).toEqual([['shift-1']])
+    expect(wrapper.emitted('moveCancel')).toEqual([[]])
+    vi.useRealTimers()
+  })
+
+  it('cancels longPress when the finger moves', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    vi.useFakeTimers()
+    const wrapper = mountBar()
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointermove', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 140,
+      clientY: 10,
+    })
+    vi.advanceTimersByTime(500)
+    await nextTick()
+
+    expect(wrapper.emitted('longPress')).toBeUndefined()
+    vi.useRealTimers()
+  })
+
+  it('does not remove on right-click on phones', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountBar()
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+    bar.element.dispatchEvent(event)
+    await nextTick()
+
+    expect(wrapper.emitted('remove')).toBeUndefined()
+    expect(event.defaultPrevented).toBe(true)
+  })
 })

@@ -8,6 +8,7 @@ export const en = {
   'common.reactivate': 'Reactivate',
   'common.holidays': 'Holidays',
   'common.dash': '—',
+  'common.back': 'Back',
 
   'app.navPrimary': 'Primary',
   'app.footer':
@@ -30,10 +31,8 @@ export const en = {
   'home.intro':
     'Plan daily shifts across a week for many employees and review the result in one place.',
   'home.demo.badge': 'Recommended first step',
-  'home.demo.title': 'We strongly recommend starting with the guided demo',
-  'home.demo.description':
-    'The demo walks you through every page with sample data so you can learn the app before touching your own schedule. Your saved data is restored as soon as you exit.',
-  'home.demo.cta': 'Start the guided demo',
+  'home.demo.title': 'Start with the guided demo',
+  'home.demo.cta': 'Start demo',
   'home.feature.scheduler.title': 'Scheduler',
   'home.feature.scheduler.description': 'Build weekly shifts for every employee on your team.',
   'home.feature.calendar.title': 'Calendar',
@@ -51,6 +50,9 @@ export const en = {
   'scheduler.title': 'Scheduler',
   'scheduler.description':
     "Click a cell for a 3-hour shift, drag to choose a custom range, drag a bar's edges to adjust, right-click a bar to remove it.",
+  'scheduler.descriptionPhone':
+    "Tap a cell for a 3-hour shift, drag to choose a custom range, drag a bar's edges to adjust, long-press a shift and tap × to remove it. Use two fingers to pan the schedule table.",
+  'scheduler.gridScrollAria': 'Scrollable schedule table. Use two fingers to pan.',
   'scheduler.previousWeek': 'Previous week',
   'scheduler.nextWeek': 'Next week',
   'scheduler.weekdays': 'Weekdays',
@@ -104,8 +106,12 @@ export const en = {
   'shiftGrid.headcountTooltipOne': '{count} employee scheduled at {hour}:00',
   'shiftGrid.headcountTooltipMany': '{count} employees scheduled at {hour}:00',
   'shiftBar.removeHint': 'Right-click to remove this shift',
+  'shiftBar.removeHintPhone': 'Long-press this shift, then tap × to remove it',
+  'shiftBar.removeAction': 'Remove this shift',
   'shiftBar.aria':
     'Shift for {name}: {start} to {end}. Use arrow keys to move, Shift plus arrow keys to resize, Delete to remove.',
+  'shiftBar.ariaTouch':
+    'Shift for {name}: {start} to {end}. Long-press and tap the remove button to delete it.',
   'shiftRow.trackAria': 'Shift track for {name}. Press Enter to add a 3 hour shift.',
   'shiftRow.markOff': 'Mark {name} off for this day',
   'shiftRow.markOn': 'Mark {name} back on for this day',
@@ -247,6 +253,7 @@ export const en = {
   'calendar.importedSuccessfully': 'Imported successfully',
   'calendar.fetchedBadge': 'Fetched',
   'calendar.dayAria': '{date}: {entries}',
+  'calendar.touchHint': 'Select a day, then tap Add holiday or event.',
   'calendar.loadingOptions': 'Loading options…',
   'calendar.form.addTitle': 'Add holiday or event',
   'calendar.form.editTitle': 'Edit holiday or event',
@@ -427,7 +434,7 @@ export const en = {
   'demo.scenario.employees.details':
     "Select a name to open the employee's details and holiday weeks.",
   'demo.scenario.employees.detailsDialog':
-    'The details dialog summarizes role, contract, hours, contact, comments and holidays.',
+    'The details view summarizes role, contract, hours, contact, comments and holidays.',
   'demo.scenario.employees.detailsComment':
     'Any comments saved on the employee appear at the end of the details.',
   'demo.scenario.employees.closeDetails': 'Close the details to return to the list.',
@@ -469,7 +476,7 @@ export const en = {
   'demo.scenario.scheduler.dayEntries':
     'The selected day also shows its public holidays and events in a blue label under the date.',
   'demo.scenario.scheduler.grid':
-    'Each row is a team member and the horizontal axis runs from 09:00 to 01:00.',
+    'Each row is a team member and the horizontal axis runs from 09:00 to 01:00. On phones, use two fingers to pan the table.',
   'demo.scenario.scheduler.create': 'Press Enter on a row, or click and drag, to create a shift.',
   'demo.scenario.scheduler.created': 'A new shift appears on the row.',
   'demo.scenario.scheduler.resize':
@@ -477,7 +484,7 @@ export const en = {
   'demo.scenario.scheduler.resizeApplied':
     'Shift with the right arrow extends the shift end by one time slot.',
   'demo.scenario.scheduler.move':
-    'Drag the shift to move it within the row, or use the arrow keys. Press Delete to remove it.',
+    'Drag the shift to move it within the row, or use the arrow keys. Press Delete to remove it. On phones, long-press the shift and tap × instead.',
   'demo.scenario.scheduler.moveBetweenRows':
     "Drag a shift onto another employee's row to reassign it. The shift leaves the original employee and merges into the destination employee's schedule. Disabled rows, such as days off and holidays, won't accept it.",
   'demo.scenario.scheduler.removed': 'The shift has been removed.',
@@ -493,13 +500,13 @@ export const en = {
   'demo.scenario.scheduler.settingsOpen':
     'Open the schedule settings. Each option has an info icon with the details.',
   'demo.scenario.scheduler.settingsWindow':
-    'The schedule settings open with the current window and slot size.',
+    'The schedule settings view opens with the current window and slot size.',
   'demo.scenario.scheduler.settingsStart':
     'Pick the start time with the hour and minute selectors.',
   'demo.scenario.scheduler.settingsEnd':
     'Pick the end time the same way. The grid expands or shrinks to match.',
   'demo.scenario.scheduler.settingsTooltips':
-    'Hover or focus the info icon next to a setting to read what it does without cluttering the dialog.',
+    'Tap or focus the info icon next to a setting to read what it does. On phones, the hint is also shown inline.',
   'demo.scenario.scheduler.settingsOvernight':
     'An end time before the start time keeps the schedule open past midnight.',
   'demo.scenario.scheduler.settingsSlot':
@@ -532,13 +539,13 @@ export const en = {
   'demo.scenario.calendar.year': 'Choose the year to import public holidays for.',
   'demo.scenario.calendar.fetch': 'Use the Import button to store the holidays in your workspace.',
   'demo.scenario.calendar.fetched':
-    'The imported holidays appear in the calendar, and the star badge shows the imported total per year on hover.',
+    'The imported holidays appear in the calendar, and the star badge shows the imported total per year.',
   'demo.scenario.calendar.month':
     'Use the arrows around the month name to browse the calendar.',
   'demo.scenario.calendar.monthPrevious': 'Move to the previous month.',
   'demo.scenario.calendar.monthNext': 'Return to the next month.',
   'demo.scenario.calendar.selectDay':
-    'Select a day to target it. Double-click a day to add an entry for that date.',
+    'Select a day to target it, then use Add holiday or event. Double-click also works on desktop.',
   'demo.scenario.calendar.clear':
     'Use Clear all to remove every imported public holiday while keeping your own entries.',
   'demo.scenario.calendar.clearConfirm':
@@ -577,7 +584,7 @@ export const en = {
     'Employees on holiday for the whole week appear as a single vacation row.',
   'demo.scenario.summary.details': 'Select a name to open the employee details from the summary.',
   'demo.scenario.summary.detailsDialog':
-    'The same employee details dialog opens here, with contact and holiday information.',
+    'The same employee details view opens here, with contact and holiday information.',
   'demo.scenario.summary.detailsClose': 'Close it to return to the summary.',
   'demo.scenario.summary.print': 'Print the summary using your browser print dialog.',
   'demo.scenario.summary.pdf': 'Save the summary as a PDF file.',

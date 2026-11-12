@@ -10,9 +10,9 @@
     role="button"
     :tabindex="disabled ? -1 : 0"
     data-test="shift-bar"
-    :title="t('shiftBar.removeHint')"
+    :title="isPhone ? t('shiftBar.removeHintPhone') : t('shiftBar.removeHint')"
     :aria-disabled="disabled"
-    :aria-label="ariaLabel"
+    :aria-label="isPhone ? touchAriaLabel : ariaLabel"
     @pointerdown.stop.prevent="beginDrag('move', $event)"
     @pointermove="updateDrag"
     @pointerup="endDrag"
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Duty, Shift } from '@/types'
 import type { ShiftMoveDrag, ShiftResizeInput } from '@/modules/scheduler/types'
 import type { MinuteRange, SchedulingWindow } from '@/shared/utils/shifts'
@@ -52,6 +52,7 @@ import {
   snapToSlot,
 } from '@/shared/utils/shifts'
 import { useI18n } from '@/shared/i18n'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 import { dutyModifier } from '@/shared/utils/employee'
 import {
   minuteDeltaFromPixels,
@@ -67,9 +68,11 @@ const props = withDefaults(
     limits?: SchedulingWindow
     selected?: boolean
     disabled?: boolean
+    panActive?: boolean
   }>(),
   {
     disabled: false,
+    panActive: false,
     limits: () => ({ ...DEFAULT_SCHEDULING_WINDOW }),
   },
 )
@@ -81,6 +84,7 @@ const emit = defineEmits<{
   moveDrag: [payload: ShiftMoveDrag]
   moveEnd: [payload: ShiftMoveDrag]
   moveCancel: []
+  longPress: [id: string]
 }>()
 
 type DragMode = 'move' | 'resize-start' | 'resize-end'
@@ -90,16 +94,47 @@ interface DragState {
   originStartMinute: number
   originEndMinute: number
   startClientX: number
+  startClientY: number
   captureTarget: Element | null
   trackElement: Element | null
   pointerId: number
 }
 
 const { t } = useI18n()
+const isPhone = useIsPhone()
+
+const LONG_PRESS_MS = 500
+const LONG_PRESS_MOVE_TOLERANCE = 8
 
 const bar = ref<HTMLElement | null>(null)
 const drag = ref<DragState | null>(null)
 const draftRange = ref<MinuteRange | null>(null)
+let longPressTimer: number | null = null
+
+function clearLongPress(): void {
+  if (longPressTimer !== null) {
+    window.clearTimeout(longPressTimer)
+    longPressTimer = null
+  }
+}
+
+function fireLongPress(): void {
+  longPressTimer = null
+  if (props.disabled) return
+  cancelDrag()
+  emit('longPress', props.shift.id)
+}
+
+watch(
+  () => props.panActive,
+  (active) => {
+    if (!active) return
+    clearLongPress()
+    cancelDrag()
+  },
+)
+
+onBeforeUnmount(clearLongPress)
 
 const displayedRange = computed<MinuteRange>(() => ({
   startMinute: draftRange.value?.startMinute ?? props.shift.startMinute,
@@ -123,8 +158,18 @@ const ariaLabel = computed(() =>
   }),
 )
 
+const touchAriaLabel = computed(() =>
+  t('shiftBar.ariaTouch', {
+    name: props.memberName,
+    start: formatExtendedMinutes(displayedRange.value.startMinute),
+    end: formatExtendedMinutes(displayedRange.value.endMinute),
+  }),
+)
+
 function beginDrag(mode: DragMode, event: PointerEvent): void {
   if (props.disabled) return
+  if (props.panActive) return
+  if (event.pointerType === 'touch' && !event.isPrimary) return
   if (event.button > 0) return
 
   const captureTarget = event.currentTarget instanceof Element ? event.currentTarget : null
@@ -137,6 +182,7 @@ function beginDrag(mode: DragMode, event: PointerEvent): void {
     originStartMinute: props.shift.startMinute,
     originEndMinute: props.shift.endMinute,
     startClientX: event.clientX,
+    startClientY: event.clientY,
     captureTarget,
     trackElement: bar.value?.parentElement ?? null,
     pointerId: event.pointerId,
@@ -147,11 +193,23 @@ function beginDrag(mode: DragMode, event: PointerEvent): void {
   }
 
   if (mode === 'move') emit('moveStart', props.shift.id)
+
+  if (isPhone.value && event.pointerType === 'touch' && mode === 'move') {
+    clearLongPress()
+    longPressTimer = window.setTimeout(fireLongPress, LONG_PRESS_MS)
+  }
 }
 
 function updateDrag(event: PointerEvent): void {
   const state = drag.value
   if (!state) return
+
+  if (longPressTimer !== null) {
+    const moved =
+      Math.abs(event.clientX - state.startClientX) > LONG_PRESS_MOVE_TOLERANCE ||
+      Math.abs(event.clientY - state.startClientY) > LONG_PRESS_MOVE_TOLERANCE
+    if (moved) clearLongPress()
+  }
 
   const trackWidth = state.trackElement?.getBoundingClientRect().width ?? 0
   if (!trackWidth) return
@@ -200,6 +258,7 @@ function updateDrag(event: PointerEvent): void {
 }
 
 function endDrag(event: PointerEvent): void {
+  clearLongPress()
   const state = drag.value
   if (!state) return
 
@@ -219,6 +278,7 @@ function endDrag(event: PointerEvent): void {
 }
 
 function cancelDrag(): void {
+  clearLongPress()
   const wasMoving = drag.value?.mode === 'move'
   drag.value = null
   draftRange.value = null
@@ -227,6 +287,7 @@ function cancelDrag(): void {
 
 function handleContextMenu(): void {
   if (props.disabled) return
+  if (isPhone.value) return
   emit('remove', props.shift.id)
 }
 
@@ -367,6 +428,25 @@ function handleKeydown(event: KeyboardEvent): void {
 
   .shift-bar__handle {
     width: 0.4rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .shift-bar {
+    padding: 0 0.3rem;
+    font-size: 0.68rem;
+  }
+
+  .shift-bar__handle {
+    width: 0.85rem;
+  }
+
+  .shift-bar__handle--start {
+    left: -0.15rem;
+  }
+
+  .shift-bar__handle--end {
+    right: -0.15rem;
   }
 }
 </style>

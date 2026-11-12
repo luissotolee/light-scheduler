@@ -2,7 +2,7 @@
   <section class="scheduler">
     <PageHeader
       :title="t('scheduler.title')"
-      :description="t('scheduler.description')"
+      :description="t(isPhone ? 'scheduler.descriptionPhone' : 'scheduler.description')"
       description-tooltip
     />
 
@@ -182,6 +182,7 @@ import {
 } from '@/shared/utils/calendar'
 import { calendarKindLabelKey, entriesForDate } from '@/shared/utils/calendarEntries'
 import { buildDaySlots } from '@/shared/utils/shifts'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const store = useSchedulerStore()
 const settingsStore = useSchedulerSettingsStore()
@@ -196,6 +197,7 @@ const {
 } = storeToRefs(store)
 const { settings, schedulingWindow } = storeToRefs(settingsStore)
 const { t, locale } = useI18n()
+const isPhone = useIsPhone()
 
 const weekdayOptions = computed(() =>
   WEEKDAY_ORDER.map((value) => {
@@ -425,6 +427,64 @@ function handleRemove(id: string): void {
 
   .scheduler__error {
     padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .scheduler__toolbar-wrapper {
+    justify-content: stretch;
+  }
+
+  .scheduler__toolbar {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.25rem;
+  }
+
+  .scheduler__week {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .scheduler__week-button {
+    max-width: 100%;
+  }
+
+  .scheduler__week-button strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .scheduler__day-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.25rem;
+  }
+
+  .scheduler__day-title {
+    grid-column: 1;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .scheduler__selected-day {
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  .scheduler__actions {
+    grid-column: 2;
+  }
+
+  .scheduler__layout {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .scheduler__layout > :last-child {
+    width: 100%;
   }
 }
 </style>

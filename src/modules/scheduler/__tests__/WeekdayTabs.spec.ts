@@ -114,4 +114,20 @@ describe('WeekdayTabs', () => {
     expect(wrapper.find('[data-test="weekday-calendar-marker-monday"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="weekday-calendar-marker-tuesday"]').exists()).toBe(false)
   })
+
+  it('uses single weekday letters and a horizontal tablist on phones', () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mount(WeekdayTabs, { props: { modelValue: 'monday', weekdays } })
+
+    expect(wrapper.find('nav').attributes('aria-orientation')).toBe('horizontal')
+    const tabs = wrapper.findAll('[role="tab"]')
+    expect(tabs[0].text()).toBe('M 2nd')
+    expect(tabs[1].text()).toBe('T 3rd')
+    expect(tabs[0].attributes('aria-label')).toBe('Monday 2nd')
+    expect(tabs[1].attributes('aria-label')).toBe('Tuesday 3rd')
+  })
 })

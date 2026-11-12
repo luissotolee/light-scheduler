@@ -1,5 +1,5 @@
 <template>
-  <Dialog
+  <AppDialog
     :visible="visible"
     modal
     :header="title"
@@ -94,13 +94,13 @@
         />
       </div>
     </div>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import AppDialog from '@/shared/components/AppDialog.vue'
 import type { TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { formatIsoDate, formatWeekRange, holidayToWeekKey } from '@/shared/utils/calendar'
@@ -209,6 +209,32 @@ const contractLabel = computed(() =>
 
   .employee-details__list {
     gap: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .employee-details {
+    width: 100vw;
+  }
+
+  .employee-details :deep(.p-dialog-content) {
+    max-height: none;
+  }
+
+  .employee-details__body {
+    min-width: 0;
+  }
+
+  .employee-details__list {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-details__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.75rem 0 calc(0.25rem + var(--safe-area-bottom));
+    background: var(--color-surface);
   }
 }
 </style>

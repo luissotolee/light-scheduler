@@ -4,7 +4,7 @@
       <div class="page-header__title-row">
         <h1 class="page-header__title">{{ title }}</h1>
         <span
-          v-if="description && descriptionTooltip"
+          v-if="description && descriptionTooltip && !isPhone"
           v-tooltip.top="description"
           class="page-header__info"
           role="img"
@@ -15,7 +15,9 @@
           <i class="pi pi-info-circle" aria-hidden="true" />
         </span>
       </div>
-      <p v-if="description && !descriptionTooltip" class="page-header__description">{{ description }}</p>
+      <p v-if="description && (!descriptionTooltip || isPhone)" class="page-header__description">
+        {{ description }}
+      </p>
     </div>
     <div v-if="$slots.actions" class="page-header__actions">
       <slot name="actions" />
@@ -24,11 +26,15 @@
 </template>
 
 <script setup lang="ts">
+import { useIsPhone } from '@/shared/composables/useIsPhone'
+
 defineProps<{
   title: string
   description?: string
   descriptionTooltip?: boolean
 }>()
+
+const isPhone = useIsPhone()
 </script>
 
 <style scoped>
@@ -102,6 +108,27 @@ defineProps<{
 @media (max-width: 480px) {
   .page-header {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .page-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .page-header__title {
+    font-size: 1.35rem;
+  }
+
+  .page-header__description {
+    max-width: none;
+    font-size: 0.9rem;
+  }
+
+  .page-header__actions {
+    width: 100%;
+    gap: 0.5rem;
   }
 }
 </style>

@@ -111,6 +111,10 @@ export function weekdayDayOfMonth(weekKey: WeekKey, weekday: Weekday): number {
   return isoDateToDate(weekdayIsoDate(weekKey, weekday)).getDate()
 }
 
+export function weekdayInitial(label: string): string {
+  return label.trim().charAt(0).toUpperCase()
+}
+
 export function formatOrdinal(day: number, locale: Locale = 'en'): string {
   if (locale === 'es') return String(day)
 

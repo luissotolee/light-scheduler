@@ -18,9 +18,14 @@
             :key="day.weekday"
             scope="col"
             class="summary-table__day-header"
+            :aria-label="dayAria(day)"
           >
             <span class="summary-table__weekday">
-              {{ t(`weekday.${day.weekday}` as MessageKey) }}
+              {{
+                isPhone
+                  ? weekdayInitial(t(`weekday.${day.weekday}` as MessageKey))
+                  : t(`weekday.${day.weekday}` as MessageKey)
+              }}
             </span>
             <span class="summary-table__date">
               {{ formatOrdinal(day.dayOfMonth, localeStore.locale) }}
@@ -43,7 +48,7 @@
               :aria-label="t('employees.detailsFor', { name: row.name })"
               @click="emit('details', row.memberId)"
             >
-              {{ row.name }}
+              {{ isPhone ? initialsOf(row.name) : row.name }}
             </button>
           </th>
 
@@ -82,7 +87,9 @@ import type { MessageKey } from '@/shared/i18n'
 import SummaryCell from '@/modules/summary/components/SummaryCell.vue'
 import { useI18n } from '@/shared/i18n'
 import { useLocaleStore } from '@/shared/stores/locale'
-import { formatOrdinal } from '@/shared/utils/calendar'
+import { formatOrdinal, weekdayInitial } from '@/shared/utils/calendar'
+import { initialsOf } from '@/shared/utils/employee'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 defineProps<{
   rows: SummaryRow[]
@@ -96,6 +103,14 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const localeStore = useLocaleStore()
+const isPhone = useIsPhone()
+
+function dayAria(day: SummaryDayHeader): string {
+  return `${t(`weekday.${day.weekday}` as MessageKey)} ${formatOrdinal(
+    day.dayOfMonth,
+    localeStore.locale,
+  )}`
+}
 </script>
 
 <style scoped>
@@ -287,6 +302,38 @@ const localeStore = useLocaleStore()
 
   .summary-table__vacation {
     color: #92400e !important;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .summary-table-wrapper {
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .summary-table {
+    min-width: 52rem;
+  }
+
+  .summary-table__col--employee {
+    width: 5.5rem;
+  }
+
+  .summary-table__employee,
+  .summary-table__employee-header {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+
+  .summary-table thead .summary-table__employee-header {
+    z-index: 3;
+  }
+
+  .summary-table__name-button {
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
   }
 }
 </style>

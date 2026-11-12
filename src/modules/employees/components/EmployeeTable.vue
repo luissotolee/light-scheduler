@@ -3,6 +3,7 @@
     :value="rows"
     :row-class="rowClass"
     size="small"
+    :scrollable="isPhone"
     sort-field="name"
     :sort-order="1"
     :removable-sort="false"
@@ -77,27 +78,27 @@
       </template>
     </Column>
 
-    <Column :header="t('employees.column.contact')">
+    <Column v-if="!isPhone" :header="t('employees.column.contact')">
       <template #body="{ data }">
         <div class="employee-table__contact">
-          <span
+          <a
             v-if="data.phone"
             v-tooltip.top="t('employees.phone', { phone: data.phone })"
             class="employee-table__contact-icon"
-            role="img"
+            :href="`tel:${data.phone}`"
             :aria-label="t('employees.phone', { phone: data.phone })"
           >
             <i class="pi pi-phone" aria-hidden="true" />
-          </span>
-          <span
+          </a>
+          <a
             v-if="data.email"
             v-tooltip.top="t('employees.email', { email: data.email })"
             class="employee-table__contact-icon"
-            role="img"
+            :href="`mailto:${data.email}`"
             :aria-label="t('employees.email', { email: data.email })"
           >
             <i class="pi pi-envelope" aria-hidden="true" />
-          </span>
+          </a>
         </div>
       </template>
     </Column>
@@ -180,6 +181,7 @@ import DataTable from 'primevue/datatable'
 import { computed } from 'vue'
 import type { TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 import {
   CONTRACTS,
   dutyModifier,
@@ -215,6 +217,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const isPhone = useIsPhone()
 
 function rowClass(data: TeamMember): string {
   return data.active ? '' : 'employee-table__row--inactive'
@@ -327,6 +330,42 @@ function contractModifier(value: unknown): string {
   .employee-table :deep(.p-datatable-thead > tr > th),
   .employee-table :deep(.p-datatable-tbody > tr > td) {
     padding-block: 0.3rem;
+  }
+}
+
+.employee-table__contact-icon {
+  text-decoration: none;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .employee-table {
+    overflow: hidden;
+  }
+
+  .employee-table :deep(.p-datatable-thead > tr > th:first-child),
+  .employee-table :deep(.p-datatable-tbody > tr > td:first-child) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--color-surface);
+  }
+
+  .employee-table :deep(.p-datatable-thead > tr > th:first-child) {
+    z-index: 3;
+  }
+
+  .employee-table :deep(.p-datatable-thead > tr > th),
+  .employee-table :deep(.p-datatable-tbody > tr > td) {
+    white-space: nowrap;
+  }
+
+  .employee-table__actions {
+    flex-wrap: nowrap;
+  }
+
+  .employee-table__actions :deep(.p-button) {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }
 </style>
