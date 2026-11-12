@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   resolveTarget,
   waitForTarget,
@@ -8,12 +8,19 @@ import {
   pressKey,
   fillInput,
   prefersReducedMotion,
+  isPhoneViewport,
+  scrollIntoView,
+  scrollToTop,
 } from '@/modules/demo/utils/dom'
 
 describe('dom utils', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   describe('resolveTarget', () => {
@@ -95,6 +102,35 @@ describe('dom utils', () => {
     })
   })
 
+  describe('scrollIntoView', () => {
+    it('centers the element in the viewport', () => {
+      const el = document.createElement('div')
+      const scrollSpy = vi.fn()
+      el.scrollIntoView = scrollSpy
+
+      scrollIntoView(el)
+
+      expect(scrollSpy).toHaveBeenCalledWith({
+        behavior: 'auto',
+        block: 'center',
+        inline: 'center',
+      })
+    })
+  })
+
+  describe('scrollToTop', () => {
+    it('resets the page scroll position', () => {
+      const scroller = document.scrollingElement ?? document.documentElement
+      scroller.scrollTop = 480
+      scroller.scrollLeft = 120
+
+      scrollToTop()
+
+      expect(scroller.scrollTop).toBe(0)
+      expect(scroller.scrollLeft).toBe(0)
+    })
+  })
+
   describe('getRectCenter', () => {
     it('calculates center of rect', () => {
       const rect = { left: 10, top: 20, width: 100, height: 50, right: 110, bottom: 70, x: 10, y: 20, toJSON: () => {} } as DOMRect
@@ -126,6 +162,18 @@ describe('dom utils', () => {
       expect(events[0].type).toBe('pointerdown')
       expect(events[1].type).toBe('pointerup')
       expect(events[2].type).toBe('click')
+    })
+
+    it('dispatches the pointer sequence at a fractional point', () => {
+      const el = document.createElement('div')
+      el.getBoundingClientRect = () => ({ left: 10, top: 20, width: 100, height: 50, right: 110, bottom: 70, x: 10, y: 20, toJSON: () => ({}) } as DOMRect)
+      const handler = vi.fn()
+      el.addEventListener('pointerdown', handler)
+
+      pointerClickElement(el, { x: 0.25, y: 0.5 })
+
+      expect(handler.mock.calls[0][0].clientX).toBe(35)
+      expect(handler.mock.calls[0][0].clientY).toBe(45)
     })
   })
 
@@ -224,6 +272,21 @@ it('sets textContent on contenteditable', () => {
     it('returns false when matchMedia throws', () => {
       vi.stubGlobal('matchMedia', vi.fn().mockImplementation(() => { throw new Error() }))
       expect(prefersReducedMotion()).toBe(false)
+    })
+  })
+
+  describe('isPhoneViewport', () => {
+    it('returns the phone media query result', () => {
+      vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+      expect(isPhoneViewport()).toBe(true)
+
+      vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: false }))
+      expect(isPhoneViewport()).toBe(false)
+    })
+
+    it('returns false when matchMedia throws', () => {
+      vi.stubGlobal('matchMedia', vi.fn().mockImplementation(() => { throw new Error() }))
+      expect(isPhoneViewport()).toBe(false)
     })
   })
 })

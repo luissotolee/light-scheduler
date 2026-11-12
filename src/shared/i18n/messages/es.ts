@@ -10,6 +10,7 @@ export const es: Messages = {
   'common.reactivate': 'Reactivar',
   'common.holidays': 'Vacaciones',
   'common.dash': '—',
+  'common.back': 'Volver',
 
   'app.navPrimary': 'Principal',
   'app.footer':
@@ -32,10 +33,8 @@ export const es: Messages = {
   'home.intro':
     'Planifica turnos diarios durante una semana para muchos empleados y revisa el resultado en un solo lugar.',
   'home.demo.badge': 'Primer paso recomendado',
-  'home.demo.title': 'Recomendamos encarecidamente empezar con la demostración guiada',
-  'home.demo.description':
-    'La demostración te guía por todas las páginas con datos de ejemplo para que aprendas la aplicación antes de tocar tu propia planificación. Tus datos guardados se restauran al salir.',
-  'home.demo.cta': 'Iniciar la demostración guiada',
+  'home.demo.title': 'Empieza con la demo guiada',
+  'home.demo.cta': 'Iniciar demo',
   'home.feature.scheduler.title': 'Planificador',
   'home.feature.scheduler.description': 'Crea turnos semanales para cada empleado de tu equipo.',
   'home.feature.calendar.title': 'Calendario',
@@ -55,6 +54,9 @@ export const es: Messages = {
   'scheduler.title': 'Planificador',
   'scheduler.description':
     'Haz clic en una celda para un turno de 3 horas, arrastra para elegir un rango personalizado, arrastra los bordes de una barra para ajustarla y haz clic derecho en una barra para eliminarla.',
+  'scheduler.descriptionPhone':
+    'Toca una celda para un turno de 3 horas. Arrastra la tabla para desplazarte. Haz doble toque en un turno y arrástralo para moverlo. Arrastra los bordes de un turno para cambiar su duración, o mantén pulsado un turno y toca × para eliminarlo.',
+  'scheduler.gridScrollAria': 'Tabla del horario desplazable. Arrastra para desplazarte.',
   'scheduler.previousWeek': 'Semana anterior',
   'scheduler.nextWeek': 'Semana siguiente',
   'scheduler.weekdays': 'Días de la semana',
@@ -108,8 +110,13 @@ export const es: Messages = {
   'shiftGrid.headcountTooltipOne': '{count} empleado programado a las {hour}:00',
   'shiftGrid.headcountTooltipMany': '{count} empleados programados a las {hour}:00',
   'shiftBar.removeHint': 'Haz clic derecho para eliminar este turno',
+  'shiftBar.removeHintPhone':
+    'Haz doble toque y arrastra para mover; mantén pulsado y toca × para eliminar',
+  'shiftBar.removeAction': 'Eliminar este turno',
   'shiftBar.aria':
     'Turno de {name}: de {start} a {end}. Usa las flechas para moverlo, Mayús más flechas para cambiar su duración y Suprimir para eliminarlo.',
+  'shiftBar.ariaTouch':
+    'Turno de {name}: de {start} a {end}. Haz doble toque y arrastra para moverlo, arrastra sus bordes para cambiar la duración, o mantén pulsado y toca el botón de eliminar para borrarlo.',
   'shiftRow.trackAria': 'Pista de turnos de {name}. Pulsa Intro para añadir un turno de 3 horas.',
   'shiftRow.markOff': 'Marcar a {name} como libre este día',
   'shiftRow.markOn': 'Marcar a {name} como disponible este día',
@@ -163,6 +170,8 @@ export const es: Messages = {
   'employees.column.actions': 'Acciones',
   'employees.detailsFor': 'Ver detalles de {name}',
   'employees.detailsForInactive': 'Ver detalles de {name} (inactivo)',
+  'employees.manageFor': 'Gestionar a {name}',
+  'employees.manageForInactive': 'Gestionar a {name} (inactivo)',
   'employees.phone': 'Teléfono: {phone}',
   'employees.email': 'Correo: {email}',
   'employees.editAria': 'Editar {name}',
@@ -200,6 +209,8 @@ export const es: Messages = {
   'employees.details.holidays': 'Vacaciones',
   'employees.details.noHolidays': 'Sin vacaciones',
   'employees.details.holidayItem': 'Semana {week} ({range})',
+  'employees.manage.title': 'Gestionar empleado',
+  'employees.manage.actions': 'Acciones',
   'employees.status.active': 'Activo',
   'employees.status.inactive': 'Inactivo',
 
@@ -256,6 +267,7 @@ export const es: Messages = {
   'calendar.importedSuccessfully': 'Importado correctamente',
   'calendar.fetchedBadge': 'Importado',
   'calendar.dayAria': '{date}: {entries}',
+  'calendar.touchHint': 'Selecciona un día y toca Añadir festivo o evento.',
   'calendar.loadingOptions': 'Cargando opciones…',
   'calendar.form.addTitle': 'Añadir festivo o evento',
   'calendar.form.editTitle': 'Editar festivo o evento',
@@ -443,10 +455,16 @@ export const es: Messages = {
   'demo.scenario.employees.details':
     'Selecciona un nombre para abrir los detalles del empleado y sus semanas de vacaciones.',
   'demo.scenario.employees.detailsDialog':
-    'El diálogo de detalles resume rol, contrato, horas, contacto, comentarios y vacaciones.',
+    'La vista de detalles resume rol, contrato, horas, contacto, comentarios y vacaciones.',
   'demo.scenario.employees.detailsComment':
     'Los comentarios guardados del empleado aparecen al final de los detalles.',
   'demo.scenario.employees.closeDetails': 'Cierra los detalles para volver a la lista.',
+  'demo.scenario.employees.manageDetails':
+    'En el móvil, tocar un nombre abre el diálogo de gestión con los detalles y acciones del empleado.',
+  'demo.scenario.employees.manageOpen':
+    'En el móvil, toca el nombre del empleado para gestionarlo en un solo lugar.',
+  'demo.scenario.employees.manageReopen':
+    'Toca el nombre de nuevo para reabrir las acciones del empleado.',
   'demo.scenario.employees.holidays': 'Abre el calendario de vacaciones de un empleado.',
   'demo.scenario.employees.holidaysPick':
     'Elige las semanas en las que este empleado está de vacaciones.',
@@ -490,16 +508,20 @@ export const es: Messages = {
   'demo.scenario.scheduler.dayEntries':
     'El día seleccionado también muestra sus festivos y eventos en una etiqueta azul bajo la fecha.',
   'demo.scenario.scheduler.grid':
-    'Cada fila es un miembro del equipo y el eje horizontal va de 09:00 a 01:00.',
+    'Cada fila es un miembro del equipo y el eje horizontal va de 09:00 a 01:00. En el móvil, arrastra la tabla para desplazarte.',
+  'demo.scenario.scheduler.phonePan':
+    'Arrastra horizontalmente sobre la tabla del horario para desplazarte por el día.',
   'demo.scenario.scheduler.create':
     'Pulsa Enter en una fila, o haz clic y arrastra, para crear un turno.',
+  'demo.scenario.scheduler.createPhone':
+    'Toca una celda de una fila para crear un turno predeterminado a esa hora.',
   'demo.scenario.scheduler.created': 'Aparece un nuevo turno en la fila.',
   'demo.scenario.scheduler.resize':
     'Arrastra los bordes del turno para redimensionarlo, o usa Mayús con las flechas.',
   'demo.scenario.scheduler.resizeApplied':
     'Mayús con la flecha derecha amplía el final del turno una franja.',
   'demo.scenario.scheduler.move':
-    'Arrastra el turno para moverlo dentro de la fila, o usa las flechas. Pulsa Supr para eliminarlo.',
+    'Arrastra el turno para moverlo dentro de la fila, o usa las flechas. Pulsa Supr para eliminarlo. En el móvil, haz doble toque en el turno y arrástralo; mantén pulsado y toca × para eliminarlo.',
   'demo.scenario.scheduler.moveBetweenRows':
     'Arrastra un turno a la fila de otro empleado para reasignarlo. El turno sale del empleado original y se combina con la agenda del empleado de destino. Las filas deshabilitadas, como días libres y vacaciones, no lo aceptan.',
   'demo.scenario.scheduler.removed': 'El turno se ha eliminado.',
@@ -516,13 +538,13 @@ export const es: Messages = {
   'demo.scenario.scheduler.settingsOpen':
     'Abre la configuración del horario. Cada opción tiene un icono de información con los detalles.',
   'demo.scenario.scheduler.settingsWindow':
-    'La configuración se abre con la franja horaria y el tramo actuales.',
+    'La vista de configuración se abre con la franja horaria y el tramo actuales.',
   'demo.scenario.scheduler.settingsStart':
     'Elige la hora de inicio con los selectores de hora y minutos.',
   'demo.scenario.scheduler.settingsEnd':
     'Elige la hora de fin de la misma forma. La cuadrícula se amplía o se reduce según el rango.',
   'demo.scenario.scheduler.settingsTooltips':
-    'Pasa el cursor o enfoca el icono de información junto a un ajuste para leer qué hace sin recargar el diálogo.',
+    'Toca o enfoca el icono de información junto a un ajuste para leer qué hace. En el móvil, la pista también se muestra en línea.',
   'demo.scenario.scheduler.settingsOvernight':
     'Si la hora de fin es anterior al inicio, el horario continúa pasada la medianoche.',
   'demo.scenario.scheduler.settingsSlot':
@@ -556,13 +578,13 @@ export const es: Messages = {
   'demo.scenario.calendar.year': 'Elige el año para el que quieres importar los días festivos.',
   'demo.scenario.calendar.fetch': 'Importa los festivos para guardarlos en tu espacio de trabajo.',
   'demo.scenario.calendar.fetched':
-    'Los festivos importados aparecen en el calendario y la insignia de estrella muestra el total importado por año al pasar el cursor.',
+    'Los festivos importados aparecen en el calendario y la insignia de estrella muestra el total importado por año.',
   'demo.scenario.calendar.month':
     'Usa las flechas junto al nombre del mes para recorrer el calendario.',
   'demo.scenario.calendar.monthPrevious': 'Pasa al mes anterior.',
   'demo.scenario.calendar.monthNext': 'Vuelve al mes siguiente.',
   'demo.scenario.calendar.selectDay':
-    'Selecciona un día para fijarlo. Haz doble clic en un día para añadir una entrada en esa fecha.',
+    'Selecciona un día para fijarlo y usa Añadir festivo o evento. En escritorio también funciona el doble clic.',
   'demo.scenario.calendar.clear':
     'Usa Borrar todo para eliminar los festivos importados y conservar tus propias entradas.',
   'demo.scenario.calendar.clearConfirm':
@@ -607,7 +629,7 @@ export const es: Messages = {
   'demo.scenario.summary.details':
     'Selecciona un nombre para abrir los detalles del empleado desde el resumen.',
   'demo.scenario.summary.detailsDialog':
-    'El mismo diálogo de detalles se abre aquí, con la información de contacto y vacaciones.',
+    'La misma vista de detalles se abre aquí, con la información de contacto y vacaciones.',
   'demo.scenario.summary.detailsClose': 'Ciérralo para volver al resumen.',
   'demo.scenario.summary.print': 'Imprime el resumen con el diálogo de impresión del navegador.',
   'demo.scenario.summary.pdf': 'Guarda el resumen como archivo PDF.',

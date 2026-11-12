@@ -31,6 +31,14 @@ export function compareNames(a: string, b: string): number {
   return a.localeCompare(b, undefined, { sensitivity: 'base' })
 }
 
+export function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter((word) => word.length > 0)
+    .map((word) => word[0].toUpperCase())
+    .join('')
+}
+
 export function compareMembersByDuty(
   a: Pick<TeamMember, 'id' | 'name' | 'duty'>,
   b: Pick<TeamMember, 'id' | 'name' | 'duty'>,

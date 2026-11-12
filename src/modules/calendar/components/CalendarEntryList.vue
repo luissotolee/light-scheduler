@@ -144,4 +144,11 @@ const { t, locale } = useI18n()
   flex-shrink: 0;
   gap: 0.125rem;
 }
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .calendar-entry-list__actions :deep(.p-button) {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
 </style>

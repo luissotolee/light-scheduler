@@ -59,4 +59,20 @@ describe('PageHeader', () => {
     expect(info.attributes('aria-label')).toBe('Plan the week')
     expect(info.find('.pi.pi-info-circle').exists()).toBe(true)
   })
+
+  it('shows the description inline instead of a tooltip icon on phones', () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountHeader({
+      title: 'Scheduler',
+      description: 'Plan the week',
+      descriptionTooltip: true,
+    })
+
+    expect(wrapper.find('[data-test="page-header-info"]').exists()).toBe(false)
+    expect(wrapper.find('.page-header__description').text()).toBe('Plan the week')
+  })
 })

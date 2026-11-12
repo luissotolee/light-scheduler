@@ -9,7 +9,7 @@
     data-test="employee-table"
     class="employee-table"
   >
-    <Column field="name" :header="t('employees.column.name')" sortable>
+    <Column field="name" sortable>
       <template #header>
         <span data-test="sort-name">{{ t('employees.column.name') }}</span>
       </template>
@@ -18,12 +18,8 @@
           type="button"
           class="employee-table__name-button"
           :data-test="`details-${data.id}`"
-          :aria-label="
-            data.active
-              ? t('employees.detailsFor', { name: data.name })
-              : t('employees.detailsForInactive', { name: data.name })
-          "
-          @click="emit('details', data.id)"
+          :aria-label="nameAriaLabel(data)"
+          @click="handleNameClick(data)"
         >
           <span
             :class="['employee-table__name', { 'employee-table__name--inactive': !data.active }]"
@@ -34,12 +30,7 @@
       </template>
     </Column>
 
-    <Column
-      field="duty"
-      sort-field="dutySortRank"
-      :header="t('employees.column.duty')"
-      sortable
-    >
+    <Column field="duty" sort-field="dutySortRank" sortable>
       <template #header>
         <span data-test="sort-duty">{{ t('employees.column.duty') }}</span>
       </template>
@@ -51,12 +42,7 @@
       </template>
     </Column>
 
-    <Column
-      field="contract"
-      sort-field="contractSortRank"
-      :header="t('employees.column.contract')"
-      sortable
-    >
+    <Column field="contract" sort-field="contractSortRank" sortable>
       <template #header>
         <span data-test="sort-contract">{{ t('employees.column.contract') }}</span>
       </template>
@@ -71,38 +57,38 @@
       </template>
     </Column>
 
-    <Column field="weeklyHours" :header="t('employees.column.weeklyHours')">
+    <Column v-if="!isPhone" field="weeklyHours" :header="t('employees.column.weeklyHours')">
       <template #body="{ data }">
         <span class="employee-table__hours">{{ data.weeklyHours }}</span>
       </template>
     </Column>
 
-    <Column :header="t('employees.column.contact')">
+    <Column v-if="!isPhone" :header="t('employees.column.contact')">
       <template #body="{ data }">
         <div class="employee-table__contact">
-          <span
+          <a
             v-if="data.phone"
             v-tooltip.top="t('employees.phone', { phone: data.phone })"
             class="employee-table__contact-icon"
-            role="img"
+            :href="`tel:${data.phone}`"
             :aria-label="t('employees.phone', { phone: data.phone })"
           >
             <i class="pi pi-phone" aria-hidden="true" />
-          </span>
-          <span
+          </a>
+          <a
             v-if="data.email"
             v-tooltip.top="t('employees.email', { email: data.email })"
             class="employee-table__contact-icon"
-            role="img"
+            :href="`mailto:${data.email}`"
             :aria-label="t('employees.email', { email: data.email })"
           >
             <i class="pi pi-envelope" aria-hidden="true" />
-          </span>
+          </a>
         </div>
       </template>
     </Column>
 
-    <Column :header="t('employees.column.actions')">
+    <Column v-if="!isPhone" :header="t('employees.column.actions')">
       <template #body="{ data }">
         <div class="employee-table__actions">
           <Button
@@ -180,6 +166,7 @@ import DataTable from 'primevue/datatable'
 import { computed } from 'vue'
 import type { TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 import {
   CONTRACTS,
   dutyModifier,
@@ -210,14 +197,37 @@ const emit = defineEmits<{
   holidays: [id: string]
   remove: [id: string]
   details: [id: string]
+  manage: [id: string]
   deactivate: [id: string]
   reactivate: [id: string]
 }>()
 
 const { t } = useI18n()
+const isPhone = useIsPhone()
 
 function rowClass(data: TeamMember): string {
   return data.active ? '' : 'employee-table__row--inactive'
+}
+
+function nameAriaLabel(data: TeamMember): string {
+  if (isPhone.value) {
+    return data.active
+      ? t('employees.manageFor', { name: data.name })
+      : t('employees.manageForInactive', { name: data.name })
+  }
+
+  return data.active
+    ? t('employees.detailsFor', { name: data.name })
+    : t('employees.detailsForInactive', { name: data.name })
+}
+
+function handleNameClick(data: TeamMember): void {
+  if (isPhone.value) {
+    emit('manage', data.id)
+    return
+  }
+
+  emit('details', data.id)
 }
 
 function dutyLabel(value: unknown): string {
@@ -327,6 +337,47 @@ function contractModifier(value: unknown): string {
   .employee-table :deep(.p-datatable-thead > tr > th),
   .employee-table :deep(.p-datatable-tbody > tr > td) {
     padding-block: 0.3rem;
+  }
+}
+
+.employee-table__contact-icon {
+  text-decoration: none;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .employee-table {
+    overflow: hidden;
+  }
+
+  .employee-table :deep(.p-datatable-table) {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .employee-table :deep(.p-datatable-thead > tr > th),
+  .employee-table :deep(.p-datatable-tbody > tr > td) {
+    padding-inline: 0.45rem;
+  }
+
+  .employee-table__name {
+    display: inline-block;
+    overflow-wrap: anywhere;
+  }
+
+  .employee-table__name-button {
+    max-width: 100%;
+  }
+
+  .employee-table :deep(.employee-table__chip) {
+    max-width: 100%;
+    font-size: 0.75rem;
+  }
+
+  .employee-table :deep(.employee-table__chip .p-chip-label) {
+    min-width: 0;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 </style>

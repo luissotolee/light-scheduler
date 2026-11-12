@@ -68,6 +68,16 @@ describe('EmployeesView', () => {
     })
   }
 
+  function mountPhoneView() {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+
+    return mountView()
+  }
+
   it('renders an unchecked, accessible hide-deactivated switch by default', () => {
     const wrapper = mountView()
     const toggle = wrapper.find('[data-test="hide-inactive"]')
@@ -225,5 +235,98 @@ describe('EmployeesView', () => {
     wrapper.unmount()
 
     expect(store.hideInactive).toBe(false)
+  })
+
+  it('opens employee details on desktop when a name is clicked', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const store = useEmployeesStore()
+    const wrapper = mountView()
+
+    await wrapper.find('[data-test="details-member-1"]').trigger('click')
+
+    expect(store.detailsVisible).toBe(true)
+    expect(store.manageVisible).toBe(false)
+  })
+
+  it('opens the manage dialog from the simplified phone table', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    const store = useEmployeesStore()
+    const wrapper = mountPhoneView()
+
+    expect(wrapper.findAll('.employee-table__contact-icon')).toHaveLength(0)
+    expect(wrapper.find('[data-test="edit-member-1"]').exists()).toBe(false)
+
+    await wrapper.find('[data-test="details-member-1"]').trigger('click')
+    await nextTick()
+
+    expect(store.manageVisible).toBe(true)
+    expect(store.manageTargetId).toBe(ada.id)
+    expect(store.detailsVisible).toBe(false)
+    expect(wrapper.find('[data-test="employee-manage"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="edit-member-1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="remove-member-1"]').exists()).toBe(true)
+  })
+
+  it('keeps the manage dialog open when editing or managing holidays', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const store = useEmployeesStore()
+    const wrapper = mountPhoneView()
+
+    await wrapper.find('[data-test="details-member-1"]').trigger('click')
+    await nextTick()
+    await wrapper.find('[data-test="edit-member-1"]').trigger('click')
+
+    expect(store.formVisible).toBe(true)
+    expect(store.manageVisible).toBe(true)
+
+    store.closeForm()
+    await nextTick()
+    await wrapper.find('[data-test="holidays-member-1"]').trigger('click')
+
+    expect(store.holidayVisible).toBe(true)
+    expect(store.manageVisible).toBe(true)
+  })
+
+  it('closes the manage dialog before confirming deactivation or removal', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const store = useEmployeesStore()
+    const wrapper = mountPhoneView()
+
+    await wrapper.find('[data-test="details-member-1"]').trigger('click')
+    await nextTick()
+    await wrapper.find('[data-test="deactivate-member-1"]').trigger('click')
+
+    expect(store.manageVisible).toBe(false)
+    expect(store.confirmVisible).toBe(true)
+    expect(store.pendingAction?.kind).toBe('deactivate')
+
+    store.cancelAction()
+    await nextTick()
+    await wrapper.find('[data-test="details-member-1"]').trigger('click')
+    await nextTick()
+    await wrapper.find('[data-test="remove-member-1"]').trigger('click')
+
+    expect(store.manageVisible).toBe(false)
+    expect(store.confirmVisible).toBe(true)
+    expect(store.pendingAction?.kind).toBe('remove')
+  })
+
+  it('reactivates a member without closing the manage dialog', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([bo])
+    const store = useEmployeesStore()
+    const wrapper = mountPhoneView()
+
+    await wrapper.find('[data-test="details-member-2"]').trigger('click')
+    await nextTick()
+    await wrapper.find('[data-test="reactivate-member-2"]').trigger('click')
+
+    expect(workspace.findMember(bo.id)?.active).toBe(true)
+    expect(store.manageVisible).toBe(true)
+    expect(store.manageTargetId).toBe(bo.id)
   })
 })

@@ -299,6 +299,106 @@ describe('ShiftRow', () => {
     expect(wrapper.find('[data-test="shift-draft"]').exists()).toBe(false)
   })
 
+  it('creates a default shift on a phone tap', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountRow()
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    await pointer(track.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+
+    expect(wrapper.emitted('create')).toEqual([
+      [{ memberId: 'member-1', startMinute: 540, endMinute: 720 }],
+    ])
+  })
+
+  it('creates a default shift when pointer capture is unavailable', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    Object.defineProperty(Element.prototype, 'setPointerCapture', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => {
+        throw new Error('No active pointer')
+      }),
+    })
+    Object.defineProperty(Element.prototype, 'releasePointerCapture', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => {
+        throw new Error('No active pointer')
+      }),
+    })
+    const wrapper = mountRow()
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    await pointer(track.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+
+    expect(wrapper.emitted('create')).toEqual([
+      [{ memberId: 'member-1', startMinute: 540, endMinute: 720 }],
+    ])
+  })
+
+  it('does not create a shift when a phone gesture drags to pan', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountRow()
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    await pointer(track.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 48,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointermove', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 144,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 144,
+      clientY: 0,
+    })
+
+    expect(wrapper.emitted('create')).toBeUndefined()
+    expect(wrapper.find('[data-test="shift-draft"]').exists()).toBe(false)
+  })
+
   it('creates the dragged range when the pointer moves to another slot', async () => {
     const wrapper = mountRow()
     const track = wrapper.find('[data-test="shift-track"]')
@@ -472,5 +572,47 @@ describe('ShiftRow', () => {
     expect(wrapper.emitted('create')).toEqual([
       [{ memberId: 'member-1', startMinute: 540, endMinute: 555 }],
     ])
+  })
+
+  it('shows employee initials on phones while keeping the full accessible name', () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountRow()
+
+    const toggle = wrapper.find('[data-test="shift-row-name-toggle"]')
+    expect(toggle.text()).toBe('A')
+    expect(toggle.attributes('aria-label')).toContain('Ada')
+  })
+
+  it('shows a delete button after a long-press and removes the shift', async () => {
+    const wrapper = mountRow([bar])
+    const shiftBar = wrapper.findComponent(ShiftBar)
+
+    shiftBar.vm.$emit('longPress', 'shift-1')
+    await nextTick()
+
+    const remove = wrapper.find('[data-test="shift-delete"]')
+    expect(remove.exists()).toBe(true)
+    expect(remove.attributes('aria-label')).toBe('Remove this shift')
+
+    await remove.trigger('click')
+
+    expect(wrapper.emitted('remove')).toEqual([['shift-1']])
+    expect(wrapper.find('[data-test="shift-delete"]').exists()).toBe(false)
+  })
+
+  it('dismisses the delete button when tapping outside', async () => {
+    const wrapper = mountRow([bar])
+    wrapper.findComponent(ShiftBar).vm.$emit('longPress', 'shift-1')
+    await nextTick()
+    expect(wrapper.find('[data-test="shift-delete"]').exists()).toBe(true)
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await nextTick()
+
+    expect(wrapper.find('[data-test="shift-delete"]').exists()).toBe(false)
   })
 })

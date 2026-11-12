@@ -247,4 +247,37 @@ function handleBackupImportVisibility(visible: boolean): void {
     padding: 0.35rem 0.75rem;
   }
 }
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .archive__panel {
+    padding: 0.9rem;
+  }
+
+  .archive__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .archive__button {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .archive__status {
+    align-self: flex-start;
+    cursor: default;
+  }
+
+  .archive__sr {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0 0 0 0.35rem;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
 </style>

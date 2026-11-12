@@ -6,6 +6,7 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Tooltip from 'primevue/tooltip'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
+import { en } from '@/shared/i18n/messages/en'
 import type { TeamMember } from '@/types'
 
 const members: TeamMember[] = [  {
@@ -96,6 +97,19 @@ describe('EmployeeTable', () => {
   function mountSortingTable() {
     return mount(EmployeeTable, {
       props: { members: sortingMembers },
+      global: { stubs: { teleport: true }, directives: { tooltip: Tooltip } },
+    })
+  }
+
+  function mountPhoneTable() {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+
+    return mount(EmployeeTable, {
+      props: { members },
       global: { stubs: { teleport: true }, directives: { tooltip: Tooltip } },
     })
   }
@@ -208,6 +222,50 @@ describe('EmployeeTable', () => {
     await wrapper.find('[data-test="details-member-2"]').trigger('click')
 
     expect(wrapper.emitted('details')).toEqual([['member-2']])
+  })
+
+  it('renders only name, duty, and contract columns on a phone', () => {
+    const wrapper = mountPhoneTable()
+
+    expect(wrapper.findAllComponents(Column)).toHaveLength(3)
+    expect(wrapper.text()).not.toContain('32')
+    expect(wrapper.text()).not.toContain('16')
+    expect(wrapper.findAll('.employee-table__contact-icon')).toHaveLength(0)
+    expect(wrapper.find('[data-test="edit-member-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="remove-member-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="sort-name"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="sort-duty"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="sort-contract"]').exists()).toBe(true)
+  })
+
+  it('renders each column header label once on a phone', () => {
+    const wrapper = mountPhoneTable()
+
+    expect(wrapper.findAll('thead th').map((node) => node.text())).toEqual([
+      en['employees.column.name'],
+      en['employees.column.duty'],
+      en['employees.column.contract'],
+    ])
+  })
+
+  it('emits manage instead of details when a name is clicked on a phone', async () => {
+    const wrapper = mountPhoneTable()
+
+    await wrapper.find('[data-test="details-member-2"]').trigger('click')
+
+    expect(wrapper.emitted('manage')).toEqual([['member-2']])
+    expect(wrapper.emitted('details')).toBeUndefined()
+    expect(wrapper.find('[data-test="details-member-2"]').attributes('aria-label')).toBe(
+      en['employees.manageForInactive'].replace('{name}', 'Bo'),
+    )
+  })
+
+  it('labels the phone name control for management', () => {
+    const wrapper = mountPhoneTable()
+
+    expect(wrapper.find('[data-test="details-member-1"]').attributes('aria-label')).toBe(
+      en['employees.manageFor'].replace('{name}', 'Ada'),
+    )
   })
 
   it('emits deactivate and reactivate events with the member id', async () => {

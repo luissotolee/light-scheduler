@@ -13,8 +13,12 @@
       @keydown.down.prevent="openAndFocus"
     >
       <LocaleFlag :locale="locale" />
-      <span class="language-switcher__code">{{ locale.toUpperCase() }}</span>
-      <i class="pi pi-chevron-down language-switcher__chevron" aria-hidden="true" />
+      <span v-if="!isPhone" class="language-switcher__code">{{ locale.toUpperCase() }}</span>
+      <i
+        v-if="!isPhone"
+        class="pi pi-chevron-down language-switcher__chevron"
+        aria-hidden="true"
+      />
     </button>
 
     <ul
@@ -59,8 +63,10 @@ import LocaleFlag from '@/shared/components/LocaleFlag.vue'
 import { useI18n } from '@/shared/i18n'
 import type { Locale } from '@/shared/i18n'
 import { LOCALE_META } from '@/shared/i18n/types'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const { t, locale, setLocale, availableLocales } = useI18n()
+const isPhone = useIsPhone()
 
 const root = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLButtonElement | null>(null)
@@ -246,5 +252,20 @@ onBeforeUnmount(() => {
 
 .language-switcher__check {
   font-size: 0.8rem;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .language-switcher__trigger {
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+  }
+
+  .language-switcher__menu {
+    right: auto;
+    left: 0;
+    min-width: 11rem;
+  }
 }
 </style>

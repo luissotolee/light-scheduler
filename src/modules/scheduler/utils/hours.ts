@@ -1,5 +1,7 @@
 import type { Duty, Shift, TeamMember } from '@/types'
-import { DUTY_SORT_ORDER, compareNames } from '@/shared/utils/employee'
+import { DUTY_SORT_ORDER, compareNames, initialsOf } from '@/shared/utils/employee'
+
+export { initialsOf }
 
 export interface WeeklyHoursRow {
   memberId: string
@@ -13,14 +15,6 @@ export interface WeeklyHoursRow {
 export interface WeeklyHoursGroup {
   duty: Duty
   rows: WeeklyHoursRow[]
-}
-
-export function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter((word) => word.length > 0)
-    .map((word) => word[0].toUpperCase())
-    .join('')
 }
 
 export function sumShiftMinutes(shifts: readonly Shift[]): number {

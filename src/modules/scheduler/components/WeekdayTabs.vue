@@ -3,7 +3,7 @@
     class="weekday-tabs"
     :aria-label="t('scheduler.weekdays')"
     role="tablist"
-    aria-orientation="vertical"
+    :aria-orientation="isPhone ? 'horizontal' : 'vertical'"
     data-test="weekday-tabs"
   >
     <button
@@ -14,6 +14,7 @@
       class="weekday-tabs__tab"
       :class="{ 'weekday-tabs__tab--active': weekday.value === modelValue }"
       :aria-selected="weekday.value === modelValue"
+      :aria-label="isPhone ? tabAria(weekday) : undefined"
       :tabindex="weekday.value === modelValue ? 0 : -1"
       :data-test="`weekday-tab-${weekday.value}`"
       @click="emit('update:modelValue', weekday.value)"
@@ -35,9 +36,12 @@
       }}</span></span><span
         v-if="weekday.entries.length > 0"
         class="weekday-tabs__sr"
-      >{{ t('scheduler.calendar.markerAria', { entries: markerTitle(weekday) }) }}</span>{{ weekday.label }}{{ ' ' }}<span
-        class="weekday-tabs__day"
-      >{{ formatOrdinal(weekday.dayOfMonth, locale) }}</span>
+      >{{ t('scheduler.calendar.markerAria', { entries: markerTitle(weekday) }) }}</span
+      ><span class="weekday-tabs__label">{{
+        isPhone ? weekdayInitial(weekday.label) : weekday.label
+      }}</span>{{ ' ' }}<span class="weekday-tabs__day">{{
+        formatOrdinal(weekday.dayOfMonth, locale)
+      }}</span>
     </button>
   </nav>
 </template>
@@ -45,8 +49,9 @@
 <script setup lang="ts">
 import type { CalendarEntry, Weekday } from '@/types'
 import { useI18n } from '@/shared/i18n'
-import { formatOrdinal } from '@/shared/utils/calendar'
+import { formatOrdinal, weekdayInitial } from '@/shared/utils/calendar'
 import { calendarKindLabelKey } from '@/shared/utils/calendarEntries'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 interface WeekdayTab {
   value: Weekday
@@ -65,6 +70,7 @@ const emit = defineEmits<{
 }>()
 
 const { t, locale } = useI18n()
+const isPhone = useIsPhone()
 
 function hasHoliday(weekday: WeekdayTab): boolean {
   return weekday.entries.some(
@@ -80,6 +86,12 @@ function markerTitle(weekday: WeekdayTab): string {
   return weekday.entries
     .map((entry) => `${t(calendarKindLabelKey(entry.kind))}: ${entry.name}`)
     .join(' · ')
+}
+
+function tabAria(weekday: WeekdayTab): string {
+  const base = `${weekday.label} ${formatOrdinal(weekday.dayOfMonth, locale.value)}`
+  if (weekday.entries.length === 0) return base
+  return `${base}, ${t('scheduler.calendar.markerAria', { entries: markerTitle(weekday) })}`
 }
 </script>
 
@@ -182,6 +194,56 @@ function markerTitle(weekday: WeekdayTab): string {
   .weekday-tabs__tab {
     padding: 0.28rem 0.5rem;
     padding-left: calc(0.5rem - 2px);
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .weekday-tabs {
+    flex-direction: row;
+    gap: 0.2rem;
+    width: 100%;
+    min-width: 0;
+    padding: 0.3rem;
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    scroll-snap-type: x proximity;
+  }
+
+  .weekday-tabs__tab {
+    display: inline-flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    min-width: 2.5rem;
+    min-height: 2.9rem;
+    padding: 0.3rem 0.45rem;
+    border-left-width: 1px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    scroll-snap-align: start;
+  }
+
+  .weekday-tabs__tab--active {
+    border-left-width: 1px;
+  }
+
+  .weekday-tabs__label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .weekday-tabs__calendar {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.25rem;
+    margin-right: 0;
+  }
+
+  .weekday-tabs__day {
+    font-size: 0.7rem;
   }
 }
 </style>

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
@@ -40,6 +40,10 @@ describe('App', () => {
     document.documentElement.lang = 'en'
   })
 
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders the brand and every navigation label', async () => {
     const wrapper = await mountApp('/')
 
@@ -52,6 +56,18 @@ describe('App', () => {
     expect(contact.attributes('href')).toBe(
       'mailto:luissotolee@gmail.com?subject=Light%20Scheduler',
     )
+  })
+
+  it('keeps the brand, nav, demo and language controls in one header row', async () => {
+    const wrapper = await mountApp('/')
+    const header = wrapper.find('.app__header')
+    const children = Array.from(header.element.children)
+
+    expect(children[0]?.classList.contains('app__brand')).toBe(true)
+    expect(children[1]?.classList.contains('app__nav')).toBe(true)
+    expect(children.at(-1)?.classList.contains('app__language')).toBe(true)
+    expect(header.find('.app__nav .app-nav').exists()).toBe(true)
+    expect(header.find('[data-test="demo-start-button"]').exists()).toBe(true)
   })
 
   it('links to Ko-fi from the footer', async () => {
@@ -156,5 +172,19 @@ describe('App', () => {
     await vi.dynamicImportSettled()
 
     expect(wrapper.find('[data-test="demo-overlay"]').exists()).toBe(true)
+  })
+
+  it('hides the app title on phones so navigation starts with Home', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = await mountApp('/')
+    const header = wrapper.find('.app__header')
+
+    expect(wrapper.find('.app__brand').exists()).toBe(false)
+    expect(header.element.firstElementChild?.classList.contains('app__nav')).toBe(true)
+    expect(wrapper.findAll('.app-nav__link')).toHaveLength(NAV_ITEMS.length)
   })
 })

@@ -1,5 +1,5 @@
 <template>
-  <Dialog
+  <AppDialog
     :visible="visible"
     modal
     :header="title"
@@ -102,14 +102,14 @@
         <Button type="submit" :label="t('common.save')" data-test="calendar-entry-save" />
       </div>
     </form>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import DatePicker from 'primevue/datepicker'
-import Dialog from 'primevue/dialog'
+import AppDialog from '@/shared/components/AppDialog.vue'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { CalendarEntry, NewCalendarEntry } from '@/types'
@@ -239,5 +239,19 @@ function handleSubmit(): void {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .calendar-entry-form-dialog {
+    width: 100vw;
+  }
+
+  .calendar-entry-form__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.75rem 0 calc(0.25rem + var(--safe-area-bottom));
+    background: var(--color-surface);
+  }
 }
 </style>

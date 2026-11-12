@@ -1,5 +1,5 @@
 <template>
-  <Dialog
+  <AppDialog
     :visible="visible"
     modal
     :header="title"
@@ -224,14 +224,14 @@
         <Button type="submit" :label="t('common.save')" data-test="submit" />
       </div>
     </form>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import DatePicker from 'primevue/datepicker'
-import Dialog from 'primevue/dialog'
+import AppDialog from '@/shared/components/AppDialog.vue'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import RadioButton from 'primevue/radiobutton'
@@ -417,6 +417,30 @@ function handleSubmit(): void {
 @media screen and (max-height: 899px) {
   .employee-form {
     gap: 0.75rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .employee-form {
+    grid-template-columns: 1fr;
+    min-width: 0;
+    gap: 0.85rem;
+  }
+
+  .employee-form-dialog {
+    width: 100vw;
+  }
+
+  .employee-form-dialog :deep(.p-dialog-content) {
+    max-height: none;
+  }
+
+  .employee-form__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.75rem 0 calc(0.25rem + var(--safe-area-bottom));
+    background: var(--color-surface);
   }
 }
 </style>

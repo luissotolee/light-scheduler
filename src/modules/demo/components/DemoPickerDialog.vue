@@ -1,5 +1,5 @@
 ﻿<template>
-  <Dialog
+  <AppDialog
     :visible="visible"
     modal
     :header="t('demo.picker.title')"
@@ -39,12 +39,12 @@
         @click="emit('update:visible', false)"
       />
     </div>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import AppDialog from '@/shared/components/AppDialog.vue'
 import { useI18n } from '@/shared/i18n'
 import type { MessageKey } from '@/shared/i18n'
 
@@ -182,6 +182,29 @@ const { t } = useI18n()
 
   .demo-picker__option-description {
     font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .demo-picker {
+    width: 100vw;
+    max-height: none;
+  }
+
+  .demo-picker :deep(.p-dialog-content) {
+    max-height: none;
+  }
+
+  .demo-picker__option {
+    padding: 0.85rem;
+  }
+
+  .demo-picker__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.75rem 0 calc(0.25rem + var(--safe-area-bottom));
+    background: var(--color-surface);
   }
 }
 </style>

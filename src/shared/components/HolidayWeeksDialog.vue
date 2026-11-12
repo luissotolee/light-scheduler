@@ -1,5 +1,5 @@
 <template>
-  <Dialog
+  <AppDialog
     :visible="visible"
     modal
     :header="title"
@@ -71,13 +71,13 @@
         />
       </div>
     </div>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import AppDialog from '@/shared/components/AppDialog.vue'
 import type { HolidayWeek, HolidayWeekOption, WeekKey } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import {
@@ -278,6 +278,37 @@ function save(): void {
 }
 
 @media (max-width: 36rem) {
+  .holiday-dialog__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .holiday-dialog__body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .holiday-dialog__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+    flex: 1;
+  }
+
+  .holiday-dialog__week {
+    min-height: 2.75rem;
+  }
+
+  .holiday-dialog__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.75rem 0 calc(0.25rem + var(--safe-area-bottom));
+    background: var(--color-surface);
+  }
+}
+
+@media (max-width: 360px) {
   .holiday-dialog__grid {
     grid-template-columns: 1fr;
   }

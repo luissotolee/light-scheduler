@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { filterScenarioForViewport } from '@/modules/demo/player/engine'
 import { employeesDemoScenario } from '@/modules/demo/scenarios/employeesDemo'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
@@ -28,7 +29,7 @@ const knownTargets = [
   'week-20',
   'next-year',
   'save-holidays',
-  'edit-emp-mock-03',
+  'edit-emp-mock-02',
   'deactivate-emp-mock-02',
   'reactivate-emp-mock-02',
   'remove-emp-mock-02',
@@ -85,6 +86,25 @@ describe('employeesDemo scenario', () => {
     })
   })
 
+  it('only uses known viewport filters', () => {
+    employeesDemoScenario.steps.forEach((step) => {
+      if (step.viewport) {
+        expect(['phone', 'desktop']).toContain(step.viewport)
+      }
+    })
+  })
+
+  it('uses the manage dialog flow on phones', () => {
+    const phoneSteps = filterScenarioForViewport(employeesDemoScenario, true).steps
+    const desktopSteps = filterScenarioForViewport(employeesDemoScenario, false).steps
+
+    expect(phoneSteps.find((step) => step.id === 'employees-manage-details')).toBeDefined()
+    expect(phoneSteps.find((step) => step.id === 'employees-manage-open')).toBeDefined()
+    expect(desktopSteps.some((step) => step.id === 'employees-manage-details')).toBe(false)
+    expect(desktopSteps.some((step) => step.id === 'employees-manage-open')).toBe(false)
+    expect(desktopSteps.find((step) => step.id === 'employees-details-open')).toBeDefined()
+  })
+
   it('covers the full employee lifecycle', () => {
     const actions = employeesDemoScenario.steps.map((step) => step.action)
     const targets = employeesDemoScenario.steps
@@ -100,7 +120,7 @@ describe('employeesDemo scenario', () => {
     expect(targets).toContain('hide-inactive')
     expect(targets).toContain('employee-comment-input')
     expect(targets).toContain('details-comment')
-    expect(targets).toContain('edit-emp-mock-03')
+    expect(targets).toContain('edit-emp-mock-02')
     expect(targets).toContain('deactivate-emp-mock-02')
     expect(targets).toContain('reactivate-emp-mock-02')
     expect(targets).toContain('remove-emp-mock-02')

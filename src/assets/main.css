@@ -62,6 +62,9 @@
   --space-stack: 1rem;
   --font-size-page-title: 1.75rem;
   --font-size-section-title: 1.1rem;
+  --keyboard-inset: 0px;
+  --visual-viewport-height: 100dvh;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 
   color-scheme: dark;
   color: var(--color-text);
@@ -123,6 +126,34 @@ button,
 input,
 select {
   font-family: inherit;
+}
+
+/* Phone rules. Keep this query in sync with PHONE_MEDIA_QUERY in src/shared/utils/viewport.ts. */
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Prevent iOS focus zoom on form controls. */
+  input,
+  select,
+  textarea,
+  .p-inputtext,
+  .p-select-label,
+  .p-datepicker-input {
+    font-size: 16px;
+  }
+
+  /* Tooltips are not a reliable mobile interaction. */
+  .p-tooltip {
+    display: none !important;
+  }
+
+  input,
+  textarea,
+  select {
+    scroll-margin-block: 5rem;
+  }
 }
 
 @page {

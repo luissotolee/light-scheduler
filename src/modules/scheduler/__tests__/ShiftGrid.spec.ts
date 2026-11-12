@@ -326,4 +326,63 @@ describe('ShiftGrid', () => {
     const handoffChips = mountGrid(handoff, true).findAll('[data-test="hour-headcount"]')
     expect(handoffChips[1].text()).toBe('1')
   })
+
+  it('wraps the grid in an accessible scroller with mobile content width on phones', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountGrid()
+    await nextTick()
+
+    const scroller = wrapper.find('[data-test="shift-grid-scroller"]')
+    expect(scroller.exists()).toBe(true)
+    expect(scroller.attributes('role')).toBe('region')
+    expect(scroller.attributes('aria-label')).toBe(
+      'Scrollable schedule table. Drag to pan.',
+    )
+    expect(wrapper.find('[data-test="shift-grid"]').attributes('style')).toContain(
+      '--grid-mobile-content-width',
+    )
+    expect(wrapper.findAll('.shift-grid__corner .pi-user')).toHaveLength(1)
+  })
+
+  it('selects a shift on a phone double tap and clears it when panning starts', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountGrid()
+    await nextTick()
+    const bar = wrapper.find('[data-test="shift-bar"]')
+    const scroller = wrapper.find('[data-test="shift-grid-scroller"]')
+
+    const touch = (element: Element, type: string, clientX: number, clientY = 10) =>
+      pointer(element, type, {
+        pointerType: 'touch',
+        isPrimary: true,
+        clientX,
+        clientY,
+      })
+
+    await touch(bar.element, 'pointerdown', 100)
+    await touch(bar.element, 'pointerup', 100)
+    await touch(bar.element, 'pointerdown', 100)
+    await touch(bar.element, 'pointerup', 100)
+    await nextTick()
+
+    expect(wrapper.find('[data-test="shift-bar"]').classes()).toContain(
+      'shift-bar--selected',
+    )
+
+    await touch(scroller.element, 'pointerdown', 100, 100)
+    await touch(scroller.element, 'pointermove', 40, 100)
+    await nextTick()
+
+    expect(wrapper.find('[data-test="shift-bar"]').classes()).not.toContain(
+      'shift-bar--selected',
+    )
+  })
 })

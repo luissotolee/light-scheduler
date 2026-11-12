@@ -145,9 +145,18 @@ export const employeesDemoScenario: DemoScenario = {
     },
     {
       id: 'employees-details-open',
+      viewport: 'desktop',
       action: 'click',
       target: { testId: 'details-emp-mock-02' },
       narrationKey: 'demo.scenario.employees.details',
+      pauseMs: 1500,
+    },
+    {
+      id: 'employees-manage-details',
+      viewport: 'phone',
+      action: 'click',
+      target: { testId: 'details-emp-mock-02' },
+      narrationKey: 'demo.scenario.employees.manageDetails',
       pauseMs: 1500,
     },
     {
@@ -169,6 +178,14 @@ export const employeesDemoScenario: DemoScenario = {
       action: 'click',
       target: { testId: 'close-details' },
       narrationKey: 'demo.scenario.employees.closeDetails',
+      pauseMs: 1500,
+    },
+    {
+      id: 'employees-manage-open',
+      viewport: 'phone',
+      action: 'click',
+      target: { testId: 'details-emp-mock-02' },
+      narrationKey: 'demo.scenario.employees.manageOpen',
       pauseMs: 1500,
     },
     {
@@ -209,7 +226,7 @@ export const employeesDemoScenario: DemoScenario = {
     {
       id: 'employees-edit-open',
       action: 'click',
-      target: { testId: 'edit-emp-mock-03' },
+      target: { testId: 'edit-emp-mock-02' },
       narrationKey: 'demo.scenario.employees.edit',
       pauseMs: 1500,
     },
@@ -224,7 +241,7 @@ export const employeesDemoScenario: DemoScenario = {
       id: 'employees-edit-name',
       action: 'fill',
       target: { testId: 'employee-name-input' },
-      value: 'Carmen López Actualizada',
+      value: 'Bruno García Actualizado',
       narrationKey: 'demo.scenario.employees.editName',
       pauseMs: 1500,
     },
@@ -276,6 +293,14 @@ export const employeesDemoScenario: DemoScenario = {
       target: { testId: 'hide-inactive' },
       narrationKey: 'demo.scenario.employees.hideInactiveOff',
       pauseMs: 1800,
+    },
+    {
+      id: 'employees-manage-reopen',
+      viewport: 'phone',
+      action: 'click',
+      target: { testId: 'details-emp-mock-02' },
+      narrationKey: 'demo.scenario.employees.manageReopen',
+      pauseMs: 1500,
     },
     {
       id: 'employees-reactivate',

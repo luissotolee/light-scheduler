@@ -1,7 +1,18 @@
 <template>
-  <div class="shift-grid" data-test="shift-grid">
-    <div class="shift-grid__header" aria-hidden="true">
-      <div class="shift-grid__corner">{{ t('shiftGrid.employee') }}</div>
+  <div class="shift-grid" :style="gridStyle" data-test="shift-grid">
+    <div
+      ref="scroller"
+      class="shift-grid__scroller"
+      :class="{ 'shift-grid__scroller--panning': panning }"
+      :role="isPhone ? 'region' : undefined"
+      :aria-label="isPhone ? t('scheduler.gridScrollAria') : undefined"
+      data-test="shift-grid-scroller"
+    >
+      <div class="shift-grid__header" aria-hidden="true">
+        <div class="shift-grid__corner">
+          <i v-if="isPhone" class="pi pi-user" aria-hidden="true" />
+          <span :class="{ 'visually-hidden': isPhone }">{{ t('shiftGrid.employee') }}</span>
+        </div>
       <div class="shift-grid__hours" data-test="shift-grid-hours">{{ t('shiftGrid.hours') }}</div>
       <div class="shift-grid__time-header">
         <div class="shift-grid__time-row shift-grid__time-row--hours">
@@ -18,6 +29,7 @@
               class="shift-grid__headcount"
               :class="{ 'shift-grid__headcount--empty': hour.count === 0 }"
               :title="headcountTitle(hour)"
+              :aria-label="headcountTitle(hour)"
               data-test="hour-headcount"
             >
               {{ hour.count }}
@@ -44,11 +56,14 @@
         :key="row.member.id"
         :row="row"
         :slots="slots"
+        :selected-shift-id="selectedShiftId"
         :drop-target="dropTargetMemberId === row.member.id"
-        @create="emit('create', $event)"
+        :pan-active="panning"
+        @create="handleCreate"
         @resize="emit('resize', $event)"
-        @remove="emit('remove', $event)"
+        @remove="handleRemove"
         @toggle-off="emit('toggleOff', $event)"
+        @select="handleSelectShift"
         @move-start="handleMoveStart"
         @move-drag="handleMoveDrag"
         @move-end="handleMoveEnd"
@@ -56,7 +71,8 @@
       />
     </div>
 
-    <p v-else class="shift-grid__empty">{{ t('shiftGrid.empty') }}</p>
+      <p v-else class="shift-grid__empty">{{ t('shiftGrid.empty') }}</p>
+    </div>
   </div>
 </template>
 
@@ -73,6 +89,8 @@ import type {
 import ShiftRow from '@/modules/scheduler/components/ShiftRow.vue'
 import { buildHourlyHeadcounts, type HourHeadcount } from '@/modules/scheduler/utils/headcount'
 import { useI18n } from '@/shared/i18n'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
+import { useGridPan } from '@/shared/composables/useGridPan'
 
 const props = defineProps<{
   rows: DayRow[]
@@ -89,6 +107,22 @@ const emit = defineEmits<{
 }>()
 
 const { t, tc } = useI18n()
+const isPhone = useIsPhone()
+
+const scroller = ref<HTMLElement | null>(null)
+const selectedShiftId = ref<string | null>(null)
+const { panning } = useGridPan({
+  element: scroller,
+  enabled: isPhone,
+  onPanStart: () => {
+    resetDrag()
+    selectedShiftId.value = null
+  },
+})
+
+const gridStyle = computed<Record<string, string>>(() => ({
+  '--grid-mobile-content-width': `max(32rem, ${props.slots.length * 1.5}rem)`,
+}))
 
 const hourGroups = computed(() => buildHourlyHeadcounts(props.rows, props.slots))
 
@@ -142,6 +176,20 @@ function rowAt(clientY: number): RowHit | null {
     }
   }
   return null
+}
+
+function handleSelectShift(id: string): void {
+  selectedShiftId.value = id
+}
+
+function handleCreate(input: ShiftRangeInput): void {
+  selectedShiftId.value = null
+  emit('create', input)
+}
+
+function handleRemove(id: string): void {
+  if (selectedShiftId.value === id) selectedShiftId.value = null
+  emit('remove', id)
 }
 
 function handleMoveStart(shiftId: string): void {
@@ -341,5 +389,64 @@ function resetDrag(): void {
   .shift-grid__empty {
     padding: 0.75rem;
   }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .shift-grid {
+    --grid-row-height: 2.5rem;
+    --grid-header-height: 2.25rem;
+    --grid-name-width: 4.25rem;
+    --grid-hours-width: 3rem;
+  }
+
+  .shift-grid__scroller {
+    overflow: auto;
+    max-height: 60dvh;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: none;
+  }
+
+  .shift-grid__scroller--panning {
+    cursor: grabbing;
+  }
+
+  .shift-grid__header {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+  }
+
+  .shift-grid__header,
+  .shift-grid__body {
+    min-width: var(--grid-mobile-content-width, 100%);
+  }
+
+  .shift-grid__corner {
+    justify-content: center;
+    padding: 0;
+    font-size: 0.85rem;
+  }
+
+  .shift-grid__hours {
+    padding: 0;
+    font-size: 0.65rem;
+  }
+
+  .shift-grid__time-cell {
+    font-size: 0.62rem;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

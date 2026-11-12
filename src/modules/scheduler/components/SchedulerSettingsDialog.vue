@@ -1,5 +1,5 @@
 <template>
-  <Dialog
+  <AppDialog
     :visible="visible"
     modal
     :header="t('scheduler.settings.title')"
@@ -13,22 +13,32 @@
       @submit.prevent="handleSave"
     >
       <div class="scheduler-settings__times">
-        <TimePickerField
-          v-model="form.startTime"
-          :label="t('scheduler.settings.start')"
-          :minute-step="form.slotMinutes"
-          id-prefix="settings-start"
-          :tooltip="t('scheduler.settings.startTooltip')"
-          data-test="settings-start"
-        />
-        <TimePickerField
-          v-model="form.endTime"
-          :label="t('scheduler.settings.end')"
-          :minute-step="form.slotMinutes"
-          id-prefix="settings-end"
-          :tooltip="t('scheduler.settings.endTooltip')"
-          data-test="settings-end"
-        />
+        <div class="scheduler-settings__time-field">
+          <TimePickerField
+            v-model="form.startTime"
+            :label="t('scheduler.settings.start')"
+            :minute-step="form.slotMinutes"
+            id-prefix="settings-start"
+            :tooltip="t('scheduler.settings.startTooltip')"
+            data-test="settings-start"
+          />
+          <p v-if="isPhone" class="scheduler-settings__hint">
+            {{ t('scheduler.settings.startTooltip') }}
+          </p>
+        </div>
+        <div class="scheduler-settings__time-field">
+          <TimePickerField
+            v-model="form.endTime"
+            :label="t('scheduler.settings.end')"
+            :minute-step="form.slotMinutes"
+            id-prefix="settings-end"
+            :tooltip="t('scheduler.settings.endTooltip')"
+            data-test="settings-end"
+          />
+          <p v-if="isPhone" class="scheduler-settings__hint">
+            {{ t('scheduler.settings.endTooltip') }}
+          </p>
+        </div>
       </div>
 
       <p v-if="endsNextDay" class="scheduler-settings__hint" data-test="settings-next-day">
@@ -49,6 +59,9 @@
             <i class="pi pi-info-circle" aria-hidden="true" />
           </span>
         </div>
+        <p v-if="isPhone" class="scheduler-settings__hint">
+          {{ t('scheduler.settings.rateTooltip') }}
+        </p>
         <SelectButton
           :model-value="form.slotMinutes"
           :options="rateOptions"
@@ -65,6 +78,9 @@
       </div>
 
       <div class="scheduler-settings__field">
+        <p v-if="isPhone" class="scheduler-settings__hint">
+          {{ t('scheduler.settings.showHeadcountTooltip') }}
+        </p>
         <div class="scheduler-settings__toggle">
           <div class="scheduler-settings__label-row">
             <label class="scheduler-settings__label" for="settings-show-headcount">
@@ -109,13 +125,13 @@
         />
       </div>
     </form>
-  </Dialog>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import AppDialog from '@/shared/components/AppDialog.vue'
 import SelectButton from 'primevue/selectbutton'
 import ToggleSwitch from 'primevue/toggleswitch'
 import TimePickerField from '@/modules/scheduler/components/TimePickerField.vue'
@@ -127,6 +143,7 @@ import {
 } from '@/modules/scheduler/utils/settings'
 import { parseTimeToMinutes } from '@/shared/utils/shifts'
 import { useI18n } from '@/shared/i18n'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const props = defineProps<{
   visible: boolean
@@ -139,6 +156,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const isPhone = useIsPhone()
 
 const form = reactive<SchedulerSettings>({ ...props.settings })
 
@@ -275,6 +293,39 @@ function handleSave(): void {
 
   .scheduler-settings__times {
     gap: 0.75rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .scheduler-settings {
+    min-width: 0;
+  }
+
+  .scheduler-settings-dialog {
+    width: 100vw;
+  }
+
+  .scheduler-settings-dialog :deep(.p-dialog-content) {
+    max-height: none;
+  }
+
+  .scheduler-settings__times {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .scheduler-settings__time-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .scheduler-settings__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.75rem 0 calc(0.25rem + var(--safe-area-bottom));
+    background: var(--color-surface);
   }
 }
 </style>

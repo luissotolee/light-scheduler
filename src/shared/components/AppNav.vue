@@ -5,9 +5,11 @@
       :key="item.name"
       class="app-nav__link"
       :to="item.path"
+      :aria-label="isPhone ? t(item.labelKey) : undefined"
       :data-test="`nav-${item.name}`"
     >
-      {{ t(item.labelKey) }}
+      <i v-if="isPhone" class="app-nav__icon" :class="item.icon" aria-hidden="true" />
+      <span v-else>{{ t(item.labelKey) }}</span>
     </RouterLink>
   </nav>
 </template>
@@ -16,12 +18,14 @@
 import { RouterLink } from 'vue-router'
 import type { NavItem } from '@/router/nav'
 import { useI18n } from '@/shared/i18n'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 defineProps<{
   items: NavItem[]
 }>()
 
 const { t } = useI18n()
+const isPhone = useIsPhone()
 </script>
 
 <style scoped>
@@ -53,9 +57,29 @@ const { t } = useI18n()
   outline-offset: 2px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
   .app-nav {
-    gap: 0.75rem;
+    flex: 1;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+
+  .app-nav__link {
+    display: inline-flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0;
+    border-bottom: 0;
+    border-radius: var(--radius-sm);
+    font-size: 1.05rem;
+  }
+
+  .app-nav__link[aria-current='page'] {
+    border-bottom: 0;
+    background: var(--color-shift-bar);
   }
 }
 </style>

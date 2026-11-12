@@ -1,5 +1,5 @@
 import type { DemoStep, DemoScenario, DemoStatus } from '@/modules/demo/types'
-import { waitForTarget, getRectCenter, clickElement, pointerClickElement, pressKey, fillInput, scrollIntoView, prefersReducedMotion } from '@/modules/demo/utils/dom'
+import { waitForTarget, getRectCenter, clickElement, pointerClickElement, pressKey, fillInput, scrollIntoView, scrollToTop, prefersReducedMotion, isPhoneViewport } from '@/modules/demo/utils/dom'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 
 interface PlayerState {
@@ -66,22 +66,39 @@ export function setScenario(scenario: DemoScenario): void {
   state.stepIndex = 0
 }
 
+export function filterScenarioForViewport(
+  scenario: DemoScenario,
+  phone: boolean = isPhoneViewport(),
+): DemoScenario {
+  return {
+    ...scenario,
+    steps: scenario.steps.filter((step) => {
+      if (!step.viewport) return true
+      return step.viewport === 'phone' ? phone : !phone
+    }),
+  }
+}
+
 export async function startEngine(scenario: DemoScenario, onComplete?: () => void): Promise<void> {
   const demoStore = useDemoStore()
 
   if (state.status === 'running' || state.status === 'paused') return
 
-  state.scenario = scenario
+  const activeScenario = filterScenarioForViewport(scenario)
+
+  state.scenario = activeScenario
   state.stepIndex = 0
   state.status = 'running'
   state.reducedMotion = prefersReducedMotion()
   state.abortController = new AbortController()
   state.runToken++
 
-  demoStore.setScenario(scenario)
-  demoStore.start(scenario.id)
+  demoStore.setScenario(activeScenario)
+  demoStore.start(activeScenario.id)
   demoStore.setStep(0)
-  demoStore.setCurrentStep(scenario.steps[0] ?? null)
+  demoStore.setCurrentStep(activeScenario.steps[0] ?? null)
+
+  scrollToTop()
 
   const outcome = await runSteps(state.runToken)
   if (outcome === 'completed') {
@@ -241,6 +258,7 @@ async function executeStep(step: DemoStep, signal: AbortSignal): Promise<void> {
       const { router } = await import('@/router')
       await router.push(step.route)
       await router.isReady()
+      scrollToTop()
       break
     }
 
@@ -261,10 +279,18 @@ async function executeStep(step: DemoStep, signal: AbortSignal): Promise<void> {
 
       scrollIntoView(target.element)
 
-      const center = getRectCenter(target.rect!)
-      demoStore.setNarrationAnchor(target.rect!)
-      demoStore.setCursor(center.x, center.y, true)
-      demoStore.setRing(target.rect!, true)
+      const rect = target.element.getBoundingClientRect()
+      const center = getRectCenter(rect)
+      const point =
+        step.action === 'pointerClick' && step.target.point
+          ? {
+              x: rect.left + rect.width * step.target.point.x,
+              y: rect.top + rect.height * step.target.point.y,
+            }
+          : center
+      demoStore.setNarrationAnchor(rect)
+      demoStore.setCursor(point.x, point.y, true)
+      demoStore.setRing(rect, true)
 
       if (step.action === 'spotlight') {
         if (!state.reducedMotion) {
@@ -272,11 +298,11 @@ async function executeStep(step: DemoStep, signal: AbortSignal): Promise<void> {
         }
         demoStore.setRing(null, false)
       } else {
-        demoStore.showClick(center.x, center.y)
+        demoStore.showClick(point.x, point.y)
         if (step.action === 'click') {
           clickElement(target.element)
         } else if (step.action === 'pointerClick') {
-          pointerClickElement(target.element)
+          pointerClickElement(target.element, step.target.point)
         } else if (step.action === 'press') {
           pressKey(target.element, step.key)
         } else if (step.action === 'fill') {
@@ -293,9 +319,11 @@ async function executeStep(step: DemoStep, signal: AbortSignal): Promise<void> {
     case 'wait': {
       if (step.waitFor) {
         const target = await waitForTarget(step.waitFor, { timeoutMs: 5000 })
-        if (target.rect) {
-          demoStore.setNarrationAnchor(target.rect)
-          demoStore.setRing(target.rect, true)
+        if (target.element) {
+          scrollIntoView(target.element)
+          const rect = target.element.getBoundingClientRect()
+          demoStore.setNarrationAnchor(rect)
+          demoStore.setRing(rect, true)
           if (!state.reducedMotion) {
             await sleep(800, signal)
           }

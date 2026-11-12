@@ -250,4 +250,22 @@ function savePdf(): void {
     font-size: 9pt;
   }
 }
+
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
+  .summary__toolbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .summary__week {
+    flex: 1 1 10rem;
+    min-width: 0;
+    font-size: 0.95rem;
+  }
+
+  .summary__sheet {
+    padding: 0.5rem;
+  }
+}
 </style>

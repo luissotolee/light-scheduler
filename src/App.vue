@@ -1,12 +1,12 @@
 <template>
   <div class="app">
     <header class="app__header">
-      <RouterLink class="app__brand" to="/">Light Scheduler</RouterLink>
-      <div class="app__controls">
+      <RouterLink v-if="!isPhone" class="app__brand" to="/">Light Scheduler</RouterLink>
+      <div class="app__nav">
         <AppNav :items="NAV_ITEMS" />
-        <LanguageSwitcher />
-        <DemoModeButton v-if="demoStore.status === 'idle'" />
       </div>
+      <DemoModeButton v-if="demoStore.status === 'idle'" />
+      <LanguageSwitcher class="app__language" />
     </header>
 
     <main class="app__main">
@@ -39,9 +39,14 @@ import DemoBanner from '@/modules/demo/components/DemoBanner.vue'
 import { useI18n } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { NAV_ITEMS } from '@/router/nav'
+import { useKeyboardInset } from '@/shared/composables/useKeyboardInset'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
+const isPhone = useIsPhone()
+
+useKeyboardInset()
 
 const CONTACT_EMAIL = 'mailto:luissotolee@gmail.com?subject=Light%20Scheduler'
 
@@ -61,21 +66,26 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
 }
 
 .app__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   min-height: var(--header-height);
   padding: var(--header-padding-y) var(--space-page-x);
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
 }
 
 .app__brand {
+  flex: 0 0 auto;
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--color-text);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .app__brand:focus-visible {
@@ -83,11 +93,27 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   outline-offset: 2px;
 }
 
-.app__controls {
+.app__nav {
   display: flex;
+  flex: 0 1 auto;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--nav-gap);
+  min-width: 0;
+  margin-left: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.app__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.app__nav .app-nav {
+  flex-wrap: nowrap;
+}
+
+.app__language,
+.app__header > .demo-mode-button {
+  flex: 0 0 auto;
 }
 
 .app__main {
@@ -154,10 +180,48 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
   .app__header {
-    align-items: flex-start;
-    flex-direction: column;
+    gap: 0.4rem;
+    padding-left: max(var(--space-page-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--space-page-x), env(safe-area-inset-right, 0px));
+    padding-top: max(var(--header-padding-y), env(safe-area-inset-top, 0px));
+  }
+
+  .app__nav {
+    flex: 1 1 auto;
+    gap: 0.25rem;
+    margin-left: 0;
+  }
+
+  .app__nav .app-nav {
+    flex: 1;
+  }
+
+  .app__language,
+  .app__header > .demo-mode-button {
+    margin-left: 0;
+  }
+
+  .app__main {
+    padding-left: max(var(--space-page-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--space-page-x), env(safe-area-inset-right, 0px));
+    padding-bottom: calc(
+      var(--space-page-y-bottom) + var(--keyboard-inset) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  .app__footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    row-gap: 0.75rem;
+    padding-bottom: calc(var(--footer-padding-y) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app__footer-text,
+  .app__footer .ko-fi-button {
+    grid-column: auto;
+    justify-self: center;
   }
 }
 </style>

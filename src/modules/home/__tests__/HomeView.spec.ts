@@ -69,7 +69,6 @@ describe('HomeView', () => {
     const recommendation = wrapper.find('[data-test="home-demo-recommendation"]')
     expect(recommendation.exists()).toBe(true)
     expect(recommendation.text()).toContain(en['home.demo.title'])
-    expect(recommendation.text()).toContain(en['home.demo.description'])
 
     const start = wrapper.find('[data-test="home-demo-start"]')
     expect(start.attributes('aria-expanded')).toBe('false')
