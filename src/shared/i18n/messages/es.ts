@@ -15,6 +15,7 @@ export const es: Messages = {
   'app.footer':
     'Light Scheduler — un planificador semanal de turnos solo de frontend. Recomendamos respaldar tu trabajo localmente a través de Archivo.',
   'app.contact': 'Contacta al creador',
+  'app.supportOnKoFi': 'Apóyame en Ko-fi',
 
   'nav.home': 'Inicio',
   'nav.scheduler': 'Planificador',

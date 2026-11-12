@@ -54,6 +54,16 @@ describe('App', () => {
     )
   })
 
+  it('links to Ko-fi from the footer', async () => {
+    const wrapper = await mountApp('/')
+    const link = wrapper.find('[data-test="ko-fi-button"]')
+
+    expect(link.attributes('href')).toBe('https://ko-fi.com/J8C02AHRYD')
+    expect(link.attributes('target')).toBe('_blank')
+    expect(link.attributes('rel')).toBe('noopener noreferrer')
+    expect(link.text()).toBe(en['app.supportOnKoFi'])
+  })
+
   it('marks exactly one active navigation link', async () => {
     const wrapper = await mountApp('/scheduler')
     const active = wrapper.findAll('.app-nav__link[aria-current="page"]')

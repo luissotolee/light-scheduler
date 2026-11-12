@@ -20,6 +20,7 @@
         {{ t('app.contact') }}
       </a>
       <p class="app__footer-text">{{ t('app.footer') }}</p>
+      <KoFiButton />
     </footer>
 
     <DemoOverlay v-if="demoStore.status !== 'idle' || demoStore.showRestoredFlag" />
@@ -32,6 +33,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import { defineAsyncComponent } from 'vue'
 import AppNav from '@/shared/components/AppNav.vue'
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
+import KoFiButton from '@/shared/components/KoFiButton.vue'
 import DemoModeButton from '@/modules/demo/components/DemoModeButton.vue'
 import DemoBanner from '@/modules/demo/components/DemoBanner.vue'
 import { useI18n } from '@/shared/i18n'
@@ -105,12 +107,18 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   border-top: 1px solid var(--color-border);
   color: var(--color-muted);
   font-size: var(--footer-font-size);
-  text-align: center;
+  text-align: left;
 }
 
 .app__footer-text {
   grid-column: 2;
   margin: 0;
+  text-align: center;
+}
+
+.app__footer .ko-fi-button {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .app__footer-contact {
@@ -130,6 +138,20 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
 .app__footer-contact:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .app__footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    row-gap: 0.75rem;
+  }
+
+  .app__footer-text,
+  .app__footer .ko-fi-button {
+    grid-column: auto;
+    justify-self: center;
+  }
 }
 
 @media (max-width: 480px) {

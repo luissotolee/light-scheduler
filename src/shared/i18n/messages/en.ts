@@ -13,6 +13,7 @@ export const en = {
   'app.footer':
     'Light Scheduler — a frontend-only weekly shift scheduler. We recommend backing up your work locally through Archive.',
   'app.contact': 'Contact the creator',
+  'app.supportOnKoFi': 'Support me on Ko-fi',
 
   'nav.home': 'Home',
   'nav.scheduler': 'Scheduler',
