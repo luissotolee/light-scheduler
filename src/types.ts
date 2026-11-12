@@ -29,6 +29,32 @@ export interface HolidayWeekOption {
   label: string
 }
 
+export type CalendarEntryKind = 'public_holiday' | 'custom_holiday' | 'custom_event'
+
+export interface CalendarEntry {
+  id: string
+  /** Local calendar date, ISO `YYYY-MM-DD`. */
+  date: string
+  name: string
+  kind: CalendarEntryKind
+  /** ISO 3166-1 alpha-2 code for fetched public holidays. */
+  countryCode?: string
+  /** Provider subdivision code for fetched public holidays. */
+  region?: string
+}
+
+export interface CalendarData {
+  country: string | null
+  region: string | null
+  entries: CalendarEntry[]
+}
+
+export interface NewCalendarEntry {
+  date: string
+  name: string
+  kind: 'custom_holiday' | 'custom_event'
+}
+
 export interface TeamMember {
   id: string
   name: string

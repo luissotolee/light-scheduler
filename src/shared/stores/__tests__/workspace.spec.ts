@@ -11,6 +11,7 @@ import {
   WORKSPACE_STORAGE_KEY,
 } from '@/shared/utils/persistence'
 import { readJson, writeJson } from '@/shared/utils/storage'
+import { createDefaultCalendarData } from '@/shared/utils/calendarEntries'
 
 const member: TeamMember = {
   id: 'member-1',
@@ -38,6 +39,7 @@ const persistedPayload = {
   schedules: { '2026-11-02': [shift] },
   dayOffs: { '2026-11-02': [dayOff] },
   currentWeekKey: '2026-11-02',
+  calendar: createDefaultCalendarData(),
 }
 
 describe('workspace store', () => {
@@ -59,6 +61,7 @@ describe('workspace store', () => {
     expect(store.currentWeekShifts).toEqual([])
     expect(store.dayOffs).toEqual({})
     expect(store.currentWeekDayOffs).toEqual([])
+    expect(store.calendar).toEqual(createDefaultCalendarData())
     expect(store.hasAnyData).toBe(false)
   })
 
@@ -258,6 +261,7 @@ describe('workspace store', () => {
     expect(store.schedules).toEqual({ '2026-11-02': [shift] })
     expect(store.dayOffs).toEqual({ '2026-11-02': [dayOff] })
     expect(store.currentWeekKey).toBe('2026-11-02')
+    expect(store.calendar).toEqual(createDefaultCalendarData())
     expect(store.dataLoaded).toBe(false)
     expect(store.schemaVersion).toBe(WORKSPACE_SCHEMA_VERSION)
   })
@@ -275,6 +279,58 @@ describe('workspace store', () => {
       version: WORKSPACE_SCHEMA_VERSION,
       ...persistedPayload,
     })
+  })
+
+  it('stores calendar data and counts it as workspace data', async () => {
+    const store = useWorkspaceStore()
+    const calendar = {
+      country: 'ES',
+      region: 'AN',
+      entries: [
+        {
+          id: 'entry-1',
+          date: '2026-11-03',
+          name: 'Public holiday',
+          kind: 'public_holiday' as const,
+          countryCode: 'ES',
+          region: 'AN',
+        },
+      ],
+    }
+
+    store.setCalendar(calendar)
+    await nextTick()
+
+    expect(store.calendar).toEqual(calendar)
+    expect(store.hasAnyData).toBe(true)
+    expect(readJson(WORKSPACE_STORAGE_KEY, parsePersistedWorkspace)?.calendar).toEqual(calendar)
+  })
+
+  it('hydrates and resets calendar data', () => {
+    const calendar = {
+      country: 'ES',
+      region: null,
+      entries: [
+        {
+          id: 'entry-1',
+          date: '2026-11-03',
+          name: 'Custom event',
+          kind: 'custom_event' as const,
+        },
+      ],
+    }
+    writeJson(
+      WORKSPACE_STORAGE_KEY,
+      serializeWorkspace({ ...persistedPayload, calendar }),
+    )
+
+    const store = useWorkspaceStore()
+
+    expect(store.calendar).toEqual(calendar)
+
+    store.reset()
+
+    expect(store.calendar).toEqual(createDefaultCalendarData())
   })
 
   it('falls back to defaults when persisted JSON is malformed', () => {
@@ -319,6 +375,7 @@ describe('workspace store', () => {
     expect(store.schedules).toEqual({})
     expect(store.dayOffs).toEqual({})
     expect(store.currentWeekKey).toBe(getWeekKey(new Date()))
-    expect(localStorage.getItem(WORKSPACE_STORAGE_KEY)).toBeNull()
+    expect(store.calendar).toEqual(createDefaultCalendarData())
+    expect(store.dataLoaded).toBe(false)
   })
 })

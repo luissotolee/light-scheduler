@@ -51,9 +51,30 @@
 
     <div class="scheduler__content">
       <div class="scheduler__day-header" data-test="scheduler-day-header">
-        <h2 class="scheduler__selected-day" data-test="scheduler-selected-day">
-          {{ selectedDayLabel }}
-        </h2>
+        <div class="scheduler__day-title">
+          <h2 class="scheduler__selected-day" data-test="scheduler-selected-day">
+            {{ selectedDayLabel }}
+          </h2>
+          <span
+            v-if="selectedDayEntries.length > 0"
+            class="scheduler__day-entries"
+            data-test="scheduler-day-entries"
+          >
+            <span
+              v-for="entry in selectedDayEntries"
+              :key="entry.id"
+              class="scheduler__day-entry"
+              :title="`${t(calendarKindLabelKey(entry.kind))}: ${entry.name}`"
+              :data-test="`scheduler-day-entry-${entry.id}`"
+            >
+              <i
+                :class="entry.kind === 'custom_event' ? 'pi pi-calendar' : 'pi pi-star-fill'"
+                aria-hidden="true"
+              />
+              {{ entry.name }}
+            </span>
+          </span>
+        </div>
         <div class="scheduler__actions">
           <Button
             v-tooltip.top="t('scheduler.settings')"
@@ -157,12 +178,15 @@ import {
   formatFullDate,
   formatWeekRange,
   weekdayDayOfMonth,
+  weekdayIsoDate,
 } from '@/shared/utils/calendar'
+import { calendarKindLabelKey, entriesForDate } from '@/shared/utils/calendarEntries'
 import { buildDaySlots } from '@/shared/utils/shifts'
 
 const store = useSchedulerStore()
 const settingsStore = useSchedulerSettingsStore()
 const {
+  calendarData,
   currentWeekKey,
   dayRows,
   error,
@@ -174,17 +198,23 @@ const { settings, schedulingWindow } = storeToRefs(settingsStore)
 const { t, locale } = useI18n()
 
 const weekdayOptions = computed(() =>
-  WEEKDAY_ORDER.map((value) => ({
-    value,
-    label: t(`weekday.${value}`),
-    dayOfMonth: weekdayDayOfMonth(currentWeekKey.value, value),
-  })),
+  WEEKDAY_ORDER.map((value) => {
+    const date = weekdayIsoDate(currentWeekKey.value, value)
+    return {
+      value,
+      label: t(`weekday.${value}`),
+      dayOfMonth: weekdayDayOfMonth(currentWeekKey.value, value),
+      date,
+      entries: entriesForDate(calendarData.value, date),
+    }
+  }),
 )
 const selectedDayLabel = computed(() => formatFullDate(selectedWeekdayDate.value, locale.value))
-const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value, locale.value))
-const errorMessage = computed(() =>
-  error.value ? t(error.value.key, error.value.params) : '',
+const selectedDayEntries = computed(() =>
+  entriesForDate(calendarData.value, selectedWeekdayDate.value),
 )
+const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value, locale.value))
+const errorMessage = computed(() => (error.value ? t(error.value.key, error.value.params) : ''))
 const slots = computed(() => buildDaySlots(schedulingWindow.value))
 const resetDialogVisible = ref(false)
 const settingsDialogVisible = ref(false)
@@ -295,14 +325,49 @@ function handleRemove(id: string): void {
   padding: 0 0.25rem;
 }
 
-.scheduler__selected-day {
+.scheduler__day-title {
   grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
+}
+
+.scheduler__selected-day {
   min-width: 0;
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.25;
   text-align: center;
   overflow-wrap: anywhere;
+}
+
+.scheduler__day-entries {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.scheduler__day-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  background: var(--color-shift-bar);
+  color: var(--color-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.scheduler__day-entry .pi {
+  font-size: 0.65rem;
 }
 
 .scheduler__actions {

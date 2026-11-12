@@ -3,6 +3,7 @@ import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useArchiveStore } from '@/modules/archive/stores/archive'
+import { useCalendarStore } from '@/modules/calendar/stores/calendar'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
 import {
   captureAppStorage,
@@ -77,6 +78,8 @@ export async function startDemo(scenarioId: string): Promise<boolean> {
 
     const archiveStore = useArchiveStore()
     archiveStore.resetStatus()
+
+    useCalendarStore().resetStatus()
 
     await router.push('/scheduler')
     await router.isReady()
@@ -156,4 +159,5 @@ export async function stopDemo(): Promise<void> {
   schedulerStore.selectWeekday('monday')
   schedulerStore.clearError()
   archiveStore.resetStatus()
+  useCalendarStore().resetStatus()
 }

@@ -256,6 +256,8 @@ export const useArchiveStore = defineStore('archive', () => {
           locale: useLocaleStore().locale,
           scheduler: { ...useSchedulerSettingsStore().settings },
         },
+        new Date(),
+        workspaceStore.calendar,
       )
       const blob = await gzipJson(backup)
       downloadBlob(timestampedName('backup', BACKUP_EXTENSION), blob)
@@ -297,6 +299,7 @@ export const useArchiveStore = defineStore('archive', () => {
     const workspaceStore = workspace()
     workspaceStore.setMembers(data.members)
     workspaceStore.replaceScheduleData(data.schedules, data.dayOffs)
+    workspaceStore.setCalendar(data.calendar)
 
     if (data.currentWeekKey) {
       workspaceStore.setCurrentWeekKey(data.currentWeekKey)

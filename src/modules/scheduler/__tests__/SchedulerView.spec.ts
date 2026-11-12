@@ -345,6 +345,63 @@ describe('SchedulerView', () => {
     expect(wrapper.text()).not.toContain('09:00–12:00')
   })
 
+  it('shows calendar markers after the weekday label', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setCalendar({
+      country: null,
+      region: null,
+      entries: [
+        {
+          id: 'holiday-1',
+          date: '2026-11-03',
+          name: 'Bank holiday',
+          kind: 'public_holiday',
+        },
+      ],
+    })
+    const wrapper = mountView()
+
+    const marker = wrapper.find('[data-test="weekday-calendar-marker-tuesday"]')
+    expect(marker.exists()).toBe(true)
+    expect(marker.attributes('title')).toBe('Public holiday: Bank holiday')
+    expect(wrapper.find('[data-test="weekday-tab-tuesday"]').text()).toContain(
+      'Calendar entries: Public holiday: Bank holiday',
+    )
+    expect(wrapper.find('[data-test="weekday-calendar-marker-monday"]').exists()).toBe(false)
+
+    await wrapper.find('[data-test="weekday-tab-tuesday"]').trigger('click')
+
+    const selectedDayEntries = wrapper.find('[data-test="scheduler-day-entries"]')
+    expect(selectedDayEntries.exists()).toBe(true)
+    expect(selectedDayEntries.text()).toContain('Bank holiday')
+    expect(wrapper.find('[data-test="scheduler-day-entry-holiday-1"]').exists()).toBe(true)
+  })
+
+  it('updates calendar markers when calendar data changes', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    const wrapper = mountView()
+
+    expect(wrapper.find('[data-test="weekday-calendar-marker-wednesday"]').exists()).toBe(false)
+
+    workspace.setCalendar({
+      country: null,
+      region: null,
+      entries: [
+        {
+          id: 'event-1',
+          date: '2026-11-04',
+          name: 'Team day',
+          kind: 'custom_event',
+        },
+      ],
+    })
+    await nextTick()
+
+    expect(wrapper.find('[data-test="weekday-calendar-marker-wednesday"]').exists()).toBe(true)
+  })
+
   it('renders the selected day, tab day numbers, and daily hours for a fixed week', async () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')
@@ -521,10 +578,7 @@ describe('SchedulerView', () => {
   it('omits future-start employee from weekly hours table', () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')
-    workspace.setMembers([
-      ada,
-      { ...bo, id: 'member-3', name: 'Cy', startDate: '2026-11-09' },
-    ])
+    workspace.setMembers([ada, { ...bo, id: 'member-3', name: 'Cy', startDate: '2026-11-09' }])
     const wrapper = mountView()
 
     expect(wrapper.find('[data-test="weekly-hours-row-member-1"]').exists()).toBe(true)
@@ -534,10 +588,7 @@ describe('SchedulerView', () => {
   it('disables holiday members in the grid and omits them from weekly hours', () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')
-    workspace.setMembers([
-      { ...ada, holidays: [getIsoWeek(new Date(2026, 10, 2))] },
-      bo,
-    ])
+    workspace.setMembers([{ ...ada, holidays: [getIsoWeek(new Date(2026, 10, 2))] }, bo])
     const wrapper = mountView()
 
     const row = wrapper.find('[data-test="shift-row-member-1"]')
@@ -564,9 +615,7 @@ describe('SchedulerView', () => {
     expect(wrapper.find('[data-test="previous-week"]').attributes('aria-label')).toBe(
       'Semana anterior',
     )
-    expect(wrapper.find('[data-test="restart-week"]').attributes('aria-label')).toBe(
-      'Borrar todo',
-    )
+    expect(wrapper.find('[data-test="restart-week"]').attributes('aria-label')).toBe('Borrar todo')
     expect(wrapper.find('[data-test="scheduler-settings"]').attributes('aria-label')).toBe(
       'Configuración del horario',
     )
@@ -594,8 +643,20 @@ describe('SchedulerView', () => {
     workspace.setCurrentWeekKey('2026-11-02')
     const adaWithId: TeamMember = { ...ada, id: 'member-1' }
     workspace.setMembers([adaWithId])
-    const shift1: Shift = { id: 'shift-1', memberId: 'member-1', weekday: 'monday', startMinute: 540, endMinute: 600 }
-    const shift2: Shift = { id: 'shift-2', memberId: 'member-1', weekday: 'monday', startMinute: 720, endMinute: 780 }
+    const shift1: Shift = {
+      id: 'shift-1',
+      memberId: 'member-1',
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 600,
+    }
+    const shift2: Shift = {
+      id: 'shift-2',
+      memberId: 'member-1',
+      weekday: 'monday',
+      startMinute: 720,
+      endMinute: 780,
+    }
     workspace.setShiftsForWeek('2026-11-02', [shift1, shift2])
     const wrapper = mountView()
     const grid = wrapper.findComponent(ShiftGrid)
@@ -611,5 +672,4 @@ describe('SchedulerView', () => {
     expect(wrapper.text()).toContain('15:00–16:00')
     expect(wrapper.text()).not.toContain('12:00–13:00')
   })
-
 })

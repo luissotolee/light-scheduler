@@ -65,6 +65,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   const currentWeekKey = computed(() => workspace().currentWeekKey)
   const currentWeekShifts = computed(() => workspace().currentWeekShifts)
   const currentWeekDayOffs = computed(() => workspace().currentWeekDayOffs)
+  const calendarData = computed(() => workspace().calendar)
   const members = computed(() => workspace().activeMembers)
 
   const dayOffCounts = computed(() => countDaysOffByMember(currentWeekDayOffs.value))
@@ -373,6 +374,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     currentWeekKey,
     currentWeekShifts,
     currentWeekDayOffs,
+    calendarData,
     dayOffCounts,
     members,
     selectedWeekdayDate,

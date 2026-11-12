@@ -18,20 +18,46 @@
       :data-test="`weekday-tab-${weekday.value}`"
       @click="emit('update:modelValue', weekday.value)"
     >
-      {{ weekday.label }}
-      <span class="weekday-tabs__day">{{ formatOrdinal(weekday.dayOfMonth, locale) }}</span>
+      {{ weekday.label }}<span
+        v-if="weekday.entries.length > 0"
+        class="weekday-tabs__calendar"
+        :title="markerTitle(weekday)"
+        :data-test="`weekday-calendar-marker-${weekday.value}`"
+        aria-hidden="true"
+      ><i
+        v-if="hasHoliday(weekday)"
+        class="pi pi-star-fill weekday-tabs__calendar-holiday"
+      /><i
+        v-if="hasEvent(weekday)"
+        class="pi pi-calendar weekday-tabs__calendar-event"
+      /><span v-if="weekday.entries.length > 2" class="weekday-tabs__calendar-count">{{
+        weekday.entries.length
+      }}</span></span><span
+        v-if="weekday.entries.length > 0"
+        class="weekday-tabs__sr"
+      >{{ t('scheduler.calendar.markerAria', { entries: markerTitle(weekday) }) }}</span>{{ ' ' }}<span
+        class="weekday-tabs__day"
+      >{{ formatOrdinal(weekday.dayOfMonth, locale) }}</span>
     </button>
   </nav>
 </template>
 
 <script setup lang="ts">
-import type { Weekday } from '@/types'
+import type { CalendarEntry, Weekday } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { formatOrdinal } from '@/shared/utils/calendar'
+import { calendarKindLabelKey } from '@/shared/utils/calendarEntries'
+
+interface WeekdayTab {
+  value: Weekday
+  label: string
+  dayOfMonth: number
+  entries: CalendarEntry[]
+}
 
 defineProps<{
   modelValue: Weekday
-  weekdays: { value: Weekday; label: string; dayOfMonth: number }[]
+  weekdays: WeekdayTab[]
 }>()
 
 const emit = defineEmits<{
@@ -39,6 +65,22 @@ const emit = defineEmits<{
 }>()
 
 const { t, locale } = useI18n()
+
+function hasHoliday(weekday: WeekdayTab): boolean {
+  return weekday.entries.some(
+    (entry) => entry.kind === 'public_holiday' || entry.kind === 'custom_holiday',
+  )
+}
+
+function hasEvent(weekday: WeekdayTab): boolean {
+  return weekday.entries.some((entry) => entry.kind === 'custom_event')
+}
+
+function markerTitle(weekday: WeekdayTab): string {
+  return weekday.entries
+    .map((entry) => `${t(calendarKindLabelKey(entry.kind))}: ${entry.name}`)
+    .join(' · ')
+}
 </script>
 
 <style scoped>
@@ -54,6 +96,7 @@ const { t, locale } = useI18n()
 }
 
 .weekday-tabs__tab {
+  position: relative;
   padding: 0.4rem 0.6rem;
   padding-left: calc(0.6rem - 2px);
   border: 1px solid transparent;
@@ -87,6 +130,41 @@ const { t, locale } = useI18n()
 .weekday-tabs__tab:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+.weekday-tabs__calendar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: 0.2rem;
+  vertical-align: baseline;
+}
+
+.weekday-tabs__calendar-holiday {
+  color: var(--color-vacation-text);
+  font-size: 0.7rem;
+}
+
+.weekday-tabs__calendar-event {
+  color: var(--color-accent);
+  font-size: 0.7rem;
+}
+
+.weekday-tabs__calendar-count {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.weekday-tabs__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .weekday-tabs__day {

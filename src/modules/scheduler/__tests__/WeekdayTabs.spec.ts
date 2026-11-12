@@ -2,11 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import WeekdayTabs from '@/modules/scheduler/components/WeekdayTabs.vue'
-import type { Weekday } from '@/types'
+import type { CalendarEntry, Weekday } from '@/types'
 
-const weekdays: { value: Weekday; label: string; dayOfMonth: number }[] = [
-  { value: 'monday', label: 'Monday', dayOfMonth: 2 },
-  { value: 'tuesday', label: 'Tuesday', dayOfMonth: 3 },
+const weekdays: {
+  value: Weekday
+  label: string
+  dayOfMonth: number
+  entries: CalendarEntry[]
+}[] = [
+  { value: 'monday', label: 'Monday', dayOfMonth: 2, entries: [] },
+  { value: 'tuesday', label: 'Tuesday', dayOfMonth: 3, entries: [] },
 ]
 
 describe('WeekdayTabs', () => {
@@ -53,5 +58,54 @@ describe('WeekdayTabs', () => {
     await wrapper.find('[data-test="weekday-tab-tuesday"]').trigger('click')
 
     expect(wrapper.emitted('update:modelValue')).toEqual([['tuesday']])
+  })
+
+  it('shows a marker after the weekday label when the day has calendar entries', () => {
+    const withEntries = [
+      {
+        ...weekdays[0],
+        entries: [
+          {
+            id: 'holiday-1',
+            date: '2026-11-02',
+            name: 'Bank holiday',
+            kind: 'public_holiday' as const,
+          },
+        ],
+      },
+      {
+        ...weekdays[1],
+        entries: [
+          {
+            id: 'event-1',
+            date: '2026-11-03',
+            name: 'Team day',
+            kind: 'custom_event' as const,
+          },
+        ],
+      },
+    ]
+    const wrapper = mount(WeekdayTabs, { props: { modelValue: 'monday', weekdays: withEntries } })
+
+    const mondayMarker = wrapper.find('[data-test="weekday-calendar-marker-monday"]')
+    const tuesdayMarker = wrapper.find('[data-test="weekday-calendar-marker-tuesday"]')
+
+    expect(mondayMarker.exists()).toBe(true)
+    expect(mondayMarker.find('.pi-star-fill').exists()).toBe(true)
+    expect(mondayMarker.attributes('title')).toBe('Public holiday: Bank holiday')
+    expect(wrapper.find('[data-test="weekday-tab-monday"]').text()).toContain(
+      'Calendar entries: Public holiday: Bank holiday',
+    )
+
+    expect(tuesdayMarker.exists()).toBe(true)
+    expect(tuesdayMarker.find('.pi-calendar').exists()).toBe(true)
+    expect(tuesdayMarker.attributes('title')).toBe('Custom event: Team day')
+  })
+
+  it('omits the marker when a day has no calendar entries', () => {
+    const wrapper = mount(WeekdayTabs, { props: { modelValue: 'monday', weekdays } })
+
+    expect(wrapper.find('[data-test="weekday-calendar-marker-monday"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="weekday-calendar-marker-tuesday"]').exists()).toBe(false)
   })
 })

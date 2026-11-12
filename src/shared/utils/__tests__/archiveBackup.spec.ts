@@ -11,6 +11,10 @@ import {
   parseBackup,
   readBackupFile,
 } from '@/shared/utils/archiveBackup'
+import {
+  MAX_CALENDAR_NAME_LENGTH,
+  createDefaultCalendarData,
+} from '@/shared/utils/calendarEntries'
 
 const ada: TeamMember = {
   id: 'member-1',
@@ -220,6 +224,50 @@ describe('buildBackup', () => {
 
     expect(backup.settings).toBeUndefined()
   })
+
+  it('writes an empty calendar section by default', () => {
+    const backup = buildBackup([ada], {}, {}, '2026-11-02')
+
+    expect(backup.calendar).toEqual(createDefaultCalendarData())
+  })
+
+  it('writes calendar entries without their internal ids', () => {
+    const backup = buildBackup([ada], {}, {}, '2026-11-02', {}, new Date(), {
+      country: 'ES',
+      region: 'AN',
+      entries: [
+        {
+          id: 'entry-1',
+          date: '2026-11-03',
+          name: 'Public holiday',
+          kind: 'public_holiday',
+          countryCode: 'ES',
+          region: 'AN',
+        },
+        {
+          id: 'entry-2',
+          date: '2026-11-05',
+          name: 'Team day',
+          kind: 'custom_event',
+        },
+      ],
+    })
+
+    expect(backup.calendar).toEqual({
+      country: 'ES',
+      region: 'AN',
+      entries: [
+        {
+          date: '2026-11-03',
+          name: 'Public holiday',
+          kind: 'public_holiday',
+          countryCode: 'ES',
+          region: 'AN',
+        },
+        { date: '2026-11-05', name: 'Team day', kind: 'custom_event' },
+      ],
+    })
+  })
 })
 
 describe('parseBackup', () => {
@@ -292,6 +340,183 @@ describe('parseBackup', () => {
     expect(parsed.data.dayOffs).toEqual({})
     expect(parsed.data.currentWeekKey).toBeUndefined()
     expect(parsed.data.settings).toBeUndefined()
+    expect(parsed.data.calendar).toEqual(createDefaultCalendarData())
+  })
+
+  it('restores a legacy backup without calendar using the default', () => {
+    const parsed = parseBackup(backupRecord())
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.calendar).toEqual(createDefaultCalendarData())
+  })
+
+  it('parses calendar entries and ignores unknown fields', () => {
+    const parsed = parseBackup(
+      backupRecord({
+        calendar: {
+          country: 'ES',
+          region: 'AN',
+          futureField: 'ignored',
+          entries: [
+            {
+              date: '2026-11-03',
+              name: '  Public holiday  ',
+              kind: 'public_holiday',
+              countryCode: 'ES',
+              region: 'AN',
+              futureField: 'ignored',
+            },
+            { date: '2026-11-05', name: 'Team day', kind: 'custom_event' },
+          ],
+        },
+      }),
+    )
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.calendar.country).toBe('ES')
+    expect(parsed.data.calendar.region).toBe('AN')
+    expect(parsed.data.calendar.entries).toHaveLength(2)
+    expect(parsed.data.calendar.entries[0]).toMatchObject({
+      date: '2026-11-03',
+      name: 'Public holiday',
+      kind: 'public_holiday',
+      countryCode: 'ES',
+      region: 'AN',
+    })
+    expect(parsed.data.calendar.entries[0].id).toBeTruthy()
+    expect(parsed.data.calendar.entries[1]).toMatchObject({
+      date: '2026-11-05',
+      name: 'Team day',
+      kind: 'custom_event',
+    })
+  })
+
+  it('round-trips calendar data and regenerates entry ids', () => {
+    const backup = buildBackup([ada], {}, {}, '2026-11-02', {}, new Date(), {
+      country: 'ES',
+      region: 'AN',
+      entries: [
+        {
+          id: 'entry-1',
+          date: '2026-11-03',
+          name: 'Public holiday',
+          kind: 'public_holiday',
+          countryCode: 'ES',
+          region: 'AN',
+        },
+      ],
+    })
+    const parsed = parseBackup(JSON.parse(JSON.stringify(backup)))
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.calendar.entries).toHaveLength(1)
+    expect(parsed.data.calendar.entries[0]).toMatchObject({
+      date: '2026-11-03',
+      name: 'Public holiday',
+      kind: 'public_holiday',
+      countryCode: 'ES',
+      region: 'AN',
+    })
+    expect(parsed.data.calendar.entries[0].id).not.toBe('entry-1')
+  })
+
+  it('re-exports parsed calendar data', () => {
+    const parsed = parseBackup(
+      backupRecord({
+        calendar: {
+          country: 'ES',
+          region: 'AN',
+          entries: [{ date: '2026-11-03', name: 'Holiday', kind: 'custom_holiday' }],
+        },
+      }),
+    )
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+
+    const reexported = buildBackup(
+      [ada],
+      {},
+      {},
+      '2026-11-02',
+      {},
+      new Date(),
+      parsed.data.calendar,
+    )
+
+    expect(reexported.calendar).toEqual({
+      country: 'ES',
+      region: 'AN',
+      entries: [{ date: '2026-11-03', name: 'Holiday', kind: 'custom_holiday' }],
+    })
+  })
+
+  it('validates the calendar section', () => {
+    expect(parseBackup(backupRecord({ calendar: 'nope' }))).toEqual({
+      ok: false,
+      error: 'archive.invalidBackup',
+    })
+    expect(parseBackup(backupRecord({ calendar: { entries: 'nope' } }))).toEqual({
+      ok: false,
+      error: 'archive.invalidBackup',
+    })
+    expect(parseBackup(backupRecord({ calendar: { country: 1 } }))).toEqual({
+      ok: false,
+      error: 'errors.invalidCountry',
+    })
+    expect(parseBackup(backupRecord({ calendar: { region: 1 } }))).toEqual({
+      ok: false,
+      error: 'errors.invalidRegion',
+    })
+    expect(
+      parseBackup(
+        backupRecord({
+          calendar: {
+            entries: [{ date: 'nope', name: 'Holiday', kind: 'public_holiday' }],
+          },
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.invalidCalendarDate' })
+    expect(
+      parseBackup(
+        backupRecord({
+          calendar: { entries: [{ date: '2026-11-03', name: ' ', kind: 'public_holiday' }] },
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.requiredName' })
+    expect(
+      parseBackup(
+        backupRecord({
+          calendar: {
+            entries: [
+              {
+                date: '2026-11-03',
+                name: 'x'.repeat(MAX_CALENDAR_NAME_LENGTH + 1),
+                kind: 'public_holiday',
+              },
+            ],
+          },
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.calendarNameTooLong' })
+    expect(
+      parseBackup(
+        backupRecord({
+          calendar: { entries: [{ date: '2026-11-03', name: 'Holiday', kind: 'nope' }] },
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.invalidCalendarKind' })
+    expect(
+      parseBackup(
+        backupRecord({ calendar: { entries: [{ date: '2026-11-03', name: 'Holiday' }] } }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.invalidCalendarKind' })
+    expect(parseBackup(backupRecord({ calendar: { entries: ['nope'] } }))).toEqual({
+      ok: false,
+      error: 'errors.invalidCalendarEntry',
+    })
   })
 
   it('round-trips user settings', () => {

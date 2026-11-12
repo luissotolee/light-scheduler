@@ -1,5 +1,14 @@
-import type { DayOff, HolidayWeek, Shift, TeamMember, Weekday, WeekKey } from '@/types'
+import type {
+  CalendarData,
+  DayOff,
+  HolidayWeek,
+  Shift,
+  TeamMember,
+  Weekday,
+  WeekKey,
+} from '@/types'
 import { getIsoWeeksInYear, parseIsoDate } from '@/shared/utils/calendar'
+import { parseCalendarData } from '@/shared/utils/calendarEntries'
 import {
   createSequentialEmpId,
   isContract,
@@ -18,6 +27,7 @@ export interface PersistedWorkspace {
   schedules: Record<WeekKey, Shift[]>
   dayOffs: Record<WeekKey, DayOff[]>
   currentWeekKey: WeekKey
+  calendar: CalendarData
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -174,6 +184,9 @@ export function parsePersistedWorkspace(value: unknown): PersistedWorkspace | nu
   const currentWeekKey = parseIsoDate(value.currentWeekKey)
   if (currentWeekKey === null) return null
 
+  const calendar = parseCalendarData(value.calendar)
+  if (calendar === null) return null
+
   if (value.version === WORKSPACE_SCHEMA_VERSION) {
     const members = parseList(value.members, isTeamMember)
     if (members === null) return null
@@ -184,6 +197,7 @@ export function parsePersistedWorkspace(value: unknown): PersistedWorkspace | nu
       schedules,
       dayOffs,
       currentWeekKey,
+      calendar,
     }
   }
 
@@ -201,6 +215,7 @@ export function parsePersistedWorkspace(value: unknown): PersistedWorkspace | nu
       schedules,
       dayOffs,
       currentWeekKey,
+      calendar,
     }
   }
 

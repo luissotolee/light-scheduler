@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
-import { getIsoWeek } from '@/shared/utils/calendar'
+import { getIsoWeek, weekdayIsoDate } from '@/shared/utils/calendar'
 import { parsePersistedWorkspace, WORKSPACE_SCHEMA_VERSION } from '@/shared/utils/persistence'
 
 describe('demoWorkspace', () => {
@@ -18,6 +18,29 @@ describe('demoWorkspace', () => {
     expect(typeof workspace.schedules).toBe('object')
     expect(typeof workspace.dayOffs).toBe('object')
     expect(typeof workspace.currentWeekKey).toBe('string')
+    expect(typeof workspace.calendar).toBe('object')
+  })
+
+  it('includes calendar entries on the current week', () => {
+    const now = new Date('2026-11-09T12:00:00')
+    const workspace = buildDemoWorkspace(now)
+
+    expect(workspace.calendar.country).toBe('ES')
+    expect(workspace.calendar.region).toBe('AN')
+    expect(workspace.calendar.entries.some((entry) => entry.kind === 'public_holiday')).toBe(true)
+    expect(workspace.calendar.entries.some((entry) => entry.kind === 'custom_event')).toBe(true)
+    expect(workspace.calendar.entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: weekdayIsoDate(workspace.currentWeekKey, 'tuesday'),
+          kind: 'public_holiday',
+        }),
+        expect.objectContaining({
+          date: weekdayIsoDate(workspace.currentWeekKey, 'thursday'),
+          kind: 'custom_event',
+        }),
+      ]),
+    )
   })
 
   it('includes mock employees', () => {

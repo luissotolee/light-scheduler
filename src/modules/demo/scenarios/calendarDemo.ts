@@ -1,0 +1,85 @@
+import type { DemoScenario } from '@/modules/demo/types'
+
+export const calendarDemoScenario: DemoScenario = {
+  id: 'calendar-demo',
+  steps: [
+    {
+      id: 'calendar-intro',
+      action: 'navigate',
+      route: '/calendar',
+      narrationKey: 'demo.scenario.calendar.intro',
+      pauseMs: 2700,
+    },
+    {
+      id: 'calendar-toolbar',
+      action: 'spotlight',
+      target: { testId: 'calendar-country' },
+      narrationKey: 'demo.scenario.calendar.toolbar',
+      pauseMs: 2900,
+    },
+    {
+      id: 'calendar-fetch',
+      action: 'click',
+      target: { testId: 'calendar-fetch' },
+      narrationKey: 'demo.scenario.calendar.fetch',
+      pauseMs: 2700,
+    },
+    {
+      id: 'calendar-fetched',
+      action: 'wait',
+      waitFor: 'calendar-public-holiday-count',
+      narrationKey: 'demo.scenario.calendar.fetched',
+      pauseMs: 2700,
+    },
+    {
+      id: 'calendar-month',
+      action: 'spotlight',
+      target: { testId: 'calendar-month-grid' },
+      narrationKey: 'demo.scenario.calendar.month',
+      pauseMs: 2700,
+    },
+    {
+      id: 'calendar-add',
+      action: 'click',
+      target: { testId: 'calendar-add-entry' },
+      narrationKey: 'demo.scenario.calendar.add',
+      pauseMs: 2400,
+    },
+    {
+      id: 'calendar-form',
+      action: 'wait',
+      waitFor: 'calendar-entry-form',
+      narrationKey: 'demo.scenario.calendar.form',
+      pauseMs: 2000,
+    },
+    {
+      id: 'calendar-name',
+      action: 'fill',
+      target: { testId: 'calendar-entry-name' },
+      value: 'Team meeting',
+      narrationKey: 'demo.scenario.calendar.name',
+      pauseMs: 2700,
+    },
+    {
+      id: 'calendar-save',
+      action: 'click',
+      target: { testId: 'calendar-entry-save' },
+      narrationKey: 'demo.scenario.calendar.save',
+      pauseMs: 2700,
+    },
+    {
+      id: 'calendar-saved',
+      action: 'spotlight',
+      target: { testId: 'calendar-entry-list' },
+      narrationKey: 'demo.scenario.calendar.saved',
+      pauseMs: 2400,
+    },
+    {
+      id: 'calendar-finish',
+      action: 'spotlight',
+      target: { testId: 'calendar-month-grid' },
+      narrationKey: 'demo.scenario.calendar.finish',
+      pauseMs: 2700,
+    },
+  ],
+}

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@primeuix/themes": "^1.2.5",
+    "date-holidays": "^3.39.1",
     "pinia": "^4.1.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",

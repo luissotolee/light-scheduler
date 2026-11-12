@@ -26,12 +26,13 @@ Load the `backup-import-export` skill for the `.json.gz` build/parse/compress/do
 
 ## Guided demo parity
 
-The in-app guided demo covers four modules: **employees**, **scheduler**, **summary**, and **archive**. Any change to their behavior or layout must update the matching scenario in `src/modules/demo/scenarios/` in the same change — the demo is part of the feature, not an afterthought.
+The in-app guided demo covers five modules: **employees**, **scheduler**, **calendar**, **summary**, and **archive**. Any change to their behavior or layout must update the matching scenario in `src/modules/demo/scenarios/` in the same change — the demo is part of the feature, not an afterthought.
 
 | Module change | Scenario to update |
 | ------------- | ------------------ |
 | `employees/`  | `employeesDemo.ts` |
 | `scheduler/`  | `schedulerDemo.ts` |
+| `calendar/`   | `calendarDemo.ts`  |
 | `summary/`    | `summaryDemo.ts`   |
 | `archive/`    | `archiveDemo.ts`   |
 
@@ -39,7 +40,7 @@ The in-app guided demo covers four modules: **employees**, **scheduler**, **summ
 - **Layout or visual change** (element moved, reordered, resized, replaced, or wrapped) → verify the step resolves to the intended element and update its `target` (`testId`, `within`, `index`) so the cursor and ring always point at the right place. A step that still runs but highlights the wrong spot is a defect.
 - **New demoed module behavior** → add a step demonstrating it; keep the scenario's step order and narration coherent.
 - **`data-test` is the targeting contract.** Renaming or removing a `data-test` requires updating every scenario step and its spec that references it.
-- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `summaryDemo`, `archiveDemo`); they assert unique step IDs, translated narration keys, and known `data-test` targets/routes.
+- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `calendarDemo`, `summaryDemo`, `archiveDemo`); they assert unique step IDs, translated narration keys, and known `data-test` targets/routes.
 
 Details: `.kilo/skills/guided-demo/SKILL.md`.
 

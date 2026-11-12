@@ -59,6 +59,7 @@ export interface BackupFile {
   employees: BackupEmployee[]
   schedules: BackupSchedules
   dayOffs?: BackupDayOffs
+  calendar: BackupCalendar
 }
 ```
 
@@ -67,7 +68,8 @@ export interface BackupFile {
 - Empty weeks are omitted in both maps.
 - `employees` carries `emp_id`, `name`, duty, contract, weekly hours, holidays, `active`, `startDate`, plus optional `endDate`, `email`, `phone`, and `comment`.
 - `settings` carries the locale and scheduler settings when they are present.
-- `BackupData` is the domain-facing shape: `members`, `schedules` keyed by week key, `dayOffs` keyed by week key, optional `currentWeekKey`, optional `settings`.
+- `calendar` carries the selected `country`/`region` and public-holiday/custom entries; entry internal ids are regenerated on parse. A missing section restores the exported empty default.
+- `BackupData` is the domain-facing shape: `members`, `schedules` keyed by week key, `dayOffs` keyed by week key, optional `currentWeekKey`, optional `settings`, and `calendar`.
 
 ## 3. Building: `buildBackup`
 
@@ -79,6 +81,7 @@ export function buildBackup(
   currentWeekKey: WeekKey,
   settingsOrNow: BackupSettings | Date = {},
   nowOrSettings: Date | BackupSettings = new Date(),
+  calendar: CalendarData = createDefaultCalendarData(),
 ): BackupFile
 ```
 
@@ -196,7 +199,7 @@ Use `Blob.arrayBuffer()`, `gzipJson`, and `readBackupFile` to exercise the real 
 - [ ] Backup remains a single `.json.gz` file with `BACKUP_FORMAT`, `BACKUP_VERSION`, and `exportedAt`.
 - [ ] Build filters unknown members, omits empty weeks, and sorts deterministically.
 - [ ] Parse never throws and returns a `MessageKey` on every failure path.
-- [ ] Missing optional sections (`schedules`, `dayOffs`, `settings`, `currentWeekKey`) are tolerated.
+- [ ] Missing optional sections (`schedules`, `dayOffs`, `settings`, `currentWeekKey`, `calendar`) are tolerated.
 - [ ] Compression uses native streams and enforces `MAX_BACKUP_BYTES`.
 - [ ] Download uses `downloadBlob` + `timestampedName('backup', BACKUP_EXTENSION)`.
 - [ ] Restore is confirmation-gated, replaces the workspace, and applies only present settings.

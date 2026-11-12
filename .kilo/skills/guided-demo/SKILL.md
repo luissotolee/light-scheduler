@@ -15,7 +15,7 @@ description: Build and extend the in-app real-time guided demo (mock data, local
 - Adding or changing `data-test` selectors used by demo steps
 - Updating demo fixtures (`buildDemoWorkspace`)
 - Adding i18n keys for demo narration or controls
-- Changing behavior, functionality, or layout in any demoed module: **employees**, **scheduler**, **summary**, or **archive**
+- Changing behavior, functionality, or layout in any demoed module: **employees**, **scheduler**, **calendar**, **summary**, or **archive**
 
 ## Keeping scenarios in sync with the app
 
@@ -24,7 +24,8 @@ The demo must mirror the current app. Every change to a demoed module updates it
 | Module | Scenario | Demoed surface |
 | ------ | -------- | -------------- |
 | `src/modules/employees/` | `scenarios/employeesDemo.ts` | search, sort, add, edit, holidays, active filter, deactivate/reactivate, remove |
-| `src/modules/scheduler/` | `scenarios/schedulerDemo.ts` | weeks, week picker, weekdays, shift CRUD, day off, holidays, weekly hours |
+| `src/modules/scheduler/` | `scenarios/schedulerDemo.ts` | weeks, week picker, weekdays, shift CRUD, day off, holidays, calendar markers, weekly hours |
+| `src/modules/calendar/` | `scenarios/calendarDemo.ts` | country/region fetch, month grid, custom holidays/events |
 | `src/modules/summary/`  | `scenarios/summaryDemo.ts`  | week navigation, summary table, details, print, PDF |
 | `src/modules/archive/`  | `scenarios/archiveDemo.ts`  | backup export and restore entry points |
 
@@ -33,7 +34,7 @@ The demo must mirror the current app. Every change to a demoed module updates it
 - **New element to demonstrate** → add a stable `data-test` in the owning component, then reference it from the step.
 - **Renamed or removed `data-test`** → update every scenario step and every spec that references it.
 - **Removed feature** → remove or reword the steps and narration that describe it; do not leave stale steps.
-- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `summaryDemo`, `archiveDemo`); they assert unique step IDs, narration keys in both catalogs, and known `data-test` targets/routes. Manually confirm each step points at the intended element.
+- Run the scenario specs (`employeesDemo`, `schedulerDemo`, `calendarDemo`, `summaryDemo`, `archiveDemo`); they assert unique step IDs, narration keys in both catalogs, and known `data-test` targets/routes. Manually confirm each step points at the intended element.
 
 ## Architecture map
 
@@ -247,7 +248,7 @@ npm run build
 - `dom.spec.ts` — target resolution, waitForTarget, click/pointerClick/press/fill (including nested inputs), reduced motion.
 - `DemoModeButton.spec.ts` — picker opens, each option starts its scenario, cancel does not start.
 - `DemoPickerDialog.spec.ts` (covered via `DemoModeButton.spec.ts`) — three translated options.
-- `employeesDemo.spec.ts` / `schedulerDemo.spec.ts` / `summaryDemo.spec.ts` / `archiveDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
+- `employeesDemo.spec.ts` / `schedulerDemo.spec.ts` / `calendarDemo.spec.ts` / `summaryDemo.spec.ts` / `archiveDemo.spec.ts` — unique step IDs, narration keys in both catalogs, known targets/routes.
 - `DemoOverlay.spec.ts` — conditional render, narration translation, progress, controls, keyboard Exit, restored toast, a11y attrs.
 
 ### Manual verification

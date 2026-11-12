@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import type { DayOff, Shift, TeamMember, WeekKey } from '@/types'
+import type { CalendarData, DayOff, Shift, TeamMember, WeekKey } from '@/types'
 import { getWeekKey } from '@/shared/utils/calendar'
+import { createDefaultCalendarData } from '@/shared/utils/calendarEntries'
 import {
   parsePersistedWorkspace,
   serializeWorkspace,
@@ -16,6 +17,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const schedules = ref<Record<WeekKey, Shift[]>>({})
   const dayOffs = ref<Record<WeekKey, DayOff[]>>({})
   const currentWeekKey = ref<WeekKey>(getWeekKey(new Date()))
+  const calendar = ref<CalendarData>(createDefaultCalendarData())
   const dataLoaded = ref(false)
   const schemaVersion = WORKSPACE_SCHEMA_VERSION
 
@@ -27,7 +29,8 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     () =>
       members.value.length > 0 ||
       Object.keys(schedules.value).length > 0 ||
-      Object.keys(dayOffs.value).length > 0,
+      Object.keys(dayOffs.value).length > 0 ||
+      calendar.value.entries.length > 0,
   )
 
   function applyPersisted(persisted: PersistedWorkspace | null): void {
@@ -36,6 +39,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       schedules.value = {}
       dayOffs.value = {}
       currentWeekKey.value = getWeekKey(new Date())
+      calendar.value = createDefaultCalendarData()
       return
     }
 
@@ -43,6 +47,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     schedules.value = persisted.schedules
     dayOffs.value = persisted.dayOffs
     currentWeekKey.value = persisted.currentWeekKey
+    calendar.value = persisted.calendar
   }
 
   function hydrate(): void {
@@ -53,7 +58,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   hydrate()
 
   watch(
-    [members, schedules, dayOffs, currentWeekKey],
+    [members, schedules, dayOffs, currentWeekKey, calendar],
     () => {
       writeJson(
         WORKSPACE_STORAGE_KEY,
@@ -62,6 +67,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
           schedules: schedules.value,
           dayOffs: dayOffs.value,
           currentWeekKey: currentWeekKey.value,
+          calendar: calendar.value,
         }),
       )
     },
@@ -154,6 +160,10 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     currentWeekKey.value = weekKey
   }
 
+  function setCalendar(next: CalendarData): void {
+    calendar.value = next
+  }
+
   function markLoaded(): void {
     dataLoaded.value = true
   }
@@ -171,6 +181,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     schedules.value = {}
     dayOffs.value = {}
     currentWeekKey.value = getWeekKey(new Date())
+    calendar.value = createDefaultCalendarData()
     dataLoaded.value = false
     clearPersistedWorkspace()
   }
@@ -180,6 +191,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     schedules,
     dayOffs,
     currentWeekKey,
+    calendar,
     dataLoaded,
     schemaVersion,
     memberCount,
@@ -196,6 +208,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     replaceScheduleData,
     setDayOffsForWeek,
     setCurrentWeekKey,
+    setCalendar,
     markLoaded,
     loadWorkspace,
     reset,

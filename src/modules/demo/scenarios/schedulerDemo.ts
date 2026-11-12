@@ -32,6 +32,20 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 2900,
     },
     {
+      id: 'scheduler-calendar-markers',
+      action: 'spotlight',
+      target: { testId: 'weekday-calendar-marker-tuesday' },
+      narrationKey: 'demo.scenario.scheduler.calendarMarkers',
+      pauseMs: 2700,
+    },
+    {
+      id: 'scheduler-day-entries',
+      action: 'spotlight',
+      target: { testId: 'scheduler-day-entries' },
+      narrationKey: 'demo.scenario.scheduler.dayEntries',
+      pauseMs: 2700,
+    },
+    {
       id: 'scheduler-grid',
       action: 'spotlight',
       target: { testId: 'shift-grid' },

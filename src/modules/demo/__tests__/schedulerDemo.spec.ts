@@ -10,6 +10,8 @@ const knownTargets = [
   'scheduler-week-label',
   'week-1',
   'weekday-tab-tuesday',
+  'weekday-calendar-marker-tuesday',
+  'scheduler-day-entries',
   'shift-grid',
   'shift-track',
   'shift-bar',
@@ -106,6 +108,7 @@ describe('demoScenarios registry', () => {
   it('registers all demo scenarios', () => {
     expect(demoScenarios['employees-demo']).toBeDefined()
     expect(demoScenarios['scheduler-demo']).toBeDefined()
+    expect(demoScenarios['calendar-demo']).toBeDefined()
     expect(demoScenarios['summary-demo']).toBeDefined()
     expect(demoScenarios['archive-demo']).toBeDefined()
     expect(getDemoScenario('scheduler-demo')).toBe(schedulerDemoScenario)
@@ -113,10 +116,11 @@ describe('demoScenarios registry', () => {
 
   it('listDemoScenarios returns all scenarios', () => {
     const list = listDemoScenarios()
-    expect(list).toHaveLength(4)
+    expect(list).toHaveLength(5)
     expect(list.map((scenario) => scenario.id)).toEqual([
       'employees-demo',
       'scheduler-demo',
+      'calendar-demo',
       'summary-demo',
       'archive-demo',
     ])
