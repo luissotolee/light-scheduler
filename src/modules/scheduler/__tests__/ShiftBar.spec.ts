@@ -363,7 +363,7 @@ describe('ShiftBar', () => {
     await nextTick()
 
     expect(wrapper.emitted('longPress')).toEqual([['shift-1']])
-    expect(wrapper.emitted('moveCancel')).toEqual([[]])
+    expect(wrapper.emitted('moveCancel')).toBeUndefined()
     vi.useRealTimers()
   })
 
@@ -411,5 +411,163 @@ describe('ShiftBar', () => {
 
     expect(wrapper.emitted('remove')).toBeUndefined()
     expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('does not move a shift on a single touch drag', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountBar()
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointermove', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 148,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 148,
+      clientY: 10,
+    })
+
+    expect(wrapper.emitted('select')).toBeUndefined()
+    expect(wrapper.emitted('moveStart')).toBeUndefined()
+    expect(wrapper.emitted('moveEnd')).toBeUndefined()
+    expect(wrapper.emitted('resize')).toBeUndefined()
+  })
+
+  it('selects and moves a shift after a double tap', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountBar()
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointermove', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 148,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 148,
+      clientY: 10,
+    })
+
+    expect(wrapper.emitted('select')).toEqual([['shift-1']])
+    expect(wrapper.emitted('moveStart')).toEqual([['shift-1']])
+    expect(wrapper.emitted('moveEnd')).toEqual([
+      [{ id: 'shift-1', startMinute: 570, endMinute: 630, clientY: 10 }],
+    ])
+  })
+
+  it('drags a selected shift on a single touch press', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mount(ShiftBar, {
+      props: {
+        shift,
+        memberName: 'Ada',
+        duty: 'employee',
+        selected: true,
+      },
+    })
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    expect(bar.attributes('data-pan-ignore')).toBe('true')
+
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointermove', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 148,
+      clientY: 10,
+    })
+    await pointer(bar.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 148,
+      clientY: 10,
+    })
+
+    expect(wrapper.emitted('moveEnd')).toEqual([
+      [{ id: 'shift-1', startMinute: 570, endMinute: 630, clientY: 10 }],
+    ])
+  })
+
+  it('keeps a selected shift when a double tap does not drag', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountBar()
+    const bar = wrapper.find('[data-test="shift-bar"]')
+
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+    })
+    await pointer(bar.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+    })
+    await pointer(bar.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+    })
+    await pointer(bar.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 100,
+    })
+
+    expect(wrapper.emitted('select')).toEqual([['shift-1']])
+    expect(wrapper.emitted('moveEnd')).toBeUndefined()
+    expect(wrapper.emitted('moveCancel')).toEqual([[]])
   })
 })

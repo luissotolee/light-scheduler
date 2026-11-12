@@ -55,8 +55,8 @@ export const es: Messages = {
   'scheduler.description':
     'Haz clic en una celda para un turno de 3 horas, arrastra para elegir un rango personalizado, arrastra los bordes de una barra para ajustarla y haz clic derecho en una barra para eliminarla.',
   'scheduler.descriptionPhone':
-    'Toca una celda para un turno de 3 horas, arrastra para elegir un rango personalizado, arrastra los bordes de una barra para ajustarla; mantén pulsado un turno y toca × para eliminarlo. Usa dos dedos para desplazar la tabla del horario.',
-  'scheduler.gridScrollAria': 'Tabla del horario desplazable. Usa dos dedos para moverte.',
+    'Toca una celda para un turno de 3 horas. Arrastra la tabla para desplazarte. Haz doble toque en un turno y arrástralo para moverlo. Arrastra los bordes de un turno para cambiar su duración, o mantén pulsado un turno y toca × para eliminarlo.',
+  'scheduler.gridScrollAria': 'Tabla del horario desplazable. Arrastra para desplazarte.',
   'scheduler.previousWeek': 'Semana anterior',
   'scheduler.nextWeek': 'Semana siguiente',
   'scheduler.weekdays': 'Días de la semana',
@@ -110,12 +110,13 @@ export const es: Messages = {
   'shiftGrid.headcountTooltipOne': '{count} empleado programado a las {hour}:00',
   'shiftGrid.headcountTooltipMany': '{count} empleados programados a las {hour}:00',
   'shiftBar.removeHint': 'Haz clic derecho para eliminar este turno',
-  'shiftBar.removeHintPhone': 'Mantén pulsado este turno y toca × para eliminarlo',
+  'shiftBar.removeHintPhone':
+    'Haz doble toque y arrastra para mover; mantén pulsado y toca × para eliminar',
   'shiftBar.removeAction': 'Eliminar este turno',
   'shiftBar.aria':
     'Turno de {name}: de {start} a {end}. Usa las flechas para moverlo, Mayús más flechas para cambiar su duración y Suprimir para eliminarlo.',
   'shiftBar.ariaTouch':
-    'Turno de {name}: de {start} a {end}. Mantén pulsado y toca el botón de eliminar para borrarlo.',
+    'Turno de {name}: de {start} a {end}. Haz doble toque y arrastra para moverlo, arrastra sus bordes para cambiar la duración, o mantén pulsado y toca el botón de eliminar para borrarlo.',
   'shiftRow.trackAria': 'Pista de turnos de {name}. Pulsa Intro para añadir un turno de 3 horas.',
   'shiftRow.markOff': 'Marcar a {name} como libre este día',
   'shiftRow.markOn': 'Marcar a {name} como disponible este día',
@@ -497,16 +498,16 @@ export const es: Messages = {
   'demo.scenario.scheduler.dayEntries':
     'El día seleccionado también muestra sus festivos y eventos en una etiqueta azul bajo la fecha.',
   'demo.scenario.scheduler.grid':
-    'Cada fila es un miembro del equipo y el eje horizontal va de 09:00 a 01:00. En el móvil, usa dos dedos para desplazar la tabla.',
+    'Cada fila es un miembro del equipo y el eje horizontal va de 09:00 a 01:00. En el móvil, arrastra la tabla para desplazarte.',
   'demo.scenario.scheduler.create':
-    'Pulsa Enter en una fila, o haz clic y arrastra, para crear un turno.',
+    'Pulsa Enter en una fila, o haz clic y arrastra, para crear un turno. En el móvil, toca una celda.',
   'demo.scenario.scheduler.created': 'Aparece un nuevo turno en la fila.',
   'demo.scenario.scheduler.resize':
     'Arrastra los bordes del turno para redimensionarlo, o usa Mayús con las flechas.',
   'demo.scenario.scheduler.resizeApplied':
     'Mayús con la flecha derecha amplía el final del turno una franja.',
   'demo.scenario.scheduler.move':
-    'Arrastra el turno para moverlo dentro de la fila, o usa las flechas. Pulsa Supr para eliminarlo. En el móvil, mantén pulsado el turno y toca ×.',
+    'Arrastra el turno para moverlo dentro de la fila, o usa las flechas. Pulsa Supr para eliminarlo. En el móvil, haz doble toque en el turno y arrástralo; mantén pulsado y toca × para eliminarlo.',
   'demo.scenario.scheduler.moveBetweenRows':
     'Arrastra un turno a la fila de otro empleado para reasignarlo. El turno sale del empleado original y se combina con la agenda del empleado de destino. Las filas deshabilitadas, como días libres y vacaciones, no lo aceptan.',
   'demo.scenario.scheduler.removed': 'El turno se ha eliminado.',

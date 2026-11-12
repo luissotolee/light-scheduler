@@ -51,8 +51,8 @@ export const en = {
   'scheduler.description':
     "Click a cell for a 3-hour shift, drag to choose a custom range, drag a bar's edges to adjust, right-click a bar to remove it.",
   'scheduler.descriptionPhone':
-    "Tap a cell for a 3-hour shift, drag to choose a custom range, drag a bar's edges to adjust, long-press a shift and tap × to remove it. Use two fingers to pan the schedule table.",
-  'scheduler.gridScrollAria': 'Scrollable schedule table. Use two fingers to pan.',
+    "Tap a cell for a 3-hour shift. Drag the table to pan. Double-tap a shift, then drag to move it. Drag a shift's edges to resize it, or long-press a shift and tap × to remove it.",
+  'scheduler.gridScrollAria': 'Scrollable schedule table. Drag to pan.',
   'scheduler.previousWeek': 'Previous week',
   'scheduler.nextWeek': 'Next week',
   'scheduler.weekdays': 'Weekdays',
@@ -106,12 +106,12 @@ export const en = {
   'shiftGrid.headcountTooltipOne': '{count} employee scheduled at {hour}:00',
   'shiftGrid.headcountTooltipMany': '{count} employees scheduled at {hour}:00',
   'shiftBar.removeHint': 'Right-click to remove this shift',
-  'shiftBar.removeHintPhone': 'Long-press this shift, then tap × to remove it',
+  'shiftBar.removeHintPhone': 'Double-tap and drag to move; long-press, then tap × to remove',
   'shiftBar.removeAction': 'Remove this shift',
   'shiftBar.aria':
     'Shift for {name}: {start} to {end}. Use arrow keys to move, Shift plus arrow keys to resize, Delete to remove.',
   'shiftBar.ariaTouch':
-    'Shift for {name}: {start} to {end}. Long-press and tap the remove button to delete it.',
+    'Shift for {name}: {start} to {end}. Double-tap and drag to move it, drag its edges to resize, or long-press and tap the remove button to delete it.',
   'shiftRow.trackAria': 'Shift track for {name}. Press Enter to add a 3 hour shift.',
   'shiftRow.markOff': 'Mark {name} off for this day',
   'shiftRow.markOn': 'Mark {name} back on for this day',
@@ -476,15 +476,16 @@ export const en = {
   'demo.scenario.scheduler.dayEntries':
     'The selected day also shows its public holidays and events in a blue label under the date.',
   'demo.scenario.scheduler.grid':
-    'Each row is a team member and the horizontal axis runs from 09:00 to 01:00. On phones, use two fingers to pan the table.',
-  'demo.scenario.scheduler.create': 'Press Enter on a row, or click and drag, to create a shift.',
+    'Each row is a team member and the horizontal axis runs from 09:00 to 01:00. On phones, drag the table to pan.',
+  'demo.scenario.scheduler.create':
+    'Press Enter on a row, or click and drag, to create a shift. On phones, tap a cell instead.',
   'demo.scenario.scheduler.created': 'A new shift appears on the row.',
   'demo.scenario.scheduler.resize':
     'Drag the shift edges to resize it, or use Shift with the arrow keys.',
   'demo.scenario.scheduler.resizeApplied':
     'Shift with the right arrow extends the shift end by one time slot.',
   'demo.scenario.scheduler.move':
-    'Drag the shift to move it within the row, or use the arrow keys. Press Delete to remove it. On phones, long-press the shift and tap × instead.',
+    'Drag the shift to move it within the row, or use the arrow keys. Press Delete to remove it. On phones, double-tap the shift, then drag it; long-press and tap × to remove.',
   'demo.scenario.scheduler.moveBetweenRows':
     "Drag a shift onto another employee's row to reassign it. The shift leaves the original employee and merges into the destination employee's schedule. Disabled rows, such as days off and holidays, won't accept it.",
   'demo.scenario.scheduler.removed': 'The shift has been removed.',

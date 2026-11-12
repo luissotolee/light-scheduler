@@ -299,6 +299,65 @@ describe('ShiftRow', () => {
     expect(wrapper.find('[data-test="shift-draft"]').exists()).toBe(false)
   })
 
+  it('creates a default shift on a phone tap', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountRow()
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    await pointer(track.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+
+    expect(wrapper.emitted('create')).toEqual([
+      [{ memberId: 'member-1', startMinute: 540, endMinute: 720 }],
+    ])
+  })
+
+  it('does not create a shift when a phone gesture drags to pan', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = mountRow()
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    await pointer(track.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 48,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointermove', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 144,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 144,
+      clientY: 0,
+    })
+
+    expect(wrapper.emitted('create')).toBeUndefined()
+    expect(wrapper.find('[data-test="shift-draft"]').exists()).toBe(false)
+  })
+
   it('creates the dragged range when the pointer moves to another slot', async () => {
     const wrapper = mountRow()
     const track = wrapper.find('[data-test="shift-track"]')

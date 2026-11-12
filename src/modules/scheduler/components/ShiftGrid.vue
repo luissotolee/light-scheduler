@@ -56,12 +56,14 @@
         :key="row.member.id"
         :row="row"
         :slots="slots"
+        :selected-shift-id="selectedShiftId"
         :drop-target="dropTargetMemberId === row.member.id"
         :pan-active="panning"
-        @create="emit('create', $event)"
+        @create="handleCreate"
         @resize="emit('resize', $event)"
-        @remove="emit('remove', $event)"
+        @remove="handleRemove"
         @toggle-off="emit('toggleOff', $event)"
+        @select="handleSelectShift"
         @move-start="handleMoveStart"
         @move-drag="handleMoveDrag"
         @move-end="handleMoveEnd"
@@ -88,7 +90,7 @@ import ShiftRow from '@/modules/scheduler/components/ShiftRow.vue'
 import { buildHourlyHeadcounts, type HourHeadcount } from '@/modules/scheduler/utils/headcount'
 import { useI18n } from '@/shared/i18n'
 import { useIsPhone } from '@/shared/composables/useIsPhone'
-import { useTwoFingerPan } from '@/shared/composables/useTwoFingerPan'
+import { useGridPan } from '@/shared/composables/useGridPan'
 
 const props = defineProps<{
   rows: DayRow[]
@@ -108,10 +110,14 @@ const { t, tc } = useI18n()
 const isPhone = useIsPhone()
 
 const scroller = ref<HTMLElement | null>(null)
-const { panning } = useTwoFingerPan({
+const selectedShiftId = ref<string | null>(null)
+const { panning } = useGridPan({
   element: scroller,
   enabled: isPhone,
-  onPanStart: () => resetDrag(),
+  onPanStart: () => {
+    resetDrag()
+    selectedShiftId.value = null
+  },
 })
 
 const gridStyle = computed<Record<string, string>>(() => ({
@@ -170,6 +176,20 @@ function rowAt(clientY: number): RowHit | null {
     }
   }
   return null
+}
+
+function handleSelectShift(id: string): void {
+  selectedShiftId.value = id
+}
+
+function handleCreate(input: ShiftRangeInput): void {
+  selectedShiftId.value = null
+  emit('create', input)
+}
+
+function handleRemove(id: string): void {
+  if (selectedShiftId.value === id) selectedShiftId.value = null
+  emit('remove', id)
 }
 
 function handleMoveStart(shiftId: string): void {
@@ -384,7 +404,7 @@ function resetDrag(): void {
     max-height: 60dvh;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    touch-action: auto;
+    touch-action: none;
   }
 
   .shift-grid__scroller--panning {

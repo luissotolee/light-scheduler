@@ -13,6 +13,7 @@
     :title="isPhone ? t('shiftBar.removeHintPhone') : t('shiftBar.removeHint')"
     :aria-disabled="disabled"
     :aria-label="isPhone ? touchAriaLabel : ariaLabel"
+    :data-pan-ignore="selected ? 'true' : undefined"
     @pointerdown.stop.prevent="beginDrag('move', $event)"
     @pointermove="updateDrag"
     @pointerup="endDrag"
@@ -28,12 +29,14 @@
     <span
       class="shift-bar__handle shift-bar__handle--start"
       data-test="resize-start"
+      data-pan-ignore="true"
       aria-hidden="true"
       @pointerdown.stop.prevent="beginDrag('resize-start', $event)"
     />
     <span
       class="shift-bar__handle shift-bar__handle--end"
       data-test="resize-end"
+      data-pan-ignore="true"
       aria-hidden="true"
       @pointerdown.stop.prevent="beginDrag('resize-end', $event)"
     />
@@ -80,6 +83,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   resize: [input: ShiftResizeInput]
   remove: [id: string]
+  select: [id: string]
   moveStart: [id: string]
   moveDrag: [payload: ShiftMoveDrag]
   moveEnd: [payload: ShiftMoveDrag]
@@ -98,6 +102,7 @@ interface DragState {
   captureTarget: Element | null
   trackElement: Element | null
   pointerId: number
+  hasMoved: boolean
 }
 
 const { t } = useI18n()
@@ -105,11 +110,14 @@ const isPhone = useIsPhone()
 
 const LONG_PRESS_MS = 500
 const LONG_PRESS_MOVE_TOLERANCE = 8
+const DOUBLE_TAP_MS = 300
 
 const bar = ref<HTMLElement | null>(null)
 const drag = ref<DragState | null>(null)
 const draftRange = ref<MinuteRange | null>(null)
+const tapCandidate = ref<{ pointerId: number; startX: number; startY: number } | null>(null)
 let longPressTimer: number | null = null
+let lastTapAt = 0
 
 function clearLongPress(): void {
   if (longPressTimer !== null) {
@@ -166,12 +174,19 @@ const touchAriaLabel = computed(() =>
   }),
 )
 
-function beginDrag(mode: DragMode, event: PointerEvent): void {
-  if (props.disabled) return
-  if (props.panActive) return
-  if (event.pointerType === 'touch' && !event.isPrimary) return
-  if (event.button > 0) return
+function armLongPress(): void {
+  clearLongPress()
+  longPressTimer = window.setTimeout(fireLongPress, LONG_PRESS_MS)
+}
 
+function isWithinTapTolerance(x: number, y: number, startX: number, startY: number): boolean {
+  return (
+    Math.abs(x - startX) <= LONG_PRESS_MOVE_TOLERANCE &&
+    Math.abs(y - startY) <= LONG_PRESS_MOVE_TOLERANCE
+  )
+}
+
+function startDrag(mode: DragMode, event: PointerEvent): void {
   const captureTarget = event.currentTarget instanceof Element ? event.currentTarget : null
   if (captureTarget && typeof captureTarget.setPointerCapture === 'function') {
     captureTarget.setPointerCapture(event.pointerId)
@@ -186,6 +201,7 @@ function beginDrag(mode: DragMode, event: PointerEvent): void {
     captureTarget,
     trackElement: bar.value?.parentElement ?? null,
     pointerId: event.pointerId,
+    hasMoved: false,
   }
   draftRange.value = {
     startMinute: props.shift.startMinute,
@@ -195,20 +211,68 @@ function beginDrag(mode: DragMode, event: PointerEvent): void {
   if (mode === 'move') emit('moveStart', props.shift.id)
 
   if (isPhone.value && event.pointerType === 'touch' && mode === 'move') {
-    clearLongPress()
-    longPressTimer = window.setTimeout(fireLongPress, LONG_PRESS_MS)
+    armLongPress()
   }
 }
 
+function beginDrag(mode: DragMode, event: PointerEvent): void {
+  if (props.disabled) return
+  if (props.panActive) return
+  if (event.pointerType === 'touch' && !event.isPrimary) return
+  if (event.button > 0) return
+
+  if (isPhone.value && event.pointerType === 'touch') {
+    if (mode !== 'move') {
+      tapCandidate.value = null
+      lastTapAt = 0
+    } else {
+      const isDoubleTap =
+        props.selected || (lastTapAt !== 0 && Date.now() - lastTapAt <= DOUBLE_TAP_MS)
+
+      if (!isDoubleTap) {
+        tapCandidate.value = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+        }
+        armLongPress()
+        return
+      }
+
+      tapCandidate.value = null
+      lastTapAt = 0
+      emit('select', props.shift.id)
+    }
+  }
+
+  startDrag(mode, event)
+}
+
 function updateDrag(event: PointerEvent): void {
+  const tap = tapCandidate.value
+  if (tap) {
+    if (!isWithinTapTolerance(event.clientX, event.clientY, tap.startX, tap.startY)) {
+      tapCandidate.value = null
+      lastTapAt = 0
+      clearLongPress()
+    }
+  }
+
   const state = drag.value
   if (!state) return
 
   if (longPressTimer !== null) {
-    const moved =
-      Math.abs(event.clientX - state.startClientX) > LONG_PRESS_MOVE_TOLERANCE ||
-      Math.abs(event.clientY - state.startClientY) > LONG_PRESS_MOVE_TOLERANCE
+    const moved = !isWithinTapTolerance(
+      event.clientX,
+      event.clientY,
+      state.startClientX,
+      state.startClientY,
+    )
     if (moved) clearLongPress()
+  }
+
+  if (event.clientX !== state.startClientX || event.clientY !== state.startClientY) {
+    state.hasMoved = true
   }
 
   const trackWidth = state.trackElement?.getBoundingClientRect().width ?? 0
@@ -259,6 +323,16 @@ function updateDrag(event: PointerEvent): void {
 
 function endDrag(event: PointerEvent): void {
   clearLongPress()
+
+  const tap = tapCandidate.value
+  if (tap) {
+    tapCandidate.value = null
+    lastTapAt = isWithinTapTolerance(event.clientX, event.clientY, tap.startX, tap.startY)
+      ? Date.now()
+      : 0
+    if (!drag.value) return
+  }
+
   const state = drag.value
   if (!state) return
 
@@ -269,7 +343,10 @@ function endDrag(event: PointerEvent): void {
   drag.value = null
   draftRange.value = null
 
-  if (!range) return
+  if (!range || !state.hasMoved) {
+    if (state.mode === 'move') emit('moveCancel')
+    return
+  }
   if (state.mode === 'move') {
     emit('moveEnd', { id: props.shift.id, ...range, clientY: event.clientY })
     return
@@ -282,6 +359,8 @@ function cancelDrag(): void {
   const wasMoving = drag.value?.mode === 'move'
   drag.value = null
   draftRange.value = null
+  tapCandidate.value = null
+  lastTapAt = 0
   if (wasMoving) emit('moveCancel')
 }
 

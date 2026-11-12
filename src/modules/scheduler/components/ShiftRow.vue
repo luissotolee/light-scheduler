@@ -81,10 +81,12 @@
         :member-name="row.member.name"
         :duty="row.member.duty"
         :limits="limits"
+        :selected="bar.id === selectedShiftId"
         :disabled="disabled"
         :pan-active="panActive"
         @resize="emit('resize', $event)"
         @remove="emit('remove', $event)"
+        @select="emit('select', $event)"
         @long-press="handleLongPress"
         @move-start="emit('moveStart', $event)"
         @move-drag="emit('moveDrag', $event)"
@@ -142,10 +144,12 @@ const props = withDefaults(
   defineProps<{
     row: DayRow
     slots: DaySlot[]
+    selectedShiftId?: string | null
     dropTarget?: boolean
     panActive?: boolean
   }>(),
   {
+    selectedShiftId: null,
     dropTarget: false,
     panActive: false,
   },
@@ -237,6 +241,7 @@ const emit = defineEmits<{
   resize: [input: ShiftResizeInput]
   remove: [id: string]
   toggleOff: [memberId: string]
+  select: [id: string]
   moveStart: [id: string]
   moveDrag: [payload: ShiftMoveDrag]
   moveEnd: [payload: ShiftMoveDrag]
@@ -256,6 +261,9 @@ const dragging = ref(false)
 const moved = ref(false)
 const anchorMinute = ref(limits.value.startMinute)
 const draft = ref<MinuteRange | null>(null)
+let selectionOrigin: { x: number; y: number } | null = null
+
+const TAP_MOVE_TOLERANCE = 8
 
 const draftStyle = computed(() => {
   if (!draft.value) return {}
@@ -299,6 +307,7 @@ function startSelection(event: PointerEvent): void {
 
   anchorMinute.value = anchor
   moved.value = false
+  selectionOrigin = isPhone.value ? { x: event.clientX, y: event.clientY } : null
   draft.value = {
     startMinute: anchor,
     endMinute: Math.min(anchor + DEFAULT_SHIFT_MINUTES, limits.value.endMinute),
@@ -309,6 +318,18 @@ function startSelection(event: PointerEvent): void {
 
 function updateSelection(event: PointerEvent): void {
   if (!dragging.value) return
+
+  if (isPhone.value) {
+    const origin = selectionOrigin
+    if (
+      origin &&
+      (Math.abs(event.clientX - origin.x) > TAP_MOVE_TOLERANCE ||
+        Math.abs(event.clientY - origin.y) > TAP_MOVE_TOLERANCE)
+    ) {
+      cancelSelection()
+    }
+    return
+  }
 
   const minute = minuteAt(event.clientX)
   if (minute === null) return
@@ -335,18 +356,28 @@ function updateSelection(event: PointerEvent): void {
 function finishSelection(event: PointerEvent): void {
   if (!dragging.value) return
 
+  const origin = selectionOrigin
+  const wasMovedOnPhone =
+    isPhone.value &&
+    origin !== null &&
+    (Math.abs(event.clientX - origin.x) > TAP_MOVE_TOLERANCE ||
+      Math.abs(event.clientY - origin.y) > TAP_MOVE_TOLERANCE)
+
   releasePointer(event)
   const wasMoved = moved.value
   const anchor = anchorMinute.value
-  const range: MinuteRange | null = wasMoved
-    ? draft.value
-    : {
-        startMinute: anchor,
-        endMinute: Math.min(anchor + DEFAULT_SHIFT_MINUTES, limits.value.endMinute),
-      }
+  const defaultRange: MinuteRange = {
+    startMinute: anchor,
+    endMinute: Math.min(anchor + DEFAULT_SHIFT_MINUTES, limits.value.endMinute),
+  }
+  let range: MinuteRange | null = null
+  if (!wasMovedOnPhone) {
+    range = isPhone.value || !wasMoved ? defaultRange : draft.value
+  }
 
   dragging.value = false
   moved.value = false
+  selectionOrigin = null
   draft.value = null
 
   if (!range || range.endMinute - range.startMinute < limits.value.slotMinutes) return
@@ -356,6 +387,7 @@ function finishSelection(event: PointerEvent): void {
 function cancelSelection(): void {
   dragging.value = false
   moved.value = false
+  selectionOrigin = null
   draft.value = null
 }
 
