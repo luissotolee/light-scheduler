@@ -11,7 +11,7 @@ describe('timestampedName', () => {
     vi.setSystemTime(new Date('2026-11-05T20:57:00Z'))
 
     expect(timestampedName('team-members', 'csv')).toBe(
-      'team-members-2026-11-05T20-57-00-000Z.csv',
+      'team-members-2026-11-05_20-57-00.csv',
     )
   })
 })

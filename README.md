@@ -9,6 +9,7 @@ The product scope covers the scheduling pages plus an Archive page for import/ex
 | Page      | Purpose                                                           | Status      |
 | --------- | ----------------------------------------------------------------- | ----------- |
 | Scheduler | Create and manage daily shifts at a weekly cadence for employees. | Implemented |
+| Calendar  | Fetch public holidays and keep custom holidays or events.         | Implemented |
 | Employees | Manage employee records used when building schedules.             | Implemented |
 | Summary   | Review the weekly schedule and print it or save it as PDF.        | Implemented |
 | Archive   | Download or restore a compressed JSON backup of the workspace.    | Implemented |
@@ -21,9 +22,10 @@ There is no backend. Backup encoding, downloads, and all other application behav
 
 ## Current status
 
-All four feature pages are implemented, with a shared Spanish/English localization layer and an in-app guided demo:
+All five feature pages are implemented, with a shared Spanish/English localization layer and an in-app guided demo:
 
-- **Scheduler** — weekly shift grid with shift creation, editing, and removal; a configurable day time window and slot size; holiday weeks with disabled rows excluded from weekly hours; week picker and active-employee filter; a per-day weekly-hours table; and optional hourly headcount chips.
+- **Scheduler** — weekly shift grid with shift creation, editing, and removal; a configurable day time window and slot size; holiday weeks with disabled rows excluded from weekly hours; week picker and active-employee filter; a per-day weekly-hours table; optional hourly headcount chips; and calendar markers after each weekday label.
+- **Calendar** — fetch public holidays by country, region, and year from the offline `date-holidays` dataset, keep them in the workspace, and add custom holidays or events.
 - **Employees** — employee create/edit/delete, search, holiday-week selection, and per-employee comments.
 - **Summary** — read-only weekly schedule review with print and PDF export.
 - **Archive** — gzip-compressed `.json.gz` backup download and restore, with backward-compatible parsing so older backups still restore and unknown fields are ignored.
@@ -91,6 +93,7 @@ src/
       locale.ts           active language
     utils/
       calendar.ts         timezone-safe local ISO week helpers
+      calendarEntries.ts  calendar entry validation, defaults, sorting, dedupe
       shifts.ts           HH:mm parsing and half-open overlap helpers
       archiveBackup.ts    gzip JSON backup build, validation, encode, decode
       download.ts         Blob download and timestamped filename helpers
@@ -105,6 +108,12 @@ src/
     fixtures/employees.ts mock employee data shared with the demo
   modules/
     home/views/HomeView.vue     store-free landing page
+    calendar/
+      views/CalendarView.vue    holidays and custom events
+      stores/calendar.ts        fetch, clear, and custom-entry actions
+      components/               CalendarMonthGrid, CalendarEntryList,
+                                CalendarEntryFormDialog
+      utils/                    holidayProvider (date-holidays adapter), countries
     scheduler/
       views/SchedulerView.vue   weekly shift grid
       stores/scheduler.ts       week navigation and shift actions
@@ -133,7 +142,7 @@ src/
   __tests__/                    app shell and route tests
 ```
 
-The four feature pages are lazy-loaded chunks, so their code mounts only after the matching navigation item is selected. Home stays eager for the first paint.
+The five feature pages are lazy-loaded chunks, so their code mounts only after the matching navigation item is selected. Home stays eager for the first paint.
 
 ## Testing strategy
 
@@ -156,6 +165,10 @@ The four feature pages are lazy-loaded chunks, so their code mounts only after t
 3. The site deploys at `https://<owner>.github.io/light-scheduler/`.
 
 The Vite `base` is `/light-scheduler/` in `vite.config.ts`. If you rename the repository or use a custom domain, update `base` accordingly.
+
+## Third-party data
+
+Public holiday data is provided by [`date-holidays`](https://github.com/commenthol/date-holidays), loaded lazily only on the Calendar page. Its holiday data is licensed under `CC-BY-SA-4.0`; the package itself is `ISC`. See the package repository for the full attribution list.
 
 ## License
 

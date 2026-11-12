@@ -1,4 +1,6 @@
 import type {
+  CalendarData,
+  CalendarEntryKind,
   Contract,
   DayOff,
   Duty,
@@ -29,6 +31,12 @@ import {
   normalizeHolidays,
   parseWeeklyHours,
 } from '@/shared/utils/employee'
+import {
+  MAX_CALENDAR_NAME_LENGTH,
+  createDefaultCalendarData,
+  isCalendarEntryKind,
+  normalizeCalendarEntries,
+} from '@/shared/utils/calendarEntries'
 import { createId } from '@/shared/utils/id'
 import { isWeekday } from '@/shared/utils/persistence'
 
@@ -68,6 +76,20 @@ export interface BackupSettings {
   scheduler?: SchedulerSettings
 }
 
+export interface BackupCalendarEntry {
+  date: string
+  name: string
+  kind: CalendarEntryKind
+  countryCode?: string
+  region?: string
+}
+
+export interface BackupCalendar {
+  country: string | null
+  region: string | null
+  entries: BackupCalendarEntry[]
+}
+
 export interface BackupFile {
   format: typeof BACKUP_FORMAT
   version: typeof BACKUP_VERSION
@@ -77,6 +99,7 @@ export interface BackupFile {
   employees: BackupEmployee[]
   schedules: BackupSchedules
   dayOffs?: BackupDayOffs
+  calendar: BackupCalendar
 }
 
 export interface BackupData {
@@ -85,6 +108,7 @@ export interface BackupData {
   dayOffs: Record<WeekKey, DayOff[]>
   currentWeekKey?: WeekKey
   settings?: BackupSettings
+  calendar: CalendarData
 }
 
 export type BackupParseResult = { ok: true; data: BackupData } | { ok: false; error: MessageKey }
@@ -224,6 +248,72 @@ function parseBackupSettings(value: unknown): Parsed<BackupSettings | undefined>
   return {
     ok: true,
     value: settings.locale === undefined && settings.scheduler === undefined ? undefined : settings,
+  }
+}
+
+function parseBackupCalendar(value: unknown): Parsed<CalendarData> {
+  if (value === undefined) return { ok: true, value: createDefaultCalendarData() }
+  if (!isRecord(value)) return { ok: false, error: 'archive.invalidBackup' }
+
+  const countryValue = value.country
+  if (countryValue !== undefined && countryValue !== null && typeof countryValue !== 'string') {
+    return { ok: false, error: 'errors.invalidCountry' }
+  }
+  const country =
+    typeof countryValue === 'string' && countryValue.trim() !== '' ? countryValue.trim() : null
+
+  const regionValue = value.region
+  if (regionValue !== undefined && regionValue !== null && typeof regionValue !== 'string') {
+    return { ok: false, error: 'errors.invalidRegion' }
+  }
+  const region =
+    typeof regionValue === 'string' && regionValue.trim() !== '' ? regionValue.trim() : null
+
+  const entriesValue = value.entries
+  if (entriesValue === undefined) {
+    return { ok: true, value: { country, region, entries: [] } }
+  }
+  if (!Array.isArray(entriesValue)) {
+    return { ok: false, error: 'archive.invalidBackup' }
+  }
+
+  const entries: CalendarData['entries'] = []
+  for (const rawEntry of entriesValue) {
+    if (!isRecord(rawEntry)) return { ok: false, error: 'errors.invalidCalendarEntry' }
+
+    const date = parseIsoDate(rawEntry.date)
+    if (date === null) return { ok: false, error: 'errors.invalidCalendarDate' }
+
+    const name = typeof rawEntry.name === 'string' ? rawEntry.name.trim() : ''
+    if (name === '') return { ok: false, error: 'errors.requiredName' }
+    if (name.length > MAX_CALENDAR_NAME_LENGTH) {
+      return { ok: false, error: 'errors.calendarNameTooLong' }
+    }
+
+    if (!isCalendarEntryKind(rawEntry.kind)) {
+      return { ok: false, error: 'errors.invalidCalendarKind' }
+    }
+
+    if (rawEntry.countryCode !== undefined && typeof rawEntry.countryCode !== 'string') {
+      return { ok: false, error: 'errors.invalidCalendarEntry' }
+    }
+    if (rawEntry.region !== undefined && typeof rawEntry.region !== 'string') {
+      return { ok: false, error: 'errors.invalidCalendarEntry' }
+    }
+
+    entries.push({
+      id: createId(),
+      date,
+      name,
+      kind: rawEntry.kind,
+      ...(rawEntry.countryCode !== undefined ? { countryCode: rawEntry.countryCode } : {}),
+      ...(rawEntry.region !== undefined ? { region: rawEntry.region } : {}),
+    })
+  }
+
+  return {
+    ok: true,
+    value: { country, region, entries: normalizeCalendarEntries(entries) },
   }
 }
 
@@ -388,6 +478,7 @@ export function buildBackup(
   currentWeekKey: WeekKey,
   settingsOrNow: BackupSettings | Date = {},
   nowOrSettings: Date | BackupSettings = new Date(),
+  calendar: CalendarData = createDefaultCalendarData(),
 ): BackupFile {
   const { settings, now } = normalizeBuildArguments(settingsOrNow, nowOrSettings)
   const memberById = new Map(members.map((member) => [member.id, member]))
@@ -458,6 +549,17 @@ export function buildBackup(
     employees: members.map(toBackupEmployee),
     schedules: scheduleBuckets,
     dayOffs: dayOffBuckets,
+    calendar: {
+      country: calendar.country,
+      region: calendar.region,
+      entries: calendar.entries.map((entry) => ({
+        date: entry.date,
+        name: entry.name,
+        kind: entry.kind,
+        ...(entry.countryCode ? { countryCode: entry.countryCode } : {}),
+        ...(entry.region ? { region: entry.region } : {}),
+      })),
+    },
   }
 }
 
@@ -514,6 +616,9 @@ export function parseBackup(value: unknown): BackupParseResult {
   const settings = parseBackupSettings(value.settings)
   if (!settings.ok) return settings
 
+  const calendar = parseBackupCalendar(value.calendar)
+  if (!calendar.ok) return calendar
+
   let currentWeekKey: WeekKey | undefined
   if (value.currentWeekKey !== undefined) {
     const parsedWeekKey = parseIsoDate(value.currentWeekKey)
@@ -529,6 +634,7 @@ export function parseBackup(value: unknown): BackupParseResult {
       dayOffs: dayOffs.value,
       ...(currentWeekKey ? { currentWeekKey } : {}),
       ...(settings.value ? { settings: settings.value } : {}),
+      calendar: calendar.value,
     },
   }
 }

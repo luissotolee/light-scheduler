@@ -166,7 +166,7 @@ describe('ArchiveView', () => {
     })
 
     expect(wrapper.find('[data-test="confirm-message"]').text()).toContain(
-      'This replaces all employees, shifts, and days off',
+      'This replaces all employees, shifts, days off, holidays, events',
     )
 
     await wrapper.find('[data-test="confirm-accept"]').trigger('click')

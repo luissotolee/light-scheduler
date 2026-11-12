@@ -19,6 +19,7 @@
           :minute-step="form.slotMinutes"
           id-prefix="settings-start"
           :tooltip="t('scheduler.settings.startTooltip')"
+          data-test="settings-start"
         />
         <TimePickerField
           v-model="form.endTime"
@@ -26,6 +27,7 @@
           :minute-step="form.slotMinutes"
           id-prefix="settings-end"
           :tooltip="t('scheduler.settings.endTooltip')"
+          data-test="settings-end"
         />
       </div>
 
@@ -82,7 +84,7 @@
           <ToggleSwitch
             v-model="form.showHourlyHeadcount"
             input-id="settings-show-headcount"
-            data-test="settings-show-headcount"
+            :pt="{ input: { 'data-test': 'settings-show-headcount' } }"
           />
         </div>
       </div>

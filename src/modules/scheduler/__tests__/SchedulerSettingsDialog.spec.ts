@@ -51,6 +51,8 @@ describe('SchedulerSettingsDialog', () => {
     expect(wrapper.text()).toContain('Ends the next day')
     expect(wrapper.text()).toContain('Show headcount per hour')
     expect(wrapper.findComponent(ToggleSwitch).props('modelValue')).toBe(false)
+    expect(wrapper.find('[data-test="settings-start"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="settings-end"]').exists()).toBe(true)
   })
 
   it('moves the setting explanations into info tooltips', async () => {
@@ -98,6 +100,19 @@ describe('SchedulerSettingsDialog', () => {
     expect(wrapper.emitted('save')).toEqual([
       [{ ...DEFAULT_SCHEDULER_SETTINGS, showHourlyHeadcount: true }],
     ])
+  })
+
+  it('updates the hourly headcount when the switch input changes', async () => {
+    const wrapper = await mountDialog()
+
+    expect(wrapper.findComponent(ToggleSwitch).props('modelValue')).toBe(false)
+
+    const input = wrapper.find<HTMLInputElement>('[data-test="settings-show-headcount"]')
+    input.element.checked = true
+    input.element.dispatchEvent(new Event('change', { bubbles: true }))
+    await nextTick()
+
+    expect(wrapper.findComponent(ToggleSwitch).props('modelValue')).toBe(true)
   })
 
   it('reflects an enabled hourly headcount setting as checked', async () => {

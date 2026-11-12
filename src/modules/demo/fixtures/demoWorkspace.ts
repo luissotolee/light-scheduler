@@ -1,7 +1,7 @@
-import type { TeamMember, Shift, DayOff, WeekKey } from '@/types'
+import type { CalendarData, TeamMember, Shift, DayOff, WeekKey } from '@/types'
 import type { PersistedWorkspace } from '@/shared/utils/persistence'
 import { WORKSPACE_SCHEMA_VERSION } from '@/shared/utils/persistence'
-import { addWeeks, getIsoWeek, getWeekKey } from '@/shared/utils/calendar'
+import { addWeeks, getIsoWeek, getWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
 import { normalizeHolidays } from '@/shared/utils/employee'
 import { createId } from '@/shared/utils/id'
 import { MOCK_EMPLOYEES } from '@/shared/fixtures/employees'
@@ -91,11 +91,33 @@ export function buildDemoWorkspace(now: Date = new Date()): PersistedWorkspace {
     [nextWeekKey]: buildDayOffsForWeek(nextWeekKey, activeMembers),
   }
 
+  const calendar: CalendarData = {
+    country: 'ES',
+    region: 'AN',
+    entries: [
+      {
+        id: 'calendar-demo-public',
+        date: weekdayIsoDate(currentWeekKey, 'tuesday'),
+        name: 'Public holiday (demo)',
+        kind: 'public_holiday',
+        countryCode: 'ES',
+        region: 'AN',
+      },
+      {
+        id: 'calendar-demo-event',
+        date: weekdayIsoDate(currentWeekKey, 'thursday'),
+        name: 'Team planning day',
+        kind: 'custom_event',
+      },
+    ],
+  }
+
   return {
     version: WORKSPACE_SCHEMA_VERSION,
     members,
     schedules,
     dayOffs,
     currentWeekKey,
+    calendar,
   }
 }

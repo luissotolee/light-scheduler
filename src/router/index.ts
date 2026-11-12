@@ -15,6 +15,11 @@ export function createAppRouter(
         component: () => import('@/modules/scheduler/views/SchedulerView.vue'),
       },
       {
+        path: '/calendar',
+        name: 'calendar',
+        component: () => import('@/modules/calendar/views/CalendarView.vue'),
+      },
+      {
         path: '/employees',
         name: 'employees',
         component: () => import('@/modules/employees/views/EmployeesView.vue'),

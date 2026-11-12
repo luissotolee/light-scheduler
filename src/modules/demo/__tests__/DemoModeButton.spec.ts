@@ -83,12 +83,13 @@ describe('DemoModeButton', () => {
     expect(body().find('[data-test="demo-option-scheduler"]').text()).toContain(
       en['demo.picker.scheduler'],
     )
+    expect(body().find('[data-test="demo-option-calendar"]').text()).toContain(
+      en['demo.picker.calendar'],
+    )
     expect(body().find('[data-test="demo-option-summary"]').text()).toContain(
       en['demo.picker.summary'],
     )
-    expect(body().find('[data-test="demo-option-archive"]').text()).toContain(
-      en['demo.picker.archive'],
-    )
+    expect(body().find('[data-test="demo-option-archive"]').exists()).toBe(false)
     expect(startDemo).not.toHaveBeenCalled()
   })
 
@@ -122,6 +123,21 @@ describe('DemoModeButton', () => {
     expect(startDemo).toHaveBeenCalledWith('scheduler-demo')
   })
 
+  it('starts the calendar scenario from its option', async () => {
+    vi.mocked(startDemo).mockResolvedValue(true)
+    const wrapper = mountButton()
+
+    await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
+
+    body().find('[data-test="demo-option-calendar"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
+
+    expect(startDemo).toHaveBeenCalledWith('calendar-demo')
+  })
+
   it('starts the summary scenario from its option', async () => {
     vi.mocked(startDemo).mockResolvedValue(true)
     const wrapper = mountButton()
@@ -135,21 +151,6 @@ describe('DemoModeButton', () => {
     await nextTick()
 
     expect(startDemo).toHaveBeenCalledWith('summary-demo')
-  })
-
-  it('starts the archive scenario from its option', async () => {
-    vi.mocked(startDemo).mockResolvedValue(true)
-    const wrapper = mountButton()
-
-    await wrapper.find('[data-test="demo-start-button"]').trigger('click')
-    await nextTick()
-
-    body().find('[data-test="demo-option-archive"]').element.dispatchEvent(
-      new MouseEvent('click', { bubbles: true }),
-    )
-    await nextTick()
-
-    expect(startDemo).toHaveBeenCalledWith('archive-demo')
   })
 
   it('closes the picker without starting a demo when cancelled', async () => {

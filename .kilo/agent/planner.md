@@ -19,7 +19,7 @@ If the plan implements or changes backup export/import, gzip handling, archive r
 
 If the plan adds or changes any field in the backup format, the persisted workspace, or stored user settings, load the `backup-compatibility` skill. Plan for an exported default, tolerant parsing (missing → default), unknown-field ignoring, additive changes without a version bump (or a migration for breaking changes), and a legacy-fixture test proving an older backup still restores.
 
-If the plan changes functionality, behavior, or layout in a module covered by the guided demo (**employees**, **scheduler**, **summary**, **archive**), load the `guided-demo` skill and include the matching scenario update in the plan: `employeesDemo.ts`, `schedulerDemo.ts`, `summaryDemo.ts`, or `archiveDemo.ts`. Plan for added/edited/removed steps and narration keys (both languages), and for `data-test`/`within`/`index` target corrections when an element moves or is replaced so steps always point at the right place.
+If the plan changes functionality, behavior, or layout in a module covered by the guided demo (**employees**, **scheduler**, **calendar**, **summary**), load the `guided-demo` skill and include the matching scenario update in the plan: `employeesDemo.ts`, `schedulerDemo.ts`, `calendarDemo.ts`, or `summaryDemo.ts`. Plan for added/edited/removed steps and narration keys (both languages), and for `data-test`/`within`/`index` target corrections when an element moves or is replaced so steps always point at the right place.
 
 ## Your job
 

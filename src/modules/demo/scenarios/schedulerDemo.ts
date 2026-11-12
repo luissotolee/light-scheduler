@@ -32,6 +32,20 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 2900,
     },
     {
+      id: 'scheduler-calendar-markers',
+      action: 'spotlight',
+      target: { testId: 'weekday-calendar-marker-tuesday' },
+      narrationKey: 'demo.scenario.scheduler.calendarMarkers',
+      pauseMs: 2700,
+    },
+    {
+      id: 'scheduler-day-entries',
+      action: 'spotlight',
+      target: { testId: 'scheduler-day-entries' },
+      narrationKey: 'demo.scenario.scheduler.dayEntries',
+      pauseMs: 2700,
+    },
+    {
       id: 'scheduler-grid',
       action: 'spotlight',
       target: { testId: 'shift-grid' },
@@ -56,9 +70,17 @@ export const schedulerDemoScenario: DemoScenario = {
     {
       id: 'scheduler-resize',
       action: 'spotlight',
-      target: { testId: 'resize-end', within: 'shift-row-emp-mock-01' },
+      target: { testId: 'resize-end', within: 'shift-row-emp-mock-01', index: 1 },
       narrationKey: 'demo.scenario.scheduler.resize',
       pauseMs: 2300,
+    },
+    {
+      id: 'scheduler-resize-apply',
+      action: 'press',
+      target: { testId: 'resize-end', within: 'shift-row-emp-mock-01', index: 1 },
+      key: 'Shift+ArrowRight',
+      narrationKey: 'demo.scenario.scheduler.resizeApplied',
+      pauseMs: 2700,
     },
     {
       id: 'scheduler-move-shift',
@@ -119,6 +141,13 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 2700,
     },
     {
+      id: 'scheduler-hours-diff',
+      action: 'spotlight',
+      target: { testId: 'weekly-hours-metric-diff' },
+      narrationKey: 'demo.scenario.scheduler.hoursDiff',
+      pauseMs: 2700,
+    },
+    {
       id: 'scheduler-settings-open',
       action: 'click',
       target: { testId: 'scheduler-settings' },
@@ -133,11 +162,32 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 3100,
     },
     {
+      id: 'scheduler-settings-start',
+      action: 'spotlight',
+      target: { testId: 'settings-start' },
+      narrationKey: 'demo.scenario.scheduler.settingsStart',
+      pauseMs: 2900,
+    },
+    {
+      id: 'scheduler-settings-end',
+      action: 'spotlight',
+      target: { testId: 'settings-end' },
+      narrationKey: 'demo.scenario.scheduler.settingsEnd',
+      pauseMs: 2900,
+    },
+    {
       id: 'scheduler-settings-tooltips',
       action: 'spotlight',
       target: { testId: 'settings-start-info' },
       narrationKey: 'demo.scenario.scheduler.settingsTooltips',
       pauseMs: 3100,
+    },
+    {
+      id: 'scheduler-settings-overnight',
+      action: 'spotlight',
+      target: { testId: 'settings-next-day' },
+      narrationKey: 'demo.scenario.scheduler.settingsOvernight',
+      pauseMs: 2900,
     },
     {
       id: 'scheduler-settings-slot',
@@ -154,11 +204,26 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 3100,
     },
     {
+      id: 'scheduler-settings-headcount-toggle',
+      action: 'fill',
+      target: { testId: 'settings-show-headcount' },
+      value: 'true',
+      narrationKey: 'demo.scenario.scheduler.settingsHeadcountToggle',
+      pauseMs: 2900,
+    },
+    {
       id: 'scheduler-settings-save',
       action: 'click',
       target: { testId: 'settings-save' },
       narrationKey: 'demo.scenario.scheduler.settingsSaved',
       pauseMs: 3100,
+    },
+    {
+      id: 'scheduler-headcount',
+      action: 'spotlight',
+      target: { testId: 'hour-headcount' },
+      narrationKey: 'demo.scenario.scheduler.headcount',
+      pauseMs: 2900,
     },
     {
       id: 'scheduler-restart',

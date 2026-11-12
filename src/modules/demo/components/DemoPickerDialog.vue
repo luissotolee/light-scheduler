@@ -81,18 +81,18 @@ const options: DemoPickerOption[] = [
     descriptionKey: 'demo.picker.schedulerDescription',
   },
   {
+    id: 'calendar-demo',
+    key: 'calendar',
+    icon: 'pi pi-calendar-plus',
+    titleKey: 'demo.picker.calendar',
+    descriptionKey: 'demo.picker.calendarDescription',
+  },
+  {
     id: 'summary-demo',
     key: 'summary',
     icon: 'pi pi-table',
     titleKey: 'demo.picker.summary',
     descriptionKey: 'demo.picker.summaryDescription',
-  },
-  {
-    id: 'archive-demo',
-    key: 'archive',
-    icon: 'pi pi-file-export',
-    titleKey: 'demo.picker.archive',
-    descriptionKey: 'demo.picker.archiveDescription',
   },
 ]
 

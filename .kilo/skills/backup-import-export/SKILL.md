@@ -59,6 +59,7 @@ export interface BackupFile {
   employees: BackupEmployee[]
   schedules: BackupSchedules
   dayOffs?: BackupDayOffs
+  calendar: BackupCalendar
 }
 ```
 
@@ -67,7 +68,8 @@ export interface BackupFile {
 - Empty weeks are omitted in both maps.
 - `employees` carries `emp_id`, `name`, duty, contract, weekly hours, holidays, `active`, `startDate`, plus optional `endDate`, `email`, `phone`, and `comment`.
 - `settings` carries the locale and scheduler settings when they are present.
-- `BackupData` is the domain-facing shape: `members`, `schedules` keyed by week key, `dayOffs` keyed by week key, optional `currentWeekKey`, optional `settings`.
+- `calendar` carries the selected `country`/`region` and public-holiday/custom entries; entry internal ids are regenerated on parse. A missing section restores the exported empty default.
+- `BackupData` is the domain-facing shape: `members`, `schedules` keyed by week key, `dayOffs` keyed by week key, optional `currentWeekKey`, optional `settings`, and `calendar`.
 
 ## 3. Building: `buildBackup`
 
@@ -79,6 +81,7 @@ export function buildBackup(
   currentWeekKey: WeekKey,
   settingsOrNow: BackupSettings | Date = {},
   nowOrSettings: Date | BackupSettings = new Date(),
+  calendar: CalendarData = createDefaultCalendarData(),
 ): BackupFile
 ```
 
@@ -148,12 +151,17 @@ downloadBlob(timestampedName('backup', BACKUP_EXTENSION), blob)
 
 ```ts
 export function timestampedName(base: string, ext: string): string {
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const stamp = [
+    `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`,
+    `${pad(now.getUTCHours())}-${pad(now.getUTCMinutes())}-${pad(now.getUTCSeconds())}`,
+  ].join('_')
   return `${base}-${stamp}.${ext}`
 }
 ```
 
-Output: `backup-2026-11-05T20-57-00-000Z.json.gz`. Report success/error through `MessageKey` codes (`archive.backupExported`, `archive.compressionUnsupported`, etc.), translated at the view boundary.
+Output: `backup-2026-11-05_20-57-00.json.gz` (`yyyy-mm-dd_hh24-mi-ss`). Report success/error through `MessageKey` codes (`archive.backupExported`, `archive.compressionUnsupported`, etc.), translated at the view boundary.
 
 ## 7. Restore flow
 
@@ -186,7 +194,7 @@ vi.stubGlobal('URL', {
 
 vi.useFakeTimers()
 vi.setSystemTime(new Date('2026-11-05T20:57:00Z'))
-expect(timestampedName('backup', BACKUP_EXTENSION)).toBe('backup-2026-11-05T20-57-00-000Z.json.gz')
+expect(timestampedName('backup', BACKUP_EXTENSION)).toBe('backup-2026-11-05_20-57-00.json.gz')
 ```
 
 Use `Blob.arrayBuffer()`, `gzipJson`, and `readBackupFile` to exercise the real compression path rather than mocking it. Assert user-visible messages through the i18n catalog, not hardcoded English.
@@ -196,7 +204,7 @@ Use `Blob.arrayBuffer()`, `gzipJson`, and `readBackupFile` to exercise the real 
 - [ ] Backup remains a single `.json.gz` file with `BACKUP_FORMAT`, `BACKUP_VERSION`, and `exportedAt`.
 - [ ] Build filters unknown members, omits empty weeks, and sorts deterministically.
 - [ ] Parse never throws and returns a `MessageKey` on every failure path.
-- [ ] Missing optional sections (`schedules`, `dayOffs`, `settings`, `currentWeekKey`) are tolerated.
+- [ ] Missing optional sections (`schedules`, `dayOffs`, `settings`, `currentWeekKey`, `calendar`) are tolerated.
 - [ ] Compression uses native streams and enforces `MAX_BACKUP_BYTES`.
 - [ ] Download uses `downloadBlob` + `timestampedName('backup', BACKUP_EXTENSION)`.
 - [ ] Restore is confirmation-gated, replaces the workspace, and applies only present settings.

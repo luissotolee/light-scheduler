@@ -11,12 +11,13 @@ export const en = {
 
   'app.navPrimary': 'Primary',
   'app.footer':
-    'Light Scheduler — a frontend-only weekly shift scheduler. We recommend backing up your work locally through Archive.',
+    'Light Scheduler — a light, modern weekly shift scheduler. We recommend backing up your work locally through Archive.',
   'app.contact': 'Contact the creator',
   'app.supportOnKoFi': 'Support me on Ko-fi',
 
   'nav.home': 'Home',
   'nav.scheduler': 'Scheduler',
+  'nav.calendar': 'Calendar',
   'nav.employees': 'Employees',
   'nav.summary': 'Summary',
   'nav.archive': 'Archive',
@@ -25,11 +26,19 @@ export const en = {
   'languageSwitcher.menuLabel': 'Select language',
 
   'home.description':
-    'A light, modern weekly shift scheduler for teams. It is frontend-only: all data stays in your browser and round-trips through CSV files so you can pick up where you left off.',
+    'A light, modern weekly shift scheduler for teams. All your data stays in your browser so you can pick up right where you left off.',
   'home.intro':
-    'Plan daily shifts across a week for many employees and review the result without a backend.',
+    'Plan daily shifts across a week for many employees and review the result in one place.',
+  'home.demo.badge': 'Recommended first step',
+  'home.demo.title': 'We strongly recommend starting with the guided demo',
+  'home.demo.description':
+    'The demo walks you through every page with sample data so you can learn the app before touching your own schedule. Your saved data is restored as soon as you exit.',
+  'home.demo.cta': 'Start the guided demo',
   'home.feature.scheduler.title': 'Scheduler',
   'home.feature.scheduler.description': 'Build weekly shifts for every employee on your team.',
+  'home.feature.calendar.title': 'Calendar',
+  'home.feature.calendar.description':
+    'Keep public holidays and custom events for the weeks you schedule.',
   'home.feature.employees.title': 'Employees',
   'home.feature.employees.description': 'Keep the employee records used by every schedule.',
   'home.feature.summary.title': 'Summary',
@@ -37,7 +46,7 @@ export const en = {
   'home.feature.archive.title': 'Archive',
   'home.feature.archive.description':
     'Export your data as files or import them to restore your information.',
-  'home.cta': 'Start scheduling',
+  'home.cta': 'Start adding employees',
 
   'scheduler.title': 'Scheduler',
   'scheduler.description':
@@ -69,6 +78,8 @@ export const en = {
   'scheduler.confirm.restartMessage':
     'This clears all shifts and days off for the current week. Team members are kept. This cannot be undone.',
   'scheduler.confirm.restartLabel': 'Restart',
+  'scheduler.calendar.markerAria': 'Calendar entries: {entries}',
+  'scheduler.calendar.multiple': '{count} entries',
 
   'weekday.monday': 'Monday',
   'weekday.tuesday': 'Tuesday',
@@ -133,7 +144,8 @@ export const en = {
     '{name} already has shifts in the selected holiday weeks. Saving the holiday will remove those shifts.',
   'employees.confirm.removeShifts': 'Remove shifts and save',
   'employees.hideInactive': 'Active only',
-  'employees.hideInactive.tooltip': 'Show only active employees (those not deactivated). Deactivated employees are excluded from schedules.',
+  'employees.hideInactive.tooltip':
+    'Show only active employees (those not deactivated). Deactivated employees are excluded from schedules.',
   'employees.allInactiveTitle': 'No active employees',
   'employees.allInactiveDescription':
     'All employees are deactivated. Turn off "Active only" to see them.',
@@ -193,6 +205,60 @@ export const en = {
   'weekPicker.title': 'Select week',
   'weekPicker.open': 'Select week to view',
   'calendar.weekLabel': 'Week {week} — {range}',
+  'calendar.title': 'Calendar',
+  'calendar.description':
+    'Fetch public holidays for a country and region, then add custom holidays or events that appear in the scheduler.',
+  'calendar.importTitle': 'Manage public holidays',
+  'calendar.country': 'Country',
+  'calendar.countryPlaceholder': 'Select a country',
+  'calendar.region': 'Region',
+  'calendar.regionNone': 'Country-wide',
+  'calendar.regionPlaceholder': 'Select a region',
+  'calendar.year': 'Year',
+  'calendar.fetch': 'Import',
+  'calendar.fetching': 'Fetching holidays…',
+  'calendar.fetchTooltip': 'Fetch public holidays for the selected country, region and year',
+  'calendar.clearFetchedTooltip': 'Clear all fetched public holidays',
+  'calendar.publicHolidayYearCount': '{year}: {count}',
+  'calendar.fetched': 'Imported {count} public holidays for {year}.',
+  'calendar.noneFound': 'No public holidays found for that country, region and year.',
+  'calendar.fetchFailed': 'Could not load holidays. Check the country and region and try again.',
+  'calendar.noCountry': 'Select a country first.',
+  'calendar.clearFetched': 'Clear all',
+  'calendar.cleared': 'Fetched public holidays were cleared.',
+  'calendar.clearFetchedHeader': 'Clear fetched holidays',
+  'calendar.clearFetchedMessage':
+    'This removes every imported public holiday. Custom holidays and events are kept.',
+  'calendar.clearFetchedLabel': 'Clear',
+  'calendar.emptyTitle': 'No calendar entries',
+  'calendar.emptyDescription': 'Fetch public holidays or add a custom holiday or event.',
+  'calendar.addEntry': 'Add holiday or event',
+  'calendar.month.previous': 'Previous month',
+  'calendar.month.next': 'Next month',
+  'calendar.list.title': 'Entries in {month}',
+  'calendar.list.empty': 'No entries this month.',
+  'calendar.countOne': '{count} entry',
+  'calendar.countMany': '{count} entries',
+  'calendar.kind.public_holiday': 'Public holiday',
+  'calendar.kind.custom_holiday': 'Custom holiday',
+  'calendar.kind.custom_event': 'Custom event',
+  'calendar.entry.editAria': 'Edit {name}',
+  'calendar.entry.removeAria': 'Remove {name}',
+  'calendar.importedSuccessfully': 'Imported successfully',
+  'calendar.fetchedBadge': 'Fetched',
+  'calendar.dayAria': '{date}: {entries}',
+  'calendar.loadingOptions': 'Loading options…',
+  'calendar.form.addTitle': 'Add holiday or event',
+  'calendar.form.editTitle': 'Edit holiday or event',
+  'calendar.form.date': 'Date *',
+  'calendar.form.name': 'Name *',
+  'calendar.form.namePlaceholder': 'e.g. Company anniversary',
+  'calendar.form.kind': 'Type *',
+  'calendar.form.kindHoliday': 'Custom holiday',
+  'calendar.form.kindEvent': 'Custom event',
+  'calendar.confirm.removeHeader': 'Remove calendar entry',
+  'calendar.confirm.removeMessage': 'Remove {name} from the calendar?',
+  'calendar.confirm.removeLabel': 'Remove',
 
   'summary.title': 'Summary',
 
@@ -217,15 +283,15 @@ export const en = {
 
   'archive.title': 'Archive',
   'archive.description':
-    'Download a compressed backup of every employee, shift, and day off, along with your language and scheduler settings, or restore a backup to replace your current workspace.',
+    'Download a compressed backup of every employee, shift, day off, holiday, and event, along with your language and scheduler settings, or restore a backup to replace your current workspace.',
   'archive.exportHeading': 'Backup',
   'archive.exportCopy':
-    'Download a gzip-compressed JSON file with every employee and schedule, plus your language and scheduler settings. It keeps the employee IDs needed to link shifts back to people.',
+    'Download a gzip-compressed JSON file with every employee, schedule, holiday, and event, plus your language and scheduler settings. It keeps the employee IDs needed to link shifts back to people.',
   'archive.exportEmployees': 'Export Employees',
   'archive.exportSchedule': 'Export Schedule',
   'archive.importHeading': 'Restore',
   'archive.importCopy':
-    'Upload a backup file to replace all employees, shifts, days off, and user settings. Restoring a backup replaces every week in the workspace.',
+    'Upload a backup file to replace all employees, shifts, days off, holidays, events, and user settings. Restoring a backup replaces every week in the workspace.',
   'archive.uploadEmployees': 'Upload Employees',
   'archive.uploadSchedule': 'Upload Schedule',
   'archive.noEmployees': 'No employees to export',
@@ -251,7 +317,7 @@ export const en = {
   'archive.compressionUnsupported': 'This browser cannot read compressed backups',
   'archive.confirm.backupHeader': 'Restore backup',
   'archive.confirm.backupMessage':
-    'This replaces all employees, shifts, and days off, including your language and scheduler settings, with the contents of the backup. This cannot be undone.',
+    'This replaces all employees, shifts, days off, holidays, events, and settings, including your language and scheduler settings, with the contents of the backup. This cannot be undone.',
   'archive.confirm.backupLabel': 'Restore',
   'archive.importedOne': 'Imported {count} employee',
   'archive.importedMany': 'Imported {count} employees',
@@ -277,6 +343,14 @@ export const en = {
   'errors.endNotAllowedActive': 'End date is not allowed for active employees',
   'errors.invalidActive': 'Active is invalid',
   'errors.invalidHolidays': 'Holidays are invalid',
+  'errors.invalidCalendarDate': 'Date is invalid',
+  'errors.invalidCalendarKind': 'Type is invalid',
+  'errors.invalidCalendarEntry': 'Calendar entry is invalid',
+  'errors.duplicateCalendarEntry': 'This entry already exists on that date',
+  'errors.invalidCalendarYear': 'Year is invalid',
+  'errors.invalidCountry': 'Country is invalid',
+  'errors.invalidRegion': 'Region is invalid',
+  'errors.calendarNameTooLong': 'Name is too long',
   'errors.unexpectedHeaders': 'Unexpected CSV headers',
   'errors.invalidEmployee': 'Invalid employee',
   'errors.invalidEmpId': 'Employee ID is invalid',
@@ -315,9 +389,9 @@ export const en = {
   'demo.picker.description':
     'Choose a page to explore with sample data. Your saved data is restored when you exit the demo.',
   'demo.picker.optionsAria': 'Demo pages',
-  'demo.picker.archive': 'Archive',
-  'demo.picker.archiveDescription':
-    'Export a compressed backup of every employee, shift, day off and setting, and restore from a backup file.',
+  'demo.picker.calendar': 'Calendar',
+  'demo.picker.calendarDescription':
+    'Fetch public holidays by country and region, add custom holidays or events, and see them in the scheduler.',
   'demo.picker.employees': 'Employees',
   'demo.picker.employeesDescription':
     'Search, add, edit, deactivate, reactivate and remove team members, and manage holiday weeks.',
@@ -390,12 +464,18 @@ export const en = {
   'demo.scenario.scheduler.week': 'Move between weeks with these controls.',
   'demo.scenario.scheduler.weekNext': 'The next week button returns to the following week.',
   'demo.scenario.scheduler.weekdayTabs': 'Pick a day of the week to schedule.',
+  'demo.scenario.scheduler.calendarMarkers':
+    'Calendar markers after each weekday flag public holidays and custom events.',
+  'demo.scenario.scheduler.dayEntries':
+    'The selected day also shows its public holidays and events in a blue label under the date.',
   'demo.scenario.scheduler.grid':
     'Each row is a team member and the horizontal axis runs from 09:00 to 01:00.',
   'demo.scenario.scheduler.create': 'Press Enter on a row, or click and drag, to create a shift.',
   'demo.scenario.scheduler.created': 'A new shift appears on the row.',
   'demo.scenario.scheduler.resize':
     'Drag the shift edges to resize it, or use Shift with the arrow keys.',
+  'demo.scenario.scheduler.resizeApplied':
+    'Shift with the right arrow extends the shift end by one time slot.',
   'demo.scenario.scheduler.move':
     'Drag the shift to move it within the row, or use the arrow keys. Press Delete to remove it.',
   'demo.scenario.scheduler.moveBetweenRows':
@@ -408,18 +488,30 @@ export const en = {
     'Members on holiday appear disabled and are excluded from the weekly hours table.',
   'demo.scenario.scheduler.hours':
     'The weekly hours table compares scheduled hours with contract hours.',
+  'demo.scenario.scheduler.hoursDiff':
+    'The difference row highlights under- and over-scheduled hours per employee.',
   'demo.scenario.scheduler.settingsOpen':
     'Open the schedule settings. Each option has an info icon with the details.',
   'demo.scenario.scheduler.settingsWindow':
-    'Set the start and end times. An end time before the start time keeps the schedule open past midnight.',
+    'The schedule settings open with the current window and slot size.',
+  'demo.scenario.scheduler.settingsStart':
+    'Pick the start time with the hour and minute selectors.',
+  'demo.scenario.scheduler.settingsEnd':
+    'Pick the end time the same way. The grid expands or shrinks to match.',
   'demo.scenario.scheduler.settingsTooltips':
     'Hover or focus the info icon next to a setting to read what it does without cluttering the dialog.',
+  'demo.scenario.scheduler.settingsOvernight':
+    'An end time before the start time keeps the schedule open past midnight.',
   'demo.scenario.scheduler.settingsSlot':
     'Switch the time slot between 30 and 15 minutes to change the grid detail.',
   'demo.scenario.scheduler.settingsHeadcount':
     'The headcount switch sits next to its label, and its info icon explains the hourly badge.',
+  'demo.scenario.scheduler.settingsHeadcountToggle':
+    'Turn on the headcount switch to show how many employees work in each hour.',
   'demo.scenario.scheduler.settingsSaved':
     'Save to apply the new window and slot size to the scheduler.',
+  'demo.scenario.scheduler.headcount':
+    'Each hourly badge now shows the number of employees scheduled in that hour.',
   'demo.scenario.scheduler.restart':
     'Use Clear all to remove every shift and day off from the current week.',
   'demo.scenario.scheduler.confirmRestart':
@@ -431,6 +523,44 @@ export const en = {
     'Pick any week from the calendar. The current week is highlighted.',
   'demo.scenario.scheduler.weekPickerSelected': 'The scheduler now shows the week you picked.',
   'demo.scenario.scheduler.finish': 'That covers the Scheduler page. Exit to restore your data.',
+  'demo.scenario.calendar.intro':
+    'The calendar keeps public holidays and custom events for your schedule.',
+  'demo.scenario.calendar.toolbar':
+    'In the holidays section, choose a country, region, and year, then import the public holidays.',
+  'demo.scenario.calendar.region':
+    'Pick a region to narrow the holidays, or keep the whole country.',
+  'demo.scenario.calendar.year': 'Choose the year to import public holidays for.',
+  'demo.scenario.calendar.fetch': 'Use the Import button to store the holidays in your workspace.',
+  'demo.scenario.calendar.fetched':
+    'The imported holidays appear in the calendar, and the star badge shows the imported total per year on hover.',
+  'demo.scenario.calendar.month':
+    'Use the arrows around the month name to browse the calendar.',
+  'demo.scenario.calendar.monthPrevious': 'Move to the previous month.',
+  'demo.scenario.calendar.monthNext': 'Return to the next month.',
+  'demo.scenario.calendar.selectDay':
+    'Select a day to target it. Double-click a day to add an entry for that date.',
+  'demo.scenario.calendar.clear':
+    'Use Clear all to remove every imported public holiday while keeping your own entries.',
+  'demo.scenario.calendar.clearConfirm':
+    'Confirm the removal. Custom holidays and events remain in the calendar.',
+  'demo.scenario.calendar.cleared': 'Only your custom entries remain. Now add a new one.',
+  'demo.scenario.calendar.add': 'Add a custom holiday or event.',
+  'demo.scenario.calendar.form': 'The form collects the date, name and type of the entry.',
+  'demo.scenario.calendar.date': 'The date defaults to the selected day. Pick any day you need.',
+  'demo.scenario.calendar.name': 'Type the name of the holiday or event.',
+  'demo.scenario.calendar.kind':
+    'Choose whether the entry is a custom holiday or a custom event.',
+  'demo.scenario.calendar.save': 'Save the entry to add it to the calendar.',
+  'demo.scenario.calendar.saved': 'The entry is now stored and will appear in the scheduler.',
+  'demo.scenario.calendar.edit': 'Use the pencil action to edit a custom entry.',
+  'demo.scenario.calendar.editForm': 'The form opens prefilled with the current values.',
+  'demo.scenario.calendar.editName': 'Change the name, type or date, then save.',
+  'demo.scenario.calendar.editSaved': 'The updated entry is reflected in the calendar and scheduler.',
+  'demo.scenario.calendar.remove': 'Use the trash action to delete a custom entry.',
+  'demo.scenario.calendar.confirmRemove':
+    'Confirm the removal. Imported public holidays cannot be edited this way.',
+  'demo.scenario.calendar.removed': 'The entry is gone from the month view and the scheduler.',
+  'demo.scenario.calendar.finish': 'That covers the Calendar page. Exit to restore your data.',
   'demo.scenario.summary.intro': 'The summary shows the week at a glance.',
   'demo.scenario.summary.week': 'The current week is shown here.',
   'demo.scenario.summary.weekPrevious': 'Move to the previous week.',
@@ -445,21 +575,13 @@ export const en = {
     'Each row is a team member and each column is a day, with shifts and holidays in one place.',
   'demo.scenario.summary.vacation':
     'Employees on holiday for the whole week appear as a single vacation row.',
-  'demo.scenario.summary.details':
-    'Select a name to open the employee details from the summary.',
+  'demo.scenario.summary.details': 'Select a name to open the employee details from the summary.',
   'demo.scenario.summary.detailsDialog':
     'The same employee details dialog opens here, with contact and holiday information.',
   'demo.scenario.summary.detailsClose': 'Close it to return to the summary.',
   'demo.scenario.summary.print': 'Print the summary using your browser print dialog.',
   'demo.scenario.summary.pdf': 'Save the summary as a PDF file.',
   'demo.scenario.summary.finish': 'That covers the Summary page. Exit to restore your data.',
-  'demo.scenario.archive.intro':
-    'The archive page saves and restores your entire workspace as a single compressed backup file.',
-  'demo.scenario.archive.export':
-    'Download a .json.gz backup with every employee, schedule, day off and setting.',
-  'demo.scenario.archive.import':
-    'Restore from a backup file here. You will be asked to confirm before your data is replaced.',
-  'demo.scenario.archive.finish': 'That covers the Archive page. Exit to restore your data.',
 } as const
 
 export type MessageKey = keyof typeof en

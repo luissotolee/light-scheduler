@@ -10,6 +10,7 @@ import {
   WORKSPACE_SCHEMA_VERSION,
 } from '@/shared/utils/persistence'
 import type { PersistedWorkspace } from '@/shared/utils/persistence'
+import { createDefaultCalendarData } from '@/shared/utils/calendarEntries'
 
 const member: TeamMember = {
   id: 'member-1',
@@ -38,6 +39,7 @@ const payload: Omit<PersistedWorkspace, 'version'> = {
   schedules: { '2026-11-02': [shift] },
   dayOffs: { '2026-11-02': [dayOff] },
   currentWeekKey: '2026-11-02',
+  calendar: createDefaultCalendarData(),
 }
 
 describe('persistence guards', () => {
@@ -179,6 +181,83 @@ describe('parsePersistedWorkspace', () => {
       parsePersistedWorkspace({
         ...valid,
         dayOffs: { '2026-11-02': [{ memberId: 'member-1', weekday: 'funday' }] },
+      }),
+    ).toBeNull()
+  })
+
+  it('defaults calendar data for workspaces saved before the calendar existed', () => {
+    const legacy = {
+      version: WORKSPACE_SCHEMA_VERSION,
+      members: payload.members,
+      schedules: payload.schedules,
+      dayOffs: payload.dayOffs,
+      currentWeekKey: payload.currentWeekKey,
+    }
+
+    expect(parsePersistedWorkspace(legacy)?.calendar).toEqual(createDefaultCalendarData())
+  })
+
+  it('parses calendar entries and ignores unknown fields', () => {
+    const calendar = {
+      country: 'ES',
+      region: 'AN',
+      futureField: 'ignored',
+      entries: [
+        {
+          id: 'entry-1',
+          date: '2026-11-03',
+          name: '  Public holiday  ',
+          kind: 'public_holiday',
+          countryCode: 'ES',
+          region: 'AN',
+          futureField: 'ignored',
+        },
+      ],
+    }
+
+    const parsed = parsePersistedWorkspace({
+      ...serializeWorkspace(payload),
+      calendar,
+    })
+
+    expect(parsed?.calendar).toEqual({
+      country: 'ES',
+      region: 'AN',
+      entries: [
+        {
+          id: 'entry-1',
+          date: '2026-11-03',
+          name: 'Public holiday',
+          kind: 'public_holiday',
+          countryCode: 'ES',
+          region: 'AN',
+        },
+      ],
+    })
+  })
+
+  it('rejects invalid calendar data', () => {
+    const valid = serializeWorkspace(payload)
+
+    expect(parsePersistedWorkspace({ ...valid, calendar: 'nope' })).toBeNull()
+    expect(parsePersistedWorkspace({ ...valid, calendar: { entries: 'nope' } })).toBeNull()
+    expect(
+      parsePersistedWorkspace({
+        ...valid,
+        calendar: {
+          entries: [{ id: 'entry-1', date: 'nope', name: 'Holiday', kind: 'public_holiday' }],
+        },
+      }),
+    ).toBeNull()
+    expect(
+      parsePersistedWorkspace({
+        ...valid,
+        calendar: {
+          entries: [
+            { id: 'entry-1', date: '2026-11-03', name: 'Holiday', kind: 'public_holiday' },
+            { id: 'entry-1', date: '2026-11-04', name: 'Other', kind: 'custom_event' },
+          ],
+        },
       }),
     ).toBeNull()
   })

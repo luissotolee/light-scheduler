@@ -13,12 +13,13 @@ export const es: Messages = {
 
   'app.navPrimary': 'Principal',
   'app.footer':
-    'Light Scheduler — un planificador semanal de turnos solo de frontend. Recomendamos respaldar tu trabajo localmente a través de Archivo.',
+    'Light Scheduler — un planificador semanal de turnos ligero y moderno. Recomendamos respaldar tu trabajo localmente a través de Archivo.',
   'app.contact': 'Contacta al creador',
   'app.supportOnKoFi': 'Apóyame en Ko-fi',
 
   'nav.home': 'Inicio',
   'nav.scheduler': 'Planificador',
+  'nav.calendar': 'Calendario',
   'nav.employees': 'Empleados',
   'nav.summary': 'Horario',
   'nav.archive': 'Archivo',
@@ -27,11 +28,19 @@ export const es: Messages = {
   'languageSwitcher.menuLabel': 'Seleccionar idioma',
 
   'home.description':
-    'Un planificador semanal de turnos ligero y moderno para equipos. Es solo de frontend: todos los datos permanecen en tu navegador y se intercambian mediante archivos CSV para que puedas continuar donde lo dejaste.',
+    'Un planificador semanal de turnos ligero y moderno para equipos. Todos tus datos permanecen en tu navegador para que puedas continuar justo donde lo dejaste.',
   'home.intro':
-    'Planifica turnos diarios durante una semana para muchos empleados y revisa el resultado sin backend.',
+    'Planifica turnos diarios durante una semana para muchos empleados y revisa el resultado en un solo lugar.',
+  'home.demo.badge': 'Primer paso recomendado',
+  'home.demo.title': 'Recomendamos encarecidamente empezar con la demostración guiada',
+  'home.demo.description':
+    'La demostración te guía por todas las páginas con datos de ejemplo para que aprendas la aplicación antes de tocar tu propia planificación. Tus datos guardados se restauran al salir.',
+  'home.demo.cta': 'Iniciar la demostración guiada',
   'home.feature.scheduler.title': 'Planificador',
   'home.feature.scheduler.description': 'Crea turnos semanales para cada empleado de tu equipo.',
+  'home.feature.calendar.title': 'Calendario',
+  'home.feature.calendar.description':
+    'Guarda días festivos y eventos personalizados para las semanas que planificas.',
   'home.feature.employees.title': 'Empleados',
   'home.feature.employees.description':
     'Mantén los registros de empleados que usan todas las planificaciones.',
@@ -41,7 +50,7 @@ export const es: Messages = {
   'home.feature.archive.title': 'Archivo',
   'home.feature.archive.description':
     'Exporta tus datos como archivos o impórtalos para restaurar tu información.',
-  'home.cta': 'Empezar a planificar',
+  'home.cta': 'Empezar añadiendo empleados',
 
   'scheduler.title': 'Planificador',
   'scheduler.description':
@@ -73,6 +82,8 @@ export const es: Messages = {
   'scheduler.confirm.restartMessage':
     'Esto borra todos los turnos y días libres de la semana actual. Los empleados se conservan. Esta acción no se puede deshacer.',
   'scheduler.confirm.restartLabel': 'Reiniciar',
+  'scheduler.calendar.markerAria': 'Entradas del calendario: {entries}',
+  'scheduler.calendar.multiple': '{count} entradas',
 
   'weekday.monday': 'Lunes',
   'weekday.tuesday': 'Martes',
@@ -139,7 +150,8 @@ export const es: Messages = {
     '{name} ya tiene turnos en las semanas de vacaciones seleccionadas. Guardar las vacaciones eliminará esos turnos.',
   'employees.confirm.removeShifts': 'Eliminar turnos y guardar',
   'employees.hideInactive': 'Solo activos',
-  'employees.hideInactive.tooltip': 'Mostrar solo empleados activos (aquellos no desactivados). Los empleados desactivados se excluyen de las planificaciones.',
+  'employees.hideInactive.tooltip':
+    'Mostrar solo empleados activos (aquellos no desactivados). Los empleados desactivados se excluyen de las planificaciones.',
   'employees.allInactiveTitle': 'No hay empleados activos',
   'employees.allInactiveDescription':
     'Todos los empleados están desactivados. Desactiva «Solo activos» para verlos.',
@@ -199,6 +211,63 @@ export const es: Messages = {
   'weekPicker.title': 'Seleccionar semana',
   'weekPicker.open': 'Seleccionar semana para ver',
   'calendar.weekLabel': 'Semana {week} — {range}',
+  'calendar.title': 'Calendario',
+  'calendar.description':
+    'Importa días festivos de un país y una región y añade festivos o eventos personalizados que aparecen en el planificador.',
+  'calendar.importTitle': 'Gestionar días festivos',
+  'calendar.country': 'País',
+  'calendar.countryPlaceholder': 'Selecciona un país',
+  'calendar.region': 'Región',
+  'calendar.regionNone': 'Todo el país',
+  'calendar.regionPlaceholder': 'Selecciona una región',
+  'calendar.year': 'Año',
+  'calendar.fetch': 'Importar',
+  'calendar.fetching': 'Importando festivos…',
+  'calendar.fetchTooltip':
+    'Importa los días festivos públicos del país, la región y el año seleccionados',
+  'calendar.clearFetchedTooltip': 'Borra todos los días festivos importados',
+  'calendar.publicHolidayYearCount': '{year}: {count}',
+  'calendar.fetched': 'Se importaron {count} días festivos públicos para {year}.',
+  'calendar.noneFound': 'No se encontraron días festivos para ese país, región y año.',
+  'calendar.fetchFailed':
+    'No se pudieron cargar los festivos. Revisa el país y la región e inténtalo de nuevo.',
+  'calendar.noCountry': 'Selecciona primero un país.',
+  'calendar.clearFetched': 'Borrar todo',
+  'calendar.cleared': 'Se borraron los días festivos importados.',
+  'calendar.clearFetchedHeader': 'Borrar festivos importados',
+  'calendar.clearFetchedMessage':
+    'Esto elimina todos los días festivos importados. Los festivos y eventos personalizados se conservan.',
+  'calendar.clearFetchedLabel': 'Borrar',
+  'calendar.emptyTitle': 'No hay entradas en el calendario',
+  'calendar.emptyDescription':
+    'Importa días festivos públicos o añade un festivo o evento personalizado.',
+  'calendar.addEntry': 'Añadir festivo o evento',
+  'calendar.month.previous': 'Mes anterior',
+  'calendar.month.next': 'Mes siguiente',
+  'calendar.list.title': 'Entradas de {month}',
+  'calendar.list.empty': 'No hay entradas este mes.',
+  'calendar.countOne': '{count} entrada',
+  'calendar.countMany': '{count} entradas',
+  'calendar.kind.public_holiday': 'Día festivo',
+  'calendar.kind.custom_holiday': 'Festivo personalizado',
+  'calendar.kind.custom_event': 'Evento personalizado',
+  'calendar.entry.editAria': 'Editar {name}',
+  'calendar.entry.removeAria': 'Eliminar {name}',
+  'calendar.importedSuccessfully': 'Importado correctamente',
+  'calendar.fetchedBadge': 'Importado',
+  'calendar.dayAria': '{date}: {entries}',
+  'calendar.loadingOptions': 'Cargando opciones…',
+  'calendar.form.addTitle': 'Añadir festivo o evento',
+  'calendar.form.editTitle': 'Editar festivo o evento',
+  'calendar.form.date': 'Fecha *',
+  'calendar.form.name': 'Nombre *',
+  'calendar.form.namePlaceholder': 'p. ej. Aniversario de la empresa',
+  'calendar.form.kind': 'Tipo *',
+  'calendar.form.kindHoliday': 'Festivo',
+  'calendar.form.kindEvent': 'Evento',
+  'calendar.confirm.removeHeader': 'Eliminar entrada del calendario',
+  'calendar.confirm.removeMessage': '¿Eliminar {name} del calendario?',
+  'calendar.confirm.removeLabel': 'Eliminar',
 
   'summary.title': 'Horario',
 
@@ -222,15 +291,15 @@ export const es: Messages = {
 
   'archive.title': 'Archivo',
   'archive.description':
-    'Descarga una copia comprimida de todos los empleados, turnos y días libres, junto con el idioma y los ajustes del planificador, o restaura una copia para reemplazar el espacio de trabajo actual.',
+    'Descarga una copia comprimida de todos los empleados, turnos, días libres, festivos y eventos, junto con tu idioma y la configuración del planificador, o restaura una copia para reemplazar tu espacio de trabajo actual.',
   'archive.exportHeading': 'Copia de seguridad',
   'archive.exportCopy':
-    'Descarga un archivo JSON comprimido con gzip con todos los empleados y planificaciones, además del idioma y los ajustes del planificador. Conserva los ID de empleado necesarios para vincular los turnos con las personas.',
+    'Descarga un archivo JSON comprimido con gzip con todos los empleados, planificaciones, festivos y eventos, además de tu idioma y la configuración del planificador. Conserva los IDs de empleado necesarios para vincular los turnos con las personas.',
   'archive.exportEmployees': 'Exportar empleados',
   'archive.exportSchedule': 'Exportar planificación',
   'archive.importHeading': 'Restaurar',
   'archive.importCopy':
-    'Sube un archivo de copia de seguridad para reemplazar todos los empleados, turnos, días libres y ajustes de usuario. Restaurar una copia reemplaza todas las semanas del espacio de trabajo.',
+    'Sube un archivo de copia de seguridad para reemplazar todos los empleados, turnos, días libres, festivos, eventos y ajustes de usuario. Restaurar una copia reemplaza todas las semanas del espacio de trabajo.',
   'archive.uploadEmployees': 'Subir empleados',
   'archive.uploadSchedule': 'Subir planificación',
   'archive.noEmployees': 'No hay empleados para exportar',
@@ -256,7 +325,7 @@ export const es: Messages = {
   'archive.compressionUnsupported': 'Este navegador no puede leer copias de seguridad comprimidas',
   'archive.confirm.backupHeader': 'Restaurar copia de seguridad',
   'archive.confirm.backupMessage':
-    'Esto reemplaza todos los empleados, turnos y días libres, incluidos el idioma y los ajustes del planificador, con el contenido de la copia de seguridad. Esta acción no se puede deshacer.',
+    'Esto reemplaza todos los empleados, turnos, días libres, festivos, eventos y ajustes, incluidos el idioma y la configuración del planificador, con el contenido de la copia de seguridad. Esta acción no se puede deshacer.',
   'archive.confirm.backupLabel': 'Restaurar',
   'archive.importedOne': 'Se importó {count} empleado',
   'archive.importedMany': 'Se importaron {count} empleados',
@@ -282,6 +351,14 @@ export const es: Messages = {
   'errors.endNotAllowedActive': 'La fecha de fin no está permitida para los empleados activos',
   'errors.invalidActive': 'El estado activo no es válido',
   'errors.invalidHolidays': 'Las vacaciones no son válidas',
+  'errors.invalidCalendarDate': 'La fecha no es válida',
+  'errors.invalidCalendarKind': 'El tipo no es válido',
+  'errors.invalidCalendarEntry': 'La entrada del calendario no es válida',
+  'errors.duplicateCalendarEntry': 'Esta entrada ya existe en esa fecha',
+  'errors.invalidCalendarYear': 'El año no es válido',
+  'errors.invalidCountry': 'El país no es válido',
+  'errors.invalidRegion': 'La región no es válida',
+  'errors.calendarNameTooLong': 'El nombre es demasiado largo',
   'errors.unexpectedHeaders': 'Encabezados CSV inesperados',
   'errors.invalidEmployee': 'Empleado no válido',
   'errors.invalidEmpId': 'El ID de empleado no es válido',
@@ -321,9 +398,9 @@ export const es: Messages = {
   'demo.picker.description':
     'Elige una página para explorar con datos de ejemplo. Tus datos guardados se restauran al salir de la demostración.',
   'demo.picker.optionsAria': 'Páginas de la demostración',
-  'demo.picker.archive': 'Archivo',
-  'demo.picker.archiveDescription':
-    'Exporta una copia comprimida de todos los empleados, turnos, días libres y ajustes, y restaura desde un archivo de copia de seguridad.',
+  'demo.picker.calendar': 'Calendario',
+  'demo.picker.calendarDescription':
+    'Importa días festivos por país y región, añade festivos o eventos personalizados y vélos en el planificador.',
   'demo.picker.employees': 'Empleados',
   'demo.picker.employeesDescription':
     'Busca, añade, edita, desactiva, reactiva y elimina miembros del equipo, y gestiona sus semanas de vacaciones.',
@@ -408,6 +485,10 @@ export const es: Messages = {
   'demo.scenario.scheduler.week': 'Cambia de semana con estos controles.',
   'demo.scenario.scheduler.weekNext': 'El botón de semana siguiente vuelve a la semana posterior.',
   'demo.scenario.scheduler.weekdayTabs': 'Elige un día de la semana para planificar.',
+  'demo.scenario.scheduler.calendarMarkers':
+    'Los marcadores del calendario junto a cada día señalan festivos públicos y eventos personalizados.',
+  'demo.scenario.scheduler.dayEntries':
+    'El día seleccionado también muestra sus festivos y eventos en una etiqueta azul bajo la fecha.',
   'demo.scenario.scheduler.grid':
     'Cada fila es un miembro del equipo y el eje horizontal va de 09:00 a 01:00.',
   'demo.scenario.scheduler.create':
@@ -415,6 +496,8 @@ export const es: Messages = {
   'demo.scenario.scheduler.created': 'Aparece un nuevo turno en la fila.',
   'demo.scenario.scheduler.resize':
     'Arrastra los bordes del turno para redimensionarlo, o usa Mayús con las flechas.',
+  'demo.scenario.scheduler.resizeApplied':
+    'Mayús con la flecha derecha amplía el final del turno una franja.',
   'demo.scenario.scheduler.move':
     'Arrastra el turno para moverlo dentro de la fila, o usa las flechas. Pulsa Supr para eliminarlo.',
   'demo.scenario.scheduler.moveBetweenRows':
@@ -428,18 +511,30 @@ export const es: Messages = {
     'Los miembros de vacaciones aparecen deshabilitados y se excluyen de la tabla de horas semanales.',
   'demo.scenario.scheduler.hours':
     'La tabla de horas semanales compara las horas planificadas con las del contrato.',
+  'demo.scenario.scheduler.hoursDiff':
+    'La fila de diferencia resalta las horas planificadas por debajo y por encima de cada empleado.',
   'demo.scenario.scheduler.settingsOpen':
     'Abre la configuración del horario. Cada opción tiene un icono de información con los detalles.',
   'demo.scenario.scheduler.settingsWindow':
-    'Define la hora de inicio y de fin. Si la hora de fin es anterior al inicio, el horario continúa pasada la medianoche.',
+    'La configuración se abre con la franja horaria y el tramo actuales.',
+  'demo.scenario.scheduler.settingsStart':
+    'Elige la hora de inicio con los selectores de hora y minutos.',
+  'demo.scenario.scheduler.settingsEnd':
+    'Elige la hora de fin de la misma forma. La cuadrícula se amplía o se reduce según el rango.',
   'demo.scenario.scheduler.settingsTooltips':
     'Pasa el cursor o enfoca el icono de información junto a un ajuste para leer qué hace sin recargar el diálogo.',
+  'demo.scenario.scheduler.settingsOvernight':
+    'Si la hora de fin es anterior al inicio, el horario continúa pasada la medianoche.',
   'demo.scenario.scheduler.settingsSlot':
     'Cambia la franja entre 30 y 15 minutos para modificar el detalle de la cuadrícula.',
   'demo.scenario.scheduler.settingsHeadcount':
     'El interruptor de empleados por hora está junto a su etiqueta, y su icono de información explica la insignia por hora.',
+  'demo.scenario.scheduler.settingsHeadcountToggle':
+    'Activa el interruptor de empleados por hora para mostrar cuántos empleados trabajan en cada hora.',
   'demo.scenario.scheduler.settingsSaved':
     'Guarda para aplicar la nueva franja y el tamaño del tramo al planificador.',
+  'demo.scenario.scheduler.headcount':
+    'Cada insignia por hora muestra ahora cuántos empleados están planificados en esa hora.',
   'demo.scenario.scheduler.restart':
     'Usa Borrar todo para eliminar todos los turnos y días libres de la semana actual.',
   'demo.scenario.scheduler.confirmRestart':
@@ -452,6 +547,49 @@ export const es: Messages = {
   'demo.scenario.scheduler.weekPickerSelected': 'El planificador ahora muestra la semana elegida.',
   'demo.scenario.scheduler.finish':
     'Esto cubre la página del Planificador. Sal para restaurar tus datos.',
+  'demo.scenario.calendar.intro':
+    'El calendario guarda días festivos y eventos personalizados para tu planificación.',
+  'demo.scenario.calendar.toolbar':
+    'En la sección de días festivos, elige un país, una región y un año, y luego importa los días festivos.',
+  'demo.scenario.calendar.region':
+    'Elige una región para acotar los festivos o mantén todo el país.',
+  'demo.scenario.calendar.year': 'Elige el año para el que quieres importar los días festivos.',
+  'demo.scenario.calendar.fetch': 'Importa los festivos para guardarlos en tu espacio de trabajo.',
+  'demo.scenario.calendar.fetched':
+    'Los festivos importados aparecen en el calendario y la insignia de estrella muestra el total importado por año al pasar el cursor.',
+  'demo.scenario.calendar.month':
+    'Usa las flechas junto al nombre del mes para recorrer el calendario.',
+  'demo.scenario.calendar.monthPrevious': 'Pasa al mes anterior.',
+  'demo.scenario.calendar.monthNext': 'Vuelve al mes siguiente.',
+  'demo.scenario.calendar.selectDay':
+    'Selecciona un día para fijarlo. Haz doble clic en un día para añadir una entrada en esa fecha.',
+  'demo.scenario.calendar.clear':
+    'Usa Borrar todo para eliminar los festivos importados y conservar tus propias entradas.',
+  'demo.scenario.calendar.clearConfirm':
+    'Confirma la eliminación. Los festivos y eventos personalizados permanecen en el calendario.',
+  'demo.scenario.calendar.cleared':
+    'Solo quedan tus entradas personalizadas. Ahora añade una nueva.',
+  'demo.scenario.calendar.add': 'Añade un festivo o evento personalizado.',
+  'demo.scenario.calendar.form':
+    'El formulario recopila la fecha, el nombre y el tipo de la entrada.',
+  'demo.scenario.calendar.date':
+    'La fecha parte del día seleccionado. Puedes elegir cualquier otro día.',
+  'demo.scenario.calendar.name': 'Escribe el nombre del festivo o evento.',
+  'demo.scenario.calendar.kind':
+    'Elige si la entrada es un festivo personalizado o un evento personalizado.',
+  'demo.scenario.calendar.save': 'Guarda la entrada para añadirla al calendario.',
+  'demo.scenario.calendar.saved': 'La entrada ya está guardada y aparecerá en el planificador.',
+  'demo.scenario.calendar.edit': 'Usa la acción del lápiz para editar una entrada personalizada.',
+  'demo.scenario.calendar.editForm': 'El formulario se abre con los valores actuales.',
+  'demo.scenario.calendar.editName': 'Cambia el nombre, el tipo o la fecha, y luego guarda.',
+  'demo.scenario.calendar.editSaved':
+    'La entrada actualizada se refleja en el calendario y en el planificador.',
+  'demo.scenario.calendar.remove': 'Usa la acción de la papelera para eliminar una entrada personalizada.',
+  'demo.scenario.calendar.confirmRemove':
+    'Confirma la eliminación. Los festivos importados no se pueden editar de esta forma.',
+  'demo.scenario.calendar.removed':
+    'La entrada desaparece de la vista del mes y del planificador.',
+  'demo.scenario.calendar.finish': 'Eso cubre la página Calendario. Sal para restaurar tus datos.',
   'demo.scenario.summary.intro': 'El resumen muestra la semana de un vistazo.',
   'demo.scenario.summary.week': 'Aquí se muestra la semana actual.',
   'demo.scenario.summary.weekPrevious': 'Pasa a la semana anterior.',
@@ -474,12 +612,4 @@ export const es: Messages = {
   'demo.scenario.summary.print': 'Imprime el resumen con el diálogo de impresión del navegador.',
   'demo.scenario.summary.pdf': 'Guarda el resumen como archivo PDF.',
   'demo.scenario.summary.finish': 'Esto cubre la página de Resumen. Sal para restaurar tus datos.',
-  'demo.scenario.archive.intro':
-    'La página de archivo guarda y restaura todo tu espacio de trabajo en un único archivo comprimido.',
-  'demo.scenario.archive.export':
-    'Descarga una copia .json.gz con todos los empleados, planificaciones, días libres y ajustes.',
-  'demo.scenario.archive.import':
-    'Restaura desde un archivo de copia de seguridad aquí. Se te pedirá confirmación antes de reemplazar tus datos.',
-  'demo.scenario.archive.finish':
-    'Esto cubre la página de Archivo. Sal para restaurar tus datos.',
 }

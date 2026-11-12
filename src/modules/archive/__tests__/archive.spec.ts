@@ -13,6 +13,7 @@ import {
   type BackupSettings,
 } from '@/shared/utils/archiveBackup'
 import { todayIsoDate } from '@/shared/utils/calendar'
+import { createDefaultCalendarData } from '@/shared/utils/calendarEntries'
 import type { TeamMember } from '@/types'
 
 const ada: TeamMember = {
@@ -110,7 +111,7 @@ describe('archive store', () => {
       state: 'success',
       message: { kind: 'simple', code: 'archive.employeesExported' },
     })
-    expect(downloadName).toBe('employees-2026-11-05T20-57-00-000Z.csv')
+    expect(downloadName).toBe('employees-2026-11-05_20-57-00.csv')
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
 
     const blob = blobs[0]
@@ -410,7 +411,7 @@ describe('archive store', () => {
       state: 'success',
       message: { kind: 'simple', code: 'archive.scheduleExported' },
     })
-    expect(downloadName).toBe('schedule-2026-11-05T20-57-00-000Z.csv')
+    expect(downloadName).toBe('schedule-2026-11-05_20-57-00.csv')
 
     const blob = blobs[0]
     expect(new Uint8Array(await blob.slice(0, 3).arrayBuffer())).toEqual(
@@ -681,6 +682,26 @@ describe('archive store', () => {
       expect(store.canExportBackup).toBe(true)
     })
 
+    it('allows a backup with calendar data only', () => {
+      const workspace = useWorkspaceStore()
+      const store = useArchiveStore()
+
+      workspace.setCalendar({
+        country: 'ES',
+        region: null,
+        entries: [
+          {
+            id: 'entry-1',
+            date: '2026-11-03',
+            name: 'Holiday',
+            kind: 'custom_holiday',
+          },
+        ],
+      })
+
+      expect(store.canExportBackup).toBe(true)
+    })
+
     it('reports an error when there is no data to back up', async () => {
       const store = useArchiveStore()
 
@@ -715,7 +736,7 @@ describe('archive store', () => {
         state: 'success',
         message: { kind: 'simple', code: 'archive.backupExported' },
       })
-      expect(downloadName).toBe('backup-2026-11-05T20-57-00-000Z.json.gz')
+      expect(downloadName).toBe('backup-2026-11-05_20-57-00.json.gz')
       expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
 
       const backup = await gunzipJson(blobs[0])
@@ -911,6 +932,109 @@ describe('archive store', () => {
         slotMinutes: 30,
         showHourlyHeadcount: false,
       })
+    })
+
+    it('exports calendar data', async () => {
+      const workspace = useWorkspaceStore()
+      workspace.setCalendar({
+        country: 'ES',
+        region: 'AN',
+        entries: [
+          {
+            id: 'entry-1',
+            date: '2026-11-03',
+            name: 'Public holiday',
+            kind: 'public_holiday',
+            countryCode: 'ES',
+            region: 'AN',
+          },
+          {
+            id: 'entry-2',
+            date: '2026-11-05',
+            name: 'Team day',
+            kind: 'custom_event',
+          },
+        ],
+      })
+      const store = useArchiveStore()
+
+      await store.exportBackup()
+
+      const backup = await gunzipJson(blobs[0])
+      expect(backup).toMatchObject({
+        calendar: {
+          country: 'ES',
+          region: 'AN',
+          entries: [
+            {
+              date: '2026-11-03',
+              name: 'Public holiday',
+              kind: 'public_holiday',
+              countryCode: 'ES',
+              region: 'AN',
+            },
+            { date: '2026-11-05', name: 'Team day', kind: 'custom_event' },
+          ],
+        },
+      })
+    })
+
+    it('restores calendar data from a backup', async () => {
+      const workspace = useWorkspaceStore()
+      const store = useArchiveStore()
+      const backup = buildBackup([ada], {}, {}, '2026-11-02', {}, new Date(), {
+        country: 'ES',
+        region: 'AN',
+        entries: [
+          {
+            id: 'entry-1',
+            date: '2026-11-03',
+            name: 'Public holiday',
+            kind: 'public_holiday',
+            countryCode: 'ES',
+            region: 'AN',
+          },
+        ],
+      })
+
+      await store.prepareBackupImport(
+        new File([await gzipJson(backup)], 'backup.json.gz', { type: 'application/gzip' }),
+      )
+      store.confirmBackupImport()
+
+      expect(workspace.calendar.country).toBe('ES')
+      expect(workspace.calendar.region).toBe('AN')
+      expect(workspace.calendar.entries).toHaveLength(1)
+      expect(workspace.calendar.entries[0]).toMatchObject({
+        date: '2026-11-03',
+        name: 'Public holiday',
+        kind: 'public_holiday',
+        countryCode: 'ES',
+        region: 'AN',
+      })
+    })
+
+    it('clears calendar data when restoring a legacy backup without it', async () => {
+      const workspace = useWorkspaceStore()
+      workspace.setMembers([ada])
+      workspace.setCalendar({
+        country: 'ES',
+        region: null,
+        entries: [
+          {
+            id: 'entry-1',
+            date: '2026-11-03',
+            name: 'Holiday',
+            kind: 'custom_holiday',
+          },
+        ],
+      })
+      const store = useArchiveStore()
+
+      await store.prepareBackupImport(await makeBackupFile())
+      store.confirmBackupImport()
+
+      expect(workspace.calendar).toEqual(createDefaultCalendarData())
     })
 
     it('leaves user settings unchanged when a backup has none', async () => {

@@ -130,6 +130,21 @@ describe('dom utils', () => {
   })
 
   describe('pressKey', () => {
+    it('dispatches keydown with modifiers', () => {
+      const el = document.createElement('div')
+      document.body.appendChild(el)
+      const handler = vi.fn()
+      el.addEventListener('keydown', handler)
+
+      pressKey(el, 'Shift+ArrowRight')
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler.mock.calls[0][0]).toMatchObject({
+        key: 'ArrowRight',
+        shiftKey: true,
+      })
+    })
+
     it('dispatches keydown event', () => {
       const el = document.createElement('input')
       const dispatchSpy = vi.spyOn(el, 'dispatchEvent')
@@ -155,6 +170,22 @@ describe('dom utils', () => {
       expect(dispatchSpy.mock.calls[0][0].type).toBe('input')
       expect(dispatchSpy.mock.calls[1][0].type).toBe('change')
       expect(dispatchSpy.mock.calls[2][0].type).toBe('blur')
+    })
+
+    it('checks a checkbox or switch input from a truthy value', () => {
+      const el = document.createElement('input')
+      el.type = 'checkbox'
+      document.body.appendChild(el)
+      const onChange = vi.fn()
+      el.addEventListener('change', onChange)
+
+      fillInput(el, 'true')
+      expect(el.checked).toBe(true)
+      expect(onChange).toHaveBeenCalledTimes(1)
+
+      fillInput(el, 'false')
+      expect(el.checked).toBe(false)
+      expect(onChange).toHaveBeenCalledTimes(2)
     })
 
     it('sets value on an input nested inside the target element', () => {
