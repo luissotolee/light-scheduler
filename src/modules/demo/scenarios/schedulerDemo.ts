@@ -53,11 +53,28 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 2700,
     },
     {
+      id: 'scheduler-phone-pan',
+      viewport: 'phone',
+      action: 'spotlight',
+      target: { testId: 'shift-grid-scroller' },
+      narrationKey: 'demo.scenario.scheduler.phonePan',
+      pauseMs: 2700,
+    },
+    {
       id: 'scheduler-create-shift',
+      viewport: 'desktop',
       action: 'press',
       target: { testId: 'shift-track', within: 'shift-row-emp-mock-01' },
       key: 'Enter',
       narrationKey: 'demo.scenario.scheduler.create',
+      pauseMs: 3100,
+    },
+    {
+      id: 'scheduler-create-shift-phone',
+      viewport: 'phone',
+      action: 'pointerClick',
+      target: { testId: 'shift-track', within: 'shift-row-emp-mock-01', point: { x: 0.35, y: 0.5 } },
+      narrationKey: 'demo.scenario.scheduler.createPhone',
       pauseMs: 3100,
     },
     {

@@ -326,6 +326,47 @@ describe('ShiftRow', () => {
     ])
   })
 
+  it('creates a default shift when pointer capture is unavailable', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    Object.defineProperty(Element.prototype, 'setPointerCapture', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => {
+        throw new Error('No active pointer')
+      }),
+    })
+    Object.defineProperty(Element.prototype, 'releasePointerCapture', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => {
+        throw new Error('No active pointer')
+      }),
+    })
+    const wrapper = mountRow()
+    const track = wrapper.find('[data-test="shift-track"]')
+
+    await pointer(track.element, 'pointerdown', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+    await pointer(track.element, 'pointerup', {
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: 0,
+      clientY: 0,
+    })
+
+    expect(wrapper.emitted('create')).toEqual([
+      [{ memberId: 'member-1', startMinute: 540, endMinute: 720 }],
+    ])
+  })
+
   it('does not create a shift when a phone gesture drags to pan', async () => {
     vi.stubGlobal('matchMedia', () => ({
       matches: true,

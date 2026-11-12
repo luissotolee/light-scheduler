@@ -282,14 +282,22 @@ function minuteAt(clientX: number): number | null {
 function capturePointer(event: PointerEvent): void {
   const target = event.currentTarget
   if (target instanceof Element && typeof target.setPointerCapture === 'function') {
-    target.setPointerCapture(event.pointerId)
+    try {
+      target.setPointerCapture(event.pointerId)
+    } catch {
+      return
+    }
   }
 }
 
 function releasePointer(event: PointerEvent): void {
   const target = event.currentTarget
   if (target instanceof Element && typeof target.releasePointerCapture === 'function') {
-    target.releasePointerCapture(event.pointerId)
+    try {
+      target.releasePointerCapture(event.pointerId)
+    } catch {
+      return
+    }
   }
 }
 

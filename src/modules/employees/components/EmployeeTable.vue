@@ -3,14 +3,13 @@
     :value="rows"
     :row-class="rowClass"
     size="small"
-    :scrollable="isPhone"
     sort-field="name"
     :sort-order="1"
     :removable-sort="false"
     data-test="employee-table"
     class="employee-table"
   >
-    <Column field="name" :header="t('employees.column.name')" sortable>
+    <Column field="name" sortable>
       <template #header>
         <span data-test="sort-name">{{ t('employees.column.name') }}</span>
       </template>
@@ -19,12 +18,8 @@
           type="button"
           class="employee-table__name-button"
           :data-test="`details-${data.id}`"
-          :aria-label="
-            data.active
-              ? t('employees.detailsFor', { name: data.name })
-              : t('employees.detailsForInactive', { name: data.name })
-          "
-          @click="emit('details', data.id)"
+          :aria-label="nameAriaLabel(data)"
+          @click="handleNameClick(data)"
         >
           <span
             :class="['employee-table__name', { 'employee-table__name--inactive': !data.active }]"
@@ -35,12 +30,7 @@
       </template>
     </Column>
 
-    <Column
-      field="duty"
-      sort-field="dutySortRank"
-      :header="t('employees.column.duty')"
-      sortable
-    >
+    <Column field="duty" sort-field="dutySortRank" sortable>
       <template #header>
         <span data-test="sort-duty">{{ t('employees.column.duty') }}</span>
       </template>
@@ -52,12 +42,7 @@
       </template>
     </Column>
 
-    <Column
-      field="contract"
-      sort-field="contractSortRank"
-      :header="t('employees.column.contract')"
-      sortable
-    >
+    <Column field="contract" sort-field="contractSortRank" sortable>
       <template #header>
         <span data-test="sort-contract">{{ t('employees.column.contract') }}</span>
       </template>
@@ -72,7 +57,7 @@
       </template>
     </Column>
 
-    <Column field="weeklyHours" :header="t('employees.column.weeklyHours')">
+    <Column v-if="!isPhone" field="weeklyHours" :header="t('employees.column.weeklyHours')">
       <template #body="{ data }">
         <span class="employee-table__hours">{{ data.weeklyHours }}</span>
       </template>
@@ -103,7 +88,7 @@
       </template>
     </Column>
 
-    <Column :header="t('employees.column.actions')">
+    <Column v-if="!isPhone" :header="t('employees.column.actions')">
       <template #body="{ data }">
         <div class="employee-table__actions">
           <Button
@@ -212,6 +197,7 @@ const emit = defineEmits<{
   holidays: [id: string]
   remove: [id: string]
   details: [id: string]
+  manage: [id: string]
   deactivate: [id: string]
   reactivate: [id: string]
 }>()
@@ -221,6 +207,27 @@ const isPhone = useIsPhone()
 
 function rowClass(data: TeamMember): string {
   return data.active ? '' : 'employee-table__row--inactive'
+}
+
+function nameAriaLabel(data: TeamMember): string {
+  if (isPhone.value) {
+    return data.active
+      ? t('employees.manageFor', { name: data.name })
+      : t('employees.manageForInactive', { name: data.name })
+  }
+
+  return data.active
+    ? t('employees.detailsFor', { name: data.name })
+    : t('employees.detailsForInactive', { name: data.name })
+}
+
+function handleNameClick(data: TeamMember): void {
+  if (isPhone.value) {
+    emit('manage', data.id)
+    return
+  }
+
+  emit('details', data.id)
 }
 
 function dutyLabel(value: unknown): string {
@@ -342,30 +349,35 @@ function contractModifier(value: unknown): string {
     overflow: hidden;
   }
 
-  .employee-table :deep(.p-datatable-thead > tr > th:first-child),
-  .employee-table :deep(.p-datatable-tbody > tr > td:first-child) {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    background: var(--color-surface);
-  }
-
-  .employee-table :deep(.p-datatable-thead > tr > th:first-child) {
-    z-index: 3;
+  .employee-table :deep(.p-datatable-table) {
+    width: 100%;
+    table-layout: fixed;
   }
 
   .employee-table :deep(.p-datatable-thead > tr > th),
   .employee-table :deep(.p-datatable-tbody > tr > td) {
-    white-space: nowrap;
+    padding-inline: 0.45rem;
   }
 
-  .employee-table__actions {
-    flex-wrap: nowrap;
+  .employee-table__name {
+    display: inline-block;
+    overflow-wrap: anywhere;
   }
 
-  .employee-table__actions :deep(.p-button) {
-    width: 2.5rem;
-    height: 2.5rem;
+  .employee-table__name-button {
+    max-width: 100%;
+  }
+
+  .employee-table :deep(.employee-table__chip) {
+    max-width: 100%;
+    font-size: 0.75rem;
+  }
+
+  .employee-table :deep(.employee-table__chip .p-chip-label) {
+    min-width: 0;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 </style>

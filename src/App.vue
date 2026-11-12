@@ -1,7 +1,7 @@
 <template>
   <div class="app">
     <header class="app__header">
-      <RouterLink class="app__brand" to="/">Light Scheduler</RouterLink>
+      <RouterLink v-if="!isPhone" class="app__brand" to="/">Light Scheduler</RouterLink>
       <div class="app__nav">
         <AppNav :items="NAV_ITEMS" />
       </div>
@@ -40,9 +40,11 @@ import { useI18n } from '@/shared/i18n'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import { NAV_ITEMS } from '@/router/nav'
 import { useKeyboardInset } from '@/shared/composables/useKeyboardInset'
+import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const { t } = useI18n()
 const demoStore = useDemoStore()
+const isPhone = useIsPhone()
 
 useKeyboardInset()
 
@@ -64,6 +66,9 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
 }
 
 .app__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -71,6 +76,7 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
   min-height: var(--header-height);
   padding: var(--header-padding-y) var(--space-page-x);
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
 }
 
 .app__brand {
@@ -182,12 +188,14 @@ const DemoOverlay = defineAsyncComponent(() => import('@/modules/demo/components
     padding-top: max(var(--header-padding-y), env(safe-area-inset-top, 0px));
   }
 
-  .app__brand {
-    font-size: 1rem;
+  .app__nav {
+    flex: 1 1 auto;
+    gap: 0.25rem;
+    margin-left: 0;
   }
 
-  .app__nav {
-    gap: 0.25rem;
+  .app__nav .app-nav {
+    flex: 1;
   }
 
   .app__language,

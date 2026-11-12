@@ -33,6 +33,8 @@ export const useEmployeesStore = defineStore('employees', () => {
   const pendingAction = ref<PendingAction | null>(null)
   const detailsVisible = ref(false)
   const detailsTargetId = ref<string | null>(null)
+  const manageVisible = ref(false)
+  const manageTargetId = ref<string | null>(null)
   const hideInactive = ref(false)
 
   function workspace() {
@@ -78,6 +80,11 @@ export const useEmployeesStore = defineStore('employees', () => {
   const detailsTarget = computed(() => {
     if (!detailsTargetId.value) return null
     return workspace().members.find((member) => member.id === detailsTargetId.value) ?? null
+  })
+
+  const manageTarget = computed(() => {
+    if (!manageTargetId.value) return null
+    return workspace().members.find((member) => member.id === manageTargetId.value) ?? null
   })
 
   const pendingMember = computed(() => {
@@ -274,12 +281,24 @@ export const useEmployeesStore = defineStore('employees', () => {
     detailsTargetId.value = null
   }
 
+  function openManage(id: string): void {
+    if (!workspace().findMember(id)) return
+    manageTargetId.value = id
+    manageVisible.value = true
+  }
+
+  function closeManage(): void {
+    manageVisible.value = false
+    manageTargetId.value = null
+  }
+
   function removeMember(id: string): void {
     workspace().removeMember(id)
     if (selectedId.value === id) selectedId.value = null
     if (editingId.value === id) closeForm()
     if (holidayTargetId.value === id) closeHolidays()
     if (detailsTargetId.value === id) closeDetails()
+    if (manageTargetId.value === id) closeManage()
     if (pendingAction.value?.id === id) cancelAction()
   }
 
@@ -345,6 +364,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     closeForm()
     closeHolidays()
     closeDetails()
+    closeManage()
     hideInactive.value = false
   }
 
@@ -360,6 +380,8 @@ export const useEmployeesStore = defineStore('employees', () => {
     pendingAction,
     detailsVisible,
     detailsTargetId,
+    manageVisible,
+    manageTargetId,
     hideInactive,
     count,
     filteredMembers,
@@ -367,6 +389,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     editingMember,
     holidayTarget,
     detailsTarget,
+    manageTarget,
     pendingMember,
     activeCount,
     totalCount,
@@ -382,6 +405,8 @@ export const useEmployeesStore = defineStore('employees', () => {
     cancelAction,
     openDetails,
     closeDetails,
+    openManage,
+    closeManage,
     removeMember,
     select,
     setSearch,

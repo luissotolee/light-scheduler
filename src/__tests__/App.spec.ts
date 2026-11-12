@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
@@ -38,6 +38,10 @@ describe('App', () => {
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.lang = 'en'
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('renders the brand and every navigation label', async () => {
@@ -168,5 +172,19 @@ describe('App', () => {
     await vi.dynamicImportSettled()
 
     expect(wrapper.find('[data-test="demo-overlay"]').exists()).toBe(true)
+  })
+
+  it('hides the app title on phones so navigation starts with Home', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+    const wrapper = await mountApp('/')
+    const header = wrapper.find('.app__header')
+
+    expect(wrapper.find('.app__brand').exists()).toBe(false)
+    expect(header.element.firstElementChild?.classList.contains('app__nav')).toBe(true)
+    expect(wrapper.findAll('.app-nav__link')).toHaveLength(NAV_ITEMS.length)
   })
 })

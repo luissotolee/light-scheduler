@@ -163,6 +163,8 @@ export const en = {
   'employees.column.actions': 'Actions',
   'employees.detailsFor': 'View details for {name}',
   'employees.detailsForInactive': 'View details for {name} (inactive)',
+  'employees.manageFor': 'Manage {name}',
+  'employees.manageForInactive': 'Manage {name} (inactive)',
   'employees.phone': 'Phone: {phone}',
   'employees.email': 'Email: {email}',
   'employees.editAria': 'Edit {name}',
@@ -200,6 +202,8 @@ export const en = {
   'employees.details.holidays': 'Holidays',
   'employees.details.noHolidays': 'No holidays',
   'employees.details.holidayItem': 'Week {week} ({range})',
+  'employees.manage.title': 'Manage employee',
+  'employees.manage.actions': 'Actions',
   'employees.status.active': 'Active',
   'employees.status.inactive': 'Inactive',
 
@@ -438,6 +442,12 @@ export const en = {
   'demo.scenario.employees.detailsComment':
     'Any comments saved on the employee appear at the end of the details.',
   'demo.scenario.employees.closeDetails': 'Close the details to return to the list.',
+  'demo.scenario.employees.manageDetails':
+    'On a phone, tapping a name opens the manage dialog with that employee details and actions.',
+  'demo.scenario.employees.manageOpen':
+    'On a phone, tap the employee name to manage them in one place.',
+  'demo.scenario.employees.manageReopen':
+    'Tap the name again to reopen the employee actions.',
   'demo.scenario.employees.holidays': 'Open the holiday calendar for an employee.',
   'demo.scenario.employees.holidaysPick': 'Pick the weeks this employee is on holiday.',
   'demo.scenario.employees.holidaysNextYear':
@@ -477,8 +487,12 @@ export const en = {
     'The selected day also shows its public holidays and events in a blue label under the date.',
   'demo.scenario.scheduler.grid':
     'Each row is a team member and the horizontal axis runs from 09:00 to 01:00. On phones, drag the table to pan.',
+  'demo.scenario.scheduler.phonePan':
+    'Drag horizontally anywhere on the schedule table to pan across the day.',
   'demo.scenario.scheduler.create':
-    'Press Enter on a row, or click and drag, to create a shift. On phones, tap a cell instead.',
+    'Press Enter on a row, or click and drag, to create a shift.',
+  'demo.scenario.scheduler.createPhone':
+    'Tap a cell on a row to create a default shift at that time.',
   'demo.scenario.scheduler.created': 'A new shift appears on the row.',
   'demo.scenario.scheduler.resize':
     'Drag the shift edges to resize it, or use Shift with the arrow keys.',

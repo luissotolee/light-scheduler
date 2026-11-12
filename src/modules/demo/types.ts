@@ -2,6 +2,7 @@ export interface DemoTarget {
   testId: string
   within?: string
   index?: number
+  point?: { x: number; y: number }
 }
 
 export type DemoActionType =
@@ -13,10 +14,13 @@ export type DemoActionType =
   | 'fill'
   | 'wait'
 
+export type DemoViewport = 'phone' | 'desktop'
+
 export interface DemoStepBase {
   id: string
   narrationKey: string
   action: DemoActionType
+  viewport?: DemoViewport
   durationMs?: number
   pauseMs?: number
   waitFor?: string

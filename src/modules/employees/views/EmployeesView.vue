@@ -77,6 +77,7 @@
       @deactivate="store.requestDeactivate"
       @reactivate="store.reactivateMember"
       @details="store.openDetails"
+      @manage="store.openManage"
     />
 
     <EmployeeFormDialog
@@ -109,14 +110,27 @@
       :member="detailsTarget"
       @update:visible="handleDetailsVisibility"
     />
+
+    <EmployeeManageDialog
+      v-if="isPhone"
+      :visible="manageVisible"
+      :member="manageTarget"
+      @update:visible="handleManageVisibility"
+      @edit="handleManageEdit"
+      @holidays="handleManageHolidays"
+      @deactivate="handleManageDeactivate"
+      @reactivate="handleManageReactivate"
+      @remove="handleManageRemove"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted } from 'vue'
+import { computed, onUnmounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
 import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
+import EmployeeManageDialog from '@/modules/employees/components/EmployeeManageDialog.vue'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
@@ -146,10 +160,17 @@ const {
   pendingMember,
   detailsVisible,
   detailsTarget,
+  manageVisible,
+  manageTarget,
   hideInactive,
 } = storeToRefs(store)
 const { t } = useI18n()
 const isPhone = useIsPhone()
+
+watch(isPhone, (phone) => {
+  if (phone) store.closeDetails()
+  else store.closeManage()
+})
 
 const emptyTitle = computed<MessageKey>(() => {
   if (count.value === 0) return 'employees.emptyTitle'
@@ -210,6 +231,32 @@ function handleConfirmVisibility(visible: boolean): void {
 
 function handleDetailsVisibility(visible: boolean): void {
   if (!visible) store.closeDetails()
+}
+
+function handleManageVisibility(visible: boolean): void {
+  if (!visible) store.closeManage()
+}
+
+function handleManageEdit(id: string): void {
+  store.openEdit(id)
+}
+
+function handleManageHolidays(id: string): void {
+  store.openHolidays(id)
+}
+
+function handleManageDeactivate(id: string): void {
+  store.closeManage()
+  store.requestDeactivate(id)
+}
+
+function handleManageReactivate(id: string): void {
+  store.reactivateMember(id)
+}
+
+function handleManageRemove(id: string): void {
+  store.closeManage()
+  store.requestRemove(id)
 }
 
 function handleSubmit(payload: NewTeamMember): void {

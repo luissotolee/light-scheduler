@@ -1,6 +1,17 @@
+import { PHONE_MEDIA_QUERY } from '@/shared/utils/viewport'
+
 export interface TargetResolution {
   element: HTMLElement | null
   rect: DOMRect | null
+}
+
+export function isPhoneViewport(): boolean {
+  try {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+    return window.matchMedia(PHONE_MEDIA_QUERY).matches
+  } catch {
+    return false
+  }
 }
 
 function findWithinScope(scope: Element | Document, testId: string): HTMLElement[] {
@@ -53,6 +64,14 @@ export function scrollIntoView(element: HTMLElement): void {
   element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
 }
 
+export function scrollToTop(): void {
+  const scroller = document.scrollingElement ?? document.documentElement
+  if (scroller) {
+    scroller.scrollTop = 0
+    scroller.scrollLeft = 0
+  }
+}
+
 export function getRectCenter(rect: DOMRect): { x: number; y: number } {
   return {
     x: rect.left + rect.width / 2,
@@ -64,15 +83,27 @@ export function clickElement(element: HTMLElement): void {
   element.click()
 }
 
-export function pointerClickElement(element: HTMLElement): void {
+export function pointerClickElement(
+  element: HTMLElement,
+  point?: { x: number; y: number },
+): void {
   const rect = element.getBoundingClientRect()
-  const centerX = rect.left + rect.width / 2
-  const centerY = rect.top + rect.height / 2
+  const centerX = rect.left + rect.width * (point?.x ?? 0.5)
+  const centerY = rect.top + rect.height * (point?.y ?? 0.5)
+  const base = {
+    clientX: centerX,
+    clientY: centerY,
+    bubbles: true,
+    cancelable: true,
+    pointerId: 1,
+    pointerType: isPhoneViewport() ? 'touch' : 'mouse',
+    isPrimary: true,
+  }
 
   const events = [
-    new PointerEvent('pointerdown', { clientX: centerX, clientY: centerY, bubbles: true }),
-    new PointerEvent('pointerup', { clientX: centerX, clientY: centerY, bubbles: true }),
-    new PointerEvent('click', { clientX: centerX, clientY: centerY, bubbles: true }),
+    new PointerEvent('pointerdown', { ...base, button: 0, buttons: 1 }),
+    new PointerEvent('pointerup', { ...base, button: 0, buttons: 0 }),
+    new PointerEvent('click', { ...base, button: 0 }),
   ]
 
   events.forEach((e) => element.dispatchEvent(e))

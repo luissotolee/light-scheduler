@@ -59,14 +59,17 @@ const isPhone = useIsPhone()
 
 @media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
   .app-nav {
+    flex: 1;
+    flex-wrap: nowrap;
     gap: 0.25rem;
   }
 
   .app-nav__link {
     display: inline-flex;
+    flex: 1 1 0;
     align-items: center;
     justify-content: center;
-    min-width: 2.75rem;
+    min-width: 0;
     min-height: 2.75rem;
     padding: 0;
     border-bottom: 0;

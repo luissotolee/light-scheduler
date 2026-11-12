@@ -170,6 +170,8 @@ export const es: Messages = {
   'employees.column.actions': 'Acciones',
   'employees.detailsFor': 'Ver detalles de {name}',
   'employees.detailsForInactive': 'Ver detalles de {name} (inactivo)',
+  'employees.manageFor': 'Gestionar a {name}',
+  'employees.manageForInactive': 'Gestionar a {name} (inactivo)',
   'employees.phone': 'Teléfono: {phone}',
   'employees.email': 'Correo: {email}',
   'employees.editAria': 'Editar {name}',
@@ -207,6 +209,8 @@ export const es: Messages = {
   'employees.details.holidays': 'Vacaciones',
   'employees.details.noHolidays': 'Sin vacaciones',
   'employees.details.holidayItem': 'Semana {week} ({range})',
+  'employees.manage.title': 'Gestionar empleado',
+  'employees.manage.actions': 'Acciones',
   'employees.status.active': 'Activo',
   'employees.status.inactive': 'Inactivo',
 
@@ -455,6 +459,12 @@ export const es: Messages = {
   'demo.scenario.employees.detailsComment':
     'Los comentarios guardados del empleado aparecen al final de los detalles.',
   'demo.scenario.employees.closeDetails': 'Cierra los detalles para volver a la lista.',
+  'demo.scenario.employees.manageDetails':
+    'En el móvil, tocar un nombre abre el diálogo de gestión con los detalles y acciones del empleado.',
+  'demo.scenario.employees.manageOpen':
+    'En el móvil, toca el nombre del empleado para gestionarlo en un solo lugar.',
+  'demo.scenario.employees.manageReopen':
+    'Toca el nombre de nuevo para reabrir las acciones del empleado.',
   'demo.scenario.employees.holidays': 'Abre el calendario de vacaciones de un empleado.',
   'demo.scenario.employees.holidaysPick':
     'Elige las semanas en las que este empleado está de vacaciones.',
@@ -499,8 +509,12 @@ export const es: Messages = {
     'El día seleccionado también muestra sus festivos y eventos en una etiqueta azul bajo la fecha.',
   'demo.scenario.scheduler.grid':
     'Cada fila es un miembro del equipo y el eje horizontal va de 09:00 a 01:00. En el móvil, arrastra la tabla para desplazarte.',
+  'demo.scenario.scheduler.phonePan':
+    'Arrastra horizontalmente sobre la tabla del horario para desplazarte por el día.',
   'demo.scenario.scheduler.create':
-    'Pulsa Enter en una fila, o haz clic y arrastra, para crear un turno. En el móvil, toca una celda.',
+    'Pulsa Enter en una fila, o haz clic y arrastra, para crear un turno.',
+  'demo.scenario.scheduler.createPhone':
+    'Toca una celda de una fila para crear un turno predeterminado a esa hora.',
   'demo.scenario.scheduler.created': 'Aparece un nuevo turno en la fila.',
   'demo.scenario.scheduler.resize':
     'Arrastra los bordes del turno para redimensionarlo, o usa Mayús con las flechas.',

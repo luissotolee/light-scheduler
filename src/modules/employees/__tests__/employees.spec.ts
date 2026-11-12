@@ -50,13 +50,79 @@ describe('employees store', () => {
     expect(store.pendingAction).toBeNull()
     expect(store.detailsVisible).toBe(false)
     expect(store.detailsTargetId).toBeNull()
+    expect(store.manageVisible).toBe(false)
+    expect(store.manageTargetId).toBeNull()
     expect(store.count).toBe(0)
     expect(store.filteredMembers).toEqual([])
     expect(store.selectedMember).toBeNull()
     expect(store.editingMember).toBeNull()
     expect(store.holidayTarget).toBeNull()
     expect(store.detailsTarget).toBeNull()
+    expect(store.manageTarget).toBeNull()
     expect(store.hideInactive).toBe(false)
+  })
+
+  it('opens and closes the manage dialog for an existing member', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.openManage(ada.id)
+
+    expect(store.manageVisible).toBe(true)
+    expect(store.manageTargetId).toBe(ada.id)
+    expect(store.manageTarget).toEqual(ada)
+
+    store.closeManage()
+
+    expect(store.manageVisible).toBe(false)
+    expect(store.manageTargetId).toBeNull()
+    expect(store.manageTarget).toBeNull()
+  })
+
+  it('ignores an unknown member when opening the manage dialog', () => {
+    const store = useEmployeesStore()
+
+    store.openManage('missing')
+
+    expect(store.manageVisible).toBe(false)
+    expect(store.manageTargetId).toBeNull()
+  })
+
+  it('closes the manage dialog when the managed member is removed', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    store.openManage(ada.id)
+
+    store.removeMember(ada.id)
+
+    expect(store.manageVisible).toBe(false)
+    expect(store.manageTargetId).toBeNull()
+  })
+
+  it('keeps the manage dialog open when another member is removed', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    store.openManage(ada.id)
+
+    store.removeMember(bo.id)
+
+    expect(store.manageVisible).toBe(true)
+    expect(store.manageTargetId).toBe(ada.id)
+  })
+
+  it('closes the manage dialog when the UI resets', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    store.openManage(ada.id)
+
+    store.resetUi()
+
+    expect(store.manageVisible).toBe(false)
+    expect(store.manageTargetId).toBeNull()
   })
 
   it('hides inactive employees when setHideInactive is called', () => {

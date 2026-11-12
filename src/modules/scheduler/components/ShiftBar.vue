@@ -189,7 +189,11 @@ function isWithinTapTolerance(x: number, y: number, startX: number, startY: numb
 function startDrag(mode: DragMode, event: PointerEvent): void {
   const captureTarget = event.currentTarget instanceof Element ? event.currentTarget : null
   if (captureTarget && typeof captureTarget.setPointerCapture === 'function') {
-    captureTarget.setPointerCapture(event.pointerId)
+    try {
+      captureTarget.setPointerCapture(event.pointerId)
+    } catch {
+      return
+    }
   }
 
   drag.value = {
@@ -338,7 +342,11 @@ function endDrag(event: PointerEvent): void {
 
   const range = draftRange.value
   if (state.captureTarget && typeof state.captureTarget.releasePointerCapture === 'function') {
-    state.captureTarget.releasePointerCapture(state.pointerId)
+    try {
+      state.captureTarget.releasePointerCapture(state.pointerId)
+    } catch {
+      /* noop */
+    }
   }
   drag.value = null
   draftRange.value = null

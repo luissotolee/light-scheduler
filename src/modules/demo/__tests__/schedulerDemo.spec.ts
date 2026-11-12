@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { filterScenarioForViewport } from '@/modules/demo/player/engine'
 import { schedulerDemoScenario } from '@/modules/demo/scenarios/schedulerDemo'
 import { demoScenarios, getDemoScenario, listDemoScenarios } from '@/modules/demo/scenarios'
 import { en } from '@/shared/i18n/messages/en'
@@ -13,6 +14,7 @@ const knownTargets = [
   'weekday-calendar-marker-tuesday',
   'scheduler-day-entries',
   'shift-grid',
+  'shift-grid-scroller',
   'shift-track',
   'shift-bar',
   'resize-end',
@@ -97,6 +99,20 @@ describe('schedulerDemo scenario', () => {
         expect(knownRoutes).toContain(step.route)
       }
     })
+  })
+
+  it('uses touch steps on phones and keyboard steps on desktop', () => {
+    const phoneSteps = filterScenarioForViewport(schedulerDemoScenario, true).steps
+    const desktopSteps = filterScenarioForViewport(schedulerDemoScenario, false).steps
+
+    expect(phoneSteps.find((step) => step.id === 'scheduler-phone-pan')).toBeDefined()
+    expect(phoneSteps.find((step) => step.id === 'scheduler-create-shift-phone')?.action).toBe(
+      'pointerClick',
+    )
+    expect(phoneSteps.some((step) => step.id === 'scheduler-create-shift')).toBe(false)
+    expect(desktopSteps.some((step) => step.id === 'scheduler-phone-pan')).toBe(false)
+    expect(desktopSteps.some((step) => step.id === 'scheduler-create-shift-phone')).toBe(false)
+    expect(desktopSteps.find((step) => step.id === 'scheduler-create-shift')?.action).toBe('press')
   })
 
   it('gives every click in every scenario at least 1.5 seconds before advancing', () => {
