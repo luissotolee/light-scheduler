@@ -36,6 +36,7 @@ export const useEmployeesStore = defineStore('employees', () => {
   const manageVisible = ref(false)
   const manageTargetId = ref<string | null>(null)
   const hideInactive = ref(false)
+  const exportVisible = ref(false)
 
   function workspace() {
     return useWorkspaceStore()
@@ -47,6 +48,27 @@ export const useEmployeesStore = defineStore('employees', () => {
 
   function setHideInactive(value: boolean): void {
     hideInactive.value = value
+  }
+
+  function openExport(): void {
+    exportVisible.value = true
+  }
+
+  function closeExport(): void {
+    exportVisible.value = false
+  }
+
+  function resetUi(): void {
+    setError(null)
+    search.value = ''
+    selectedId.value = null
+    cancelAction()
+    closeForm()
+    closeHolidays()
+    closeDetails()
+    closeManage()
+    hideInactive.value = false
+    closeExport()
   }
 
   const activeCount = computed(() => workspace().members.filter((member) => member.active).length)
@@ -356,17 +378,6 @@ export const useEmployeesStore = defineStore('employees', () => {
     resetUi()
   }
 
-  function resetUi(): void {
-    setError(null)
-    search.value = ''
-    selectedId.value = null
-    cancelAction()
-    closeForm()
-    closeHolidays()
-    closeDetails()
-    closeManage()
-    hideInactive.value = false
-  }
 
   return {
     search,
@@ -383,6 +394,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     manageVisible,
     manageTargetId,
     hideInactive,
+    exportVisible,
     count,
     filteredMembers,
     selectedMember,
@@ -416,6 +428,8 @@ export const useEmployeesStore = defineStore('employees', () => {
     submitForm,
     openHolidays,
     closeHolidays,
+    openExport,
+    closeExport,
     loadMembers,
     resetUi,
     setHideInactive,

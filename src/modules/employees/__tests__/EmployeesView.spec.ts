@@ -9,9 +9,16 @@ import EmployeesView from '@/modules/employees/views/EmployeesView.vue'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
+import { saveHolidayPdf } from '@/modules/employees/utils/holidayPdf'
+import { exportYearOptions } from '@/modules/employees/utils/holidayExport'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 import type { TeamMember } from '@/types'
+
+vi.mock('@/modules/employees/utils/holidayPdf', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/modules/employees/utils/holidayPdf')>()
+  return { ...actual, saveHolidayPdf: vi.fn() }
+})
 
 const ada: TeamMember = {
   id: 'member-1',
@@ -328,5 +335,54 @@ describe('EmployeesView', () => {
     expect(workspace.findMember(bo.id)?.active).toBe(true)
     expect(store.manageVisible).toBe(true)
     expect(store.manageTargetId).toBe(bo.id)
+  })
+
+  it('renders the export holidays button next to add employee', () => {
+    const wrapper = mountView()
+
+    const actions = wrapper.find('.page-header__actions')
+    expect(actions.find('[data-test="add-employee"]').exists()).toBe(true)
+    expect(actions.find('[data-test="export-holidays"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="export-holidays"]').text()).toContain(
+      en['employees.exportHolidays'],
+    )
+  })
+
+  it('opens the export dialog and downloads active employees for the selected year', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada, bo])
+    const store = useEmployeesStore()
+    const wrapper = mountView()
+    const [currentYear, nextYear] = exportYearOptions()
+
+    await wrapper.find('[data-test="export-holidays"]').trigger('click')
+    expect(store.exportVisible).toBe(true)
+    await nextTick()
+
+    expect(wrapper.find('[data-test="holiday-export-dialog"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain(String(currentYear))
+    expect(wrapper.text()).toContain(String(nextYear))
+
+    await wrapper.find('[data-test="export-year-next"]').trigger('click')
+    await wrapper.find('[data-test="confirm-holiday-export"]').trigger('click')
+    await nextTick()
+
+    expect(saveHolidayPdf).toHaveBeenCalledWith({
+      rows: [{ memberId: ada.id, name: ada.name, weeks: [] }],
+      year: nextYear,
+      locale: 'en',
+    })
+    expect(store.exportVisible).toBe(false)
+  })
+
+  it('localizes the export holidays button in Spanish', async () => {
+    const wrapper = mountView()
+
+    useLocaleStore().setLocale('es')
+    await nextTick()
+
+    expect(wrapper.find('[data-test="export-holidays"]').text()).toContain(
+      es['employees.exportHolidays'],
+    )
   })
 })

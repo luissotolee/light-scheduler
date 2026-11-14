@@ -175,14 +175,10 @@ export function getIsoWeeksForYear(year: number, locale: Locale = 'en'): Holiday
   const weeks = getIsoWeeksInYear(year)
   return Array.from({ length: weeks }, (_, index) => {
     const week = index + 1
-    const weekKey = getWeekKey(getIsoWeekStart(year, week))
     return {
       year,
       week,
-      label: translate(messages[locale], 'calendar.weekLabel', {
-        week,
-        range: formatWeekRangeShort(weekKey, locale),
-      }),
+      label: formatHolidayWeekLabel({ year, week }, locale),
     }
   })
 }
@@ -190,3 +186,14 @@ export function getIsoWeeksForYear(year: number, locale: Locale = 'en'): Holiday
 export function holidayToWeekKey(holiday: HolidayWeek): WeekKey {
   return getWeekKey(getIsoWeekStart(holiday.year, holiday.week))
 }
+
+export function formatHolidayWeekLabel(holiday: Pick<HolidayWeek, 'year' | 'week'>, locale: Locale): string {
+  const weekKey = holidayToWeekKey(holiday)
+  const range = formatWeekRangeShort(weekKey, locale)
+  return translate(messages[locale], 'calendar.weekLabel', {
+    week: holiday.week,
+    range,
+  })
+}
+
+

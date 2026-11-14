@@ -29,6 +29,11 @@ const knownTargets = [
   'week-20',
   'next-year',
   'save-holidays',
+  'export-holidays',
+  'export-year-current',
+  'export-year-next',
+  'confirm-holiday-export',
+  'cancel-holiday-export',
   'edit-emp-mock-02',
   'deactivate-emp-mock-02',
   'reactivate-emp-mock-02',
@@ -118,6 +123,8 @@ describe('employeesDemo scenario', () => {
     expect(targets).toContain('sort-name')
     expect(targets).toContain('add-employee')
     expect(targets).toContain('hide-inactive')
+    expect(targets).toContain('export-holidays')
+    expect(targets).toContain('confirm-holiday-export')
     expect(targets).toContain('employee-comment-input')
     expect(targets).toContain('details-comment')
     expect(targets).toContain('edit-emp-mock-02')

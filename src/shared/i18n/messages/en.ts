@@ -207,7 +207,30 @@ export const en = {
   'employees.status.active': 'Active',
   'employees.status.inactive': 'Inactive',
 
+  'employees.exportHolidays': 'Export holidays PDF',
+  'employees.exportHolidaysAria': 'Export the holidays of all active employees as a PDF',
+  'employees.exportHolidays.title': 'Export employee holidays',
+  'employees.exportHolidays.description': 'Choose the year to include in the employee holidays PDF.',
+  'employees.exportHolidays.year': 'Year',
+  'employees.exportHolidays.confirm': 'Download PDF',
+  'employees.exportHolidays.pdfTitle': 'Employee Holidays {year}',
+  'employees.exportHolidays.employeeColumn': 'Employee',
+  'employees.exportHolidays.weekColumn': 'Week {number}',
+  'employees.exportHolidays.filePrefix': 'holidays_employees',
+
   'holidays.title': 'Holiday weeks — {name}',
+
+  'demo.scenario.employees.exportHolidays':
+    'Open the holiday export dialog from the Export holidays PDF button.',
+  'demo.scenario.employees.exportHolidaysDialog':
+    'Choose the current year or next year for the PDF.',
+  'demo.scenario.employees.exportHolidaysYear':
+    'Only holidays saved for the selected year appear in the PDF.',
+  'demo.scenario.employees.exportHolidaysConfirm':
+    'The PDF uses the same employee order as the scheduler and summary.',
+  'demo.scenario.employees.exportHolidaysClose':
+    'Cancel closes the dialog without downloading during the demo.',
+
   'holidays.previousYear': 'Previous year',
   'holidays.nextYear': 'Next year',
   'holidays.counter': '{count} of {max} selected in {year}',
