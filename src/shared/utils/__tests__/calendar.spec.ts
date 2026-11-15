@@ -22,6 +22,7 @@ import {
   weekdayDayOfMonth,
   weekdayInitial,
   weekdayIsoDate,
+  formatHolidayWeekLabel,
 } from '@/shared/utils/calendar'
 
 afterEach(() => {
@@ -369,5 +370,22 @@ describe('Spanish date formatting', () => {
     expect(weekdayInitial('Miércoles')).toBe('M')
     expect(weekdayInitial('Sábado')).toBe('S')
     expect(weekdayInitial('')).toBe('')
+  })
+})
+
+describe('formatHolidayWeekLabel', () => {
+  it('formats a holiday week with the week number and date range', () => {
+    expect(formatHolidayWeekLabel({ year: 2026, week: 1 }, 'en')).toBe('Week 1 — Dec 29 – Jan 4')
+    expect(formatHolidayWeekLabel({ year: 2026, week: 29 }, 'en')).toBe(
+      'Week 29 — Jul 13 – Jul 19',
+    )
+  })
+
+  it('supports the Spanish locale', () => {
+    expect(formatHolidayWeekLabel({ year: 2026, week: 1 }, 'es')).toBe('Semana 1 — 29 dic – 4 ene')
+  })
+
+  it('labels a week that crosses the calendar year', () => {
+    expect(formatHolidayWeekLabel({ year: 2026, week: 53 }, 'en')).toBe('Week 53 — Dec 28 – Jan 3')
   })
 })

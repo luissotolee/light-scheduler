@@ -60,6 +60,7 @@ describe('employees store', () => {
     expect(store.detailsTarget).toBeNull()
     expect(store.manageTarget).toBeNull()
     expect(store.hideInactive).toBe(false)
+    expect(store.exportVisible).toBe(false)
   })
 
   it('opens and closes the manage dialog for an existing member', () => {
@@ -123,6 +124,27 @@ describe('employees store', () => {
 
     expect(store.manageVisible).toBe(false)
     expect(store.manageTargetId).toBeNull()
+  })
+
+  it('opens and closes the holiday export dialog', () => {
+    const store = useEmployeesStore()
+
+    expect(store.exportVisible).toBe(false)
+
+    store.openExport()
+    expect(store.exportVisible).toBe(true)
+
+    store.closeExport()
+    expect(store.exportVisible).toBe(false)
+  })
+
+  it('closes the holiday export dialog when the UI resets', () => {
+    const store = useEmployeesStore()
+
+    store.openExport()
+    store.resetUi()
+
+    expect(store.exportVisible).toBe(false)
   })
 
   it('hides inactive employees when setHideInactive is called', () => {

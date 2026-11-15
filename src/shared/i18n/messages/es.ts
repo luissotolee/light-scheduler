@@ -214,7 +214,33 @@ export const es: Messages = {
   'employees.status.active': 'Activo',
   'employees.status.inactive': 'Inactivo',
 
+  'employees.exportHolidays': 'Exportar vacaciones en PDF',
+  'employees.exportHolidaysAria': 'Exportar las vacaciones de todos los empleados activos en PDF',
+  'employees.exportHolidays.title': 'Exportar vacaciones de empleados',
+  'employees.exportHolidays.description':
+    'Elige el año que quieres incluir en el PDF de vacaciones de los empleados.',
+  'employees.exportHolidays.year': 'Año',
+  'employees.exportHolidays.confirm': 'Descargar PDF',
+  'employees.exportHolidays.pdfTitle': 'Vacaciones de Empleados {year}',
+  'employees.exportHolidays.employeeColumn': 'Empleado',
+  'employees.exportHolidays.weekColumn': 'Semana {number}',
+  'employees.exportHolidays.filePrefix': 'vacaciones_empleados',
+
   'holidays.title': 'Semanas de vacaciones — {name}',
+
+  'demo.scenario.employees.exportHolidays':
+    'Abre el diálogo de exportación con el botón Exportar vacaciones en PDF.',
+  'demo.scenario.employees.exportHolidaysDialog':
+    'Elige el año actual o el siguiente para el PDF.',
+  'demo.scenario.employees.exportHolidaysYear':
+    'En el PDF solo aparecen las vacaciones guardadas para el año seleccionado.',
+  'demo.scenario.employees.exportHolidaysConfirm':
+    'El PDF usa el mismo orden de empleados que el planificador y el resumen.',
+  'demo.scenario.employees.exportHolidaysClose':
+    'Cancelar cierra el diálogo sin descargar durante la demostración.',
+
+
+
   'holidays.previousYear': 'Año anterior',
   'holidays.nextYear': 'Año siguiente',
   'holidays.counter': '{count} de {max} seleccionadas en {year}',

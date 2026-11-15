@@ -16,6 +16,16 @@
           <i v-if="isPhone" class="pi pi-plus" aria-hidden="true" />
           <span v-if="!isPhone">{{ t('employees.add') }}</span>
         </button>
+        <button
+          type="button"
+          class="employees__button"
+          :aria-label="t('employees.exportHolidaysAria')"
+          data-test="export-holidays"
+          @click="store.openExport"
+        >
+          <i v-if="isPhone" class="pi pi-file-pdf" aria-hidden="true" />
+          <span v-if="!isPhone">{{ t('employees.exportHolidays') }}</span>
+        </button>
       </template>
     </PageHeader>
 
@@ -122,6 +132,12 @@
       @reactivate="handleManageReactivate"
       @remove="handleManageRemove"
     />
+
+    <HolidayExportDialog
+      :visible="exportVisible"
+      @update:visible="handleExportVisibility"
+      @export="handleExportHolidays"
+    />
   </section>
 </template>
 
@@ -133,17 +149,22 @@ import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue
 import EmployeeManageDialog from '@/modules/employees/components/EmployeeManageDialog.vue'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
+import HolidayExportDialog from '@/modules/employees/components/HolidayExportDialog.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
+import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useI18n } from '@/shared/i18n'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import type { HolidayWeek, NewTeamMember } from '@/types'
 import { useIsPhone } from '@/shared/composables/useIsPhone'
+import { buildHolidayExportRows } from '@/modules/employees/utils/holidayExport'
+import { saveHolidayPdf } from '@/modules/employees/utils/holidayPdf'
 
 const store = useEmployeesStore()
+const workspaceStore = useWorkspaceStore()
 const {
   search,
   count,
@@ -163,8 +184,9 @@ const {
   manageVisible,
   manageTarget,
   hideInactive,
+  exportVisible,
 } = storeToRefs(store)
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const isPhone = useIsPhone()
 
 watch(isPhone, (phone) => {
@@ -257,6 +279,16 @@ function handleManageReactivate(id: string): void {
 function handleManageRemove(id: string): void {
   store.closeManage()
   store.requestRemove(id)
+}
+
+function handleExportVisibility(visible: boolean): void {
+  if (!visible) store.closeExport()
+}
+
+function handleExportHolidays(year: number): void {
+  const rows = buildHolidayExportRows(workspaceStore.members, year)
+  saveHolidayPdf({ rows, year, locale: locale.value })
+  store.closeExport()
 }
 
 function handleSubmit(payload: NewTeamMember): void {
