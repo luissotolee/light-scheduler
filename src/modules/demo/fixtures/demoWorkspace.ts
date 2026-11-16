@@ -7,6 +7,7 @@ import { createId } from '@/shared/utils/id'
 import { MOCK_EMPLOYEES } from '@/shared/fixtures/employees'
 
 const HOLIDAY_MEMBER_ID = 'emp-mock-05'
+const REST_WARNING_MEMBER_ID = 'emp-mock-04'
 
 function buildShiftsForWeek(
   _weekKey: WeekKey,
@@ -84,6 +85,14 @@ export function buildDemoWorkspace(now: Date = new Date()): PersistedWorkspace {
     [prevWeekKey]: buildShiftsForWeek(prevWeekKey, activeMembers),
     [nextWeekKey]: buildShiftsForWeek(nextWeekKey, activeMembers),
   }
+
+  schedules[currentWeekKey].push({
+    id: createId(),
+    memberId: REST_WARNING_MEMBER_ID,
+    weekday: 'sunday',
+    startMinute: 21 * 60,
+    endMinute: 25 * 60,
+  })
 
   const dayOffs: Record<WeekKey, DayOff[]> = {
     [currentWeekKey]: buildDayOffsForWeek(currentWeekKey, activeMembers),

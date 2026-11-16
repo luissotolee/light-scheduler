@@ -4,6 +4,7 @@ import type { NewShift, Shift, Weekday, WeekKey } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import type {
   DayRow,
+  PendingRestWarning,
   SchedulerError,
   ShiftMoveInput,
   ShiftRangeInput,
@@ -28,16 +29,25 @@ import {
 import { compareMembersByDuty, isMemberInWeek, isMemberOnHoliday } from '@/shared/utils/employee'
 import { countDaysOffByMember } from '@/modules/scheduler/utils/off'
 import { closestShiftIndex, MAX_SHIFTS_PER_ROW } from '@/modules/scheduler/utils/grid'
+import { findRestConflicts } from '@/modules/scheduler/utils/rest'
 
 function dateFromWeekKey(weekKey: WeekKey): Date {
   const [year, month, day] = weekKey.split('-').map(Number)
   return new Date(year, month - 1, day)
 }
 
+interface ShiftPlan {
+  weekKey: WeekKey
+  survivor: Shift
+  shifts: Shift[]
+}
+
 export const useSchedulerStore = defineStore('scheduler', () => {
   const draft = ref<NewShift | null>(null)
   const error = ref<SchedulerError | null>(null)
+  const pendingRestWarning = ref<PendingRestWarning | null>(null)
   const selectedWeekday = ref<Weekday>('monday')
+  let pendingRestPlan: ShiftPlan | null = null
 
   function workspace() {
     return useWorkspaceStore()
@@ -128,12 +138,14 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   }
 
   function moveWeek(delta: number): void {
+    clearPendingRest()
     const nextDate = addWeeks(dateFromWeekKey(currentWeekKey.value), delta)
     workspace().setCurrentWeekKey(getWeekKey(nextDate))
     error.value = null
   }
 
   function setWeekKey(weekKey: WeekKey): void {
+    clearPendingRest()
     workspace().setCurrentWeekKey(weekKey)
     error.value = null
   }
@@ -146,8 +158,12 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     moveWeek(-1)
   }
 
-  function mergeCandidate(candidate: Shift, mode: 'create' | 'update'): Shift {
-    const others = currentWeekShifts.value.filter(
+  function planMergedCandidate(
+    candidate: Shift,
+    mode: 'create' | 'update',
+    base: readonly Shift[] = currentWeekShifts.value,
+  ): ShiftPlan {
+    const others = base.filter(
       (shift) =>
         shift.id !== candidate.id &&
         shift.memberId === candidate.memberId &&
@@ -166,19 +182,18 @@ export const useSchedulerStore = defineStore('scheduler', () => {
           startMinute: range.startMinute,
           endMinute: range.endMinute,
         }
-        workspace().setShiftsForWeek(
-          currentWeekKey.value,
-          currentWeekShifts.value.map((s) => (s.id === closest.id ? relocated : s)),
-        )
-        error.value = null
-        return relocated
+        return {
+          weekKey: currentWeekKey.value,
+          survivor: relocated,
+          shifts: base.map((shift) => (shift.id === closest.id ? relocated : shift)),
+        }
       }
     }
 
-    const next =
+    const shifts =
       mode === 'create'
-        ? [...currentWeekShifts.value.filter((shift) => !absorbedIds.has(shift.id)), survivor]
-        : currentWeekShifts.value
+        ? [...base.filter((shift) => !absorbedIds.has(shift.id)), survivor]
+        : base
             .map((shift) => {
               if (shift.id === candidate.id) return survivor
               if (absorbedIds.has(shift.id)) return null
@@ -186,9 +201,51 @@ export const useSchedulerStore = defineStore('scheduler', () => {
             })
             .filter((shift): shift is Shift => shift !== null)
 
-    workspace().setShiftsForWeek(currentWeekKey.value, next)
+    return { weekKey: currentWeekKey.value, survivor, shifts }
+  }
+
+  function clearPendingRest(): void {
+    pendingRestPlan = null
+    pendingRestWarning.value = null
+  }
+
+  function applyShiftPlan(plan: ShiftPlan): Shift | null {
+    const conflicts = findRestConflicts(plan.survivor, plan.weekKey, {
+      ...workspace().schedules,
+      [plan.weekKey]: plan.shifts,
+    })
+
+    if (conflicts.length > 0) {
+      pendingRestPlan = plan
+      pendingRestWarning.value = {
+        memberId: plan.survivor.memberId,
+        memberName: workspace().findMember(plan.survivor.memberId)?.name ?? '',
+        candidate: plan.survivor,
+        weekKey: plan.weekKey,
+        conflicts,
+      }
+      error.value = null
+      return null
+    }
+
+    workspace().setShiftsForWeek(plan.weekKey, plan.shifts)
+    clearPendingRest()
     error.value = null
-    return survivor
+    return plan.survivor
+  }
+
+  function confirmRestWarning(): void {
+    const plan = pendingRestPlan
+    if (!plan) return
+
+    clearPendingRest()
+    workspace().setShiftsForWeek(plan.weekKey, plan.shifts)
+    error.value = null
+  }
+
+  function cancelRestWarning(): void {
+    clearPendingRest()
+    error.value = null
   }
 
   function addShift(payload: NewShift): Shift | null {
@@ -206,7 +263,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       ...range,
     }
 
-    return mergeCandidate(candidate, 'create')
+    return applyShiftPlan(planMergedCandidate(candidate, 'create'))
   }
 
   function addShiftRange(input: ShiftRangeInput): Shift | null {
@@ -228,7 +285,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       ...range,
     }
 
-    return mergeCandidate(candidate, 'create')
+    return applyShiftPlan(planMergedCandidate(candidate, 'create'))
   }
 
   function updateShiftRange(input: ShiftResizeInput): Shift | null {
@@ -248,7 +305,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
 
     const candidate: Shift = { ...existing, ...range }
 
-    return mergeCandidate(candidate, 'update')
+    return applyShiftPlan(planMergedCandidate(candidate, 'update'))
   }
 
   function moveShiftToMember(input: ShiftMoveInput): Shift | null {
@@ -273,16 +330,13 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       return null
     }
 
-    workspace().setShiftsForWeek(
-      currentWeekKey.value,
-      currentWeekShifts.value.filter((shift) => shift.id !== existing.id),
-    )
-
+    const base = currentWeekShifts.value.filter((shift) => shift.id !== existing.id)
     const candidate: Shift = { ...existing, memberId: input.memberId, ...range }
-    return mergeCandidate(candidate, 'create')
+    return applyShiftPlan(planMergedCandidate(candidate, 'create', base))
   }
 
   function removeShift(id: string): void {
+    clearPendingRest()
     const existing = currentWeekShifts.value.find((shift) => shift.id === id)
     if (!existing) return
     if (memberIsOnHoliday(existing.memberId)) return
@@ -294,6 +348,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   }
 
   function resetCurrentWeek(): void {
+    clearPendingRest()
     workspace().setShiftsForWeek(currentWeekKey.value, [])
     workspace().setDayOffsForWeek(currentWeekKey.value, [])
     error.value = null
@@ -319,7 +374,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       ...range,
     }
 
-    mergeCandidate(candidate, 'update')
+    applyShiftPlan(planMergedCandidate(candidate, 'update'))
   }
 
   function clearError(): void {
@@ -331,6 +386,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   }
 
   function toggleDayOff(memberId: string): void {
+    clearPendingRest()
     const member = workspace().members.find((item) => item.id === memberId)
     if (!member || !member.active) return
     if (isMemberOnHoliday(member, currentWeekKey.value)) return
@@ -370,6 +426,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
   return {
     draft,
     error,
+    pendingRestWarning,
     selectedWeekday,
     currentWeekKey,
     currentWeekShifts,
@@ -395,6 +452,8 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     removeShift,
     resetCurrentWeek,
     updateShift,
+    confirmRestWarning,
+    cancelRestWarning,
     clearError,
     daysOffCountFor,
     toggleDayOff,

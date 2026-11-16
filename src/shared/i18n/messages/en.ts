@@ -41,7 +41,7 @@ export const en = {
   'home.feature.employees.title': 'Employees',
   'home.feature.employees.description': 'Keep the employee records used by every schedule.',
   'home.feature.summary.title': 'Summary',
-  'home.feature.summary.description': 'Review the week in a printable table and save it as a PDF.',
+  'home.feature.summary.description': 'Review the week in a printable table and open it as a PDF.',
   'home.feature.archive.title': 'Archive',
   'home.feature.archive.description':
     'Export your data as files or import them to restore your information.',
@@ -76,6 +76,10 @@ export const en = {
   'scheduler.settings.showHeadcount': 'Show headcount per hour',
   'scheduler.settings.showHeadcountTooltip':
     'Adds a badge next to each hour with the largest number of employees working at the same time during that hour.',
+  'scheduler.confirm.restHeader': 'Less than {hours} hours of rest',
+  'scheduler.confirm.restMessage':
+    '{name} will rest less than {hours} hours with the existing shift {start}–{end} on {date}. Do you want to continue?',
+  'scheduler.confirm.restLabel': 'Continue',
   'scheduler.confirm.restartHeader': 'Restart week schedule',
   'scheduler.confirm.restartMessage':
     'This clears all shifts and days off for the current week. Team members are kept. This cannot be undone.',
@@ -212,11 +216,10 @@ export const en = {
   'employees.exportHolidays.title': 'Export employee holidays',
   'employees.exportHolidays.description': 'Choose the year to include in the employee holidays PDF.',
   'employees.exportHolidays.year': 'Year',
-  'employees.exportHolidays.confirm': 'Download PDF',
+  'employees.exportHolidays.confirm': 'Open PDF',
   'employees.exportHolidays.pdfTitle': 'Employee Holidays {year}',
   'employees.exportHolidays.employeeColumn': 'Employee',
   'employees.exportHolidays.weekColumn': 'Week {number}',
-  'employees.exportHolidays.filePrefix': 'holidays_employees',
 
   'holidays.title': 'Holiday weeks — {name}',
 
@@ -227,9 +230,9 @@ export const en = {
   'demo.scenario.employees.exportHolidaysYear':
     'Only holidays saved for the selected year appear in the PDF.',
   'demo.scenario.employees.exportHolidaysConfirm':
-    'The PDF uses the same employee order as the scheduler and summary.',
+    'The PDF opens in a new browser tab using the same employee order as the scheduler and summary.',
   'demo.scenario.employees.exportHolidaysClose':
-    'Cancel closes the dialog without downloading during the demo.',
+    'Cancel closes the dialog without opening a PDF during the demo.',
 
   'holidays.previousYear': 'Previous year',
   'holidays.nextYear': 'Next year',
@@ -310,17 +313,24 @@ export const en = {
     'Add employees in the Employees page so they appear in the weekly summary.',
 
   'summary.description':
-    'Review the week as a printable table. Print it or download it as a PDF file without opening the print dialog.',
+    'Review the week as a printable table. Print it or open it as a PDF in a new browser tab.',
   'summary.print': 'Print',
-  'summary.savePdf': 'Save as PDF',
-  'summary.pdfFileLabel': 'Schedule',
+  'summary.openPdf': 'Open PDF',
+  'summary.total': 'Total',
+  'summary.contract': 'Contract',
+  'summary.diff': 'Diff',
+  'summary.settings.title': 'Summary settings',
+  'summary.settings.description': 'Choose which columns appear in the summary table.',
+  'summary.settings.showWeeklyHours': 'Show weekly hours vs contract',
+  'summary.settings.showWeeklyHoursTooltip':
+    'Adds Total, Contract, and Diff columns so each employee’s scheduled hours are compared with their weekly contract.',
 
   'archive.title': 'Archive',
   'archive.description':
-    'Download a compressed backup of every employee, shift, day off, holiday, and event, along with your language and scheduler settings, or restore a backup to replace your current workspace.',
+    'Download a compressed backup of every employee, shift, day off, holiday, and event, along with your language, scheduler, and summary settings, or restore a backup to replace your current workspace.',
   'archive.exportHeading': 'Backup',
   'archive.exportCopy':
-    'Download a gzip-compressed JSON file with every employee, schedule, holiday, and event, plus your language and scheduler settings. It keeps the employee IDs needed to link shifts back to people.',
+    'Download a gzip-compressed JSON file with every employee, schedule, holiday, and event, plus your language, scheduler, and summary settings. It keeps the employee IDs needed to link shifts back to people.',
   'archive.exportEmployees': 'Export Employees',
   'archive.exportSchedule': 'Export Schedule',
   'archive.importHeading': 'Restore',
@@ -351,7 +361,7 @@ export const en = {
   'archive.compressionUnsupported': 'This browser cannot read compressed backups',
   'archive.confirm.backupHeader': 'Restore backup',
   'archive.confirm.backupMessage':
-    'This replaces all employees, shifts, days off, holidays, events, and settings, including your language and scheduler settings, with the contents of the backup. This cannot be undone.',
+    'This replaces all employees, shifts, days off, holidays, events, and settings, including your language, scheduler, and summary settings, with the contents of the backup. This cannot be undone.',
   'archive.confirm.backupLabel': 'Restore',
   'archive.importedOne': 'Imported {count} employee',
   'archive.importedMany': 'Imported {count} employees',
@@ -557,6 +567,14 @@ export const en = {
     'Save to apply the new window and slot size to the scheduler.',
   'demo.scenario.scheduler.headcount':
     'Each hourly badge now shows the number of employees scheduled in that hour.',
+  'demo.scenario.scheduler.restWarningDay':
+    'This week ends with a late shift that finishes after midnight.',
+  'demo.scenario.scheduler.restWarningMove':
+    "Moving that shift leaves less than 12 hours before next week's Monday shift.",
+  'demo.scenario.scheduler.restWarningDialog':
+    'The scheduler asks for confirmation before saving a change that leaves less than 12 hours of rest.',
+  'demo.scenario.scheduler.restWarningConfirmed':
+    'Confirm to save the change, or cancel to keep the original shift.',
   'demo.scenario.scheduler.restart':
     'Use Clear all to remove every shift and day off from the current week.',
   'demo.scenario.scheduler.confirmRestart':
@@ -618,14 +636,24 @@ export const en = {
   'demo.scenario.summary.backToThisWeek': 'Use This week to return to the current week.',
   'demo.scenario.summary.table':
     'Each row is a team member and each column is a day, with shifts and holidays in one place.',
+  'demo.scenario.summary.settingsOpen':
+    'Open the summary settings to choose which columns are shown.',
+  'demo.scenario.summary.settingsWindow': 'These settings control the summary table columns.',
+  'demo.scenario.summary.settingsToggle':
+    'Turn on weekly hours to compare scheduled and contract hours.',
+  'demo.scenario.summary.settingsSaved': 'Save to apply the new columns to the table.',
+  'demo.scenario.summary.hoursColumns':
+    'The Total, Contract, and Diff columns compare each employee’s scheduled hours with their weekly contract.',
+  'demo.scenario.summary.hoursRow':
+    'A positive diff means the employee is scheduled above the contract; a negative diff means below.',
   'demo.scenario.summary.vacation':
-    'Employees on holiday for the whole week appear as a single vacation row.',
+    'Employees on holiday for the whole week appear as a single vacation row, and their weekly diff is left blank.',
   'demo.scenario.summary.details': 'Select a name to open the employee details from the summary.',
   'demo.scenario.summary.detailsDialog':
     'The same employee details view opens here, with contact and holiday information.',
   'demo.scenario.summary.detailsClose': 'Close it to return to the summary.',
   'demo.scenario.summary.print': 'Print the summary using your browser print dialog.',
-  'demo.scenario.summary.pdf': 'Save the summary as a PDF file.',
+  'demo.scenario.summary.pdf': 'Open the summary as a PDF in a new browser tab.',
   'demo.scenario.summary.finish': 'That covers the Summary page. Exit to restore your data.',
 } as const
 

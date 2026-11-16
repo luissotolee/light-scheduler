@@ -1,12 +1,23 @@
 <template>
   <div class="summary-table-wrapper">
-    <table class="summary-table" data-test="summary-table">
+    <table
+      class="summary-table"
+      :class="{ 'summary-table--with-hours': showWeeklyHours }"
+      data-test="summary-table"
+    >
       <caption class="visually-hidden">
         {{ t('summary.caption', { range: weekRangeLabel }) }}
       </caption>
       <colgroup>
         <col class="summary-table__col summary-table__col--employee" />
         <col v-for="day in days" :key="day.weekday" class="summary-table__col" />
+        <template v-if="showWeeklyHours">
+          <col
+            v-for="column in ['total', 'contract', 'diff']"
+            :key="column"
+            class="summary-table__col summary-table__col--hours"
+          />
+        </template>
       </colgroup>
       <thead>
         <tr>
@@ -30,6 +41,30 @@
             <span class="summary-table__date">
               {{ formatOrdinal(day.dayOfMonth, localeStore.locale) }}
             </span>
+          </th>
+          <th
+            v-if="showWeeklyHours"
+            scope="col"
+            class="summary-table__hours-header"
+            data-test="summary-hours-header-total"
+          >
+            {{ t('summary.total') }}
+          </th>
+          <th
+            v-if="showWeeklyHours"
+            scope="col"
+            class="summary-table__hours-header"
+            data-test="summary-hours-header-contract"
+          >
+            {{ t('summary.contract') }}
+          </th>
+          <th
+            v-if="showWeeklyHours"
+            scope="col"
+            class="summary-table__hours-header"
+            data-test="summary-hours-header-diff"
+          >
+            {{ t('summary.diff') }}
           </th>
         </tr>
       </thead>
@@ -75,6 +110,28 @@
               <SummaryCell :cell="row.cells[day.weekday]" />
             </td>
           </template>
+
+          <template v-if="showWeeklyHours">
+            <td
+              class="summary-table__hours"
+              :data-test="`summary-hours-total-${row.memberId}`"
+            >
+              {{ formatHours(row.totalHours) }}
+            </td>
+            <td
+              class="summary-table__hours"
+              :data-test="`summary-hours-contract-${row.memberId}`"
+            >
+              {{ formatHours(row.contractHours) }}
+            </td>
+            <td
+              class="summary-table__hours"
+              :class="diffClass(row.diffHours)"
+              :data-test="`summary-hours-diff-${row.memberId}`"
+            >
+              {{ row.diffHours === null ? t('common.dash') : formatDiff(row.diffHours) }}
+            </td>
+          </template>
         </tr>
       </tbody>
     </table>
@@ -89,13 +146,18 @@ import { useI18n } from '@/shared/i18n'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { formatOrdinal, weekdayInitial } from '@/shared/utils/calendar'
 import { initialsOf } from '@/shared/utils/employee'
+import { formatDiff, formatHours } from '@/shared/utils/hours'
 import { useIsPhone } from '@/shared/composables/useIsPhone'
 
-defineProps<{
-  rows: SummaryRow[]
-  days: SummaryDayHeader[]
-  weekRangeLabel: string
-}>()
+withDefaults(
+  defineProps<{
+    rows: SummaryRow[]
+    days: SummaryDayHeader[]
+    weekRangeLabel: string
+    showWeeklyHours?: boolean
+  }>(),
+  { showWeeklyHours: false },
+)
 
 const emit = defineEmits<{
   details: [memberId: string]
@@ -110,6 +172,14 @@ function dayAria(day: SummaryDayHeader): string {
     day.dayOfMonth,
     localeStore.locale,
   )}`
+}
+
+function diffClass(hours: number | null): string[] {
+  if (hours === null) return []
+  const rounded = Math.round(hours * 10) / 10
+  if (rounded < 0) return ['summary-table__diff--negative']
+  if (rounded === 0) return ['summary-table__diff--zero']
+  return []
 }
 </script>
 
@@ -129,8 +199,16 @@ function dayAria(day: SummaryDayHeader): string {
   background: var(--color-summary-bg);
 }
 
+.summary-table--with-hours {
+  min-width: 70rem;
+}
+
 .summary-table__col--employee {
   width: 14rem;
+}
+
+.summary-table__col--hours {
+  width: 4.5rem;
 }
 
 .summary-table th,
@@ -188,6 +266,26 @@ function dayAria(day: SummaryDayHeader): string {
 .summary-table__weekday,
 .summary-table__date {
   display: block;
+}
+
+.summary-table__hours-header {
+  font-weight: 600;
+  background: var(--color-summary-header-bg);
+  color: var(--color-summary-header-text);
+}
+
+.summary-table__hours {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.summary-table__diff--negative {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.summary-table__diff--zero {
+  color: var(--color-summary-muted);
 }
 
 .summary-table__date {
@@ -255,6 +353,14 @@ function dayAria(day: SummaryDayHeader): string {
     width: 32mm;
   }
 
+  .summary-table__col--hours {
+    width: 12mm;
+  }
+
+  .summary-table__hours-header {
+    font-size: 7pt;
+  }
+
   .summary-table th,
   .summary-table td {
     border-color: #000;
@@ -316,8 +422,16 @@ function dayAria(day: SummaryDayHeader): string {
     min-width: 52rem;
   }
 
+  .summary-table--with-hours {
+    min-width: 56rem;
+  }
+
   .summary-table__col--employee {
     width: 5.5rem;
+  }
+
+  .summary-table__col--hours {
+    width: 3.5rem;
   }
 
   .summary-table__employee,

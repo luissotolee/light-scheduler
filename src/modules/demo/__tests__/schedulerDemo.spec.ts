@@ -11,6 +11,8 @@ const knownTargets = [
   'scheduler-week-label',
   'week-1',
   'weekday-tab-tuesday',
+  'weekday-tab-sunday',
+  'shift-row-emp-mock-04',
   'weekday-calendar-marker-tuesday',
   'scheduler-day-entries',
   'shift-grid',

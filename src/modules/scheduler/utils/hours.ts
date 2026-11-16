@@ -1,7 +1,9 @@
 import type { Duty, Shift, TeamMember } from '@/types'
 import { DUTY_SORT_ORDER, compareNames, initialsOf } from '@/shared/utils/employee'
+import { minutesToHours, sumShiftMinutes } from '@/shared/utils/hours'
 
-export { initialsOf }
+export { initialsOf, minutesToHours, sumShiftMinutes }
+export { formatDiff, formatHours } from '@/shared/utils/hours'
 
 export interface WeeklyHoursRow {
   memberId: string
@@ -15,24 +17,6 @@ export interface WeeklyHoursRow {
 export interface WeeklyHoursGroup {
   duty: Duty
   rows: WeeklyHoursRow[]
-}
-
-export function sumShiftMinutes(shifts: readonly Shift[]): number {
-  return shifts.reduce((total, shift) => total + (shift.endMinute - shift.startMinute), 0)
-}
-
-export function minutesToHours(minutes: number): number {
-  return minutes / 60
-}
-
-export function formatHours(hours: number): string {
-  return (Math.round(hours * 10) / 10).toFixed(1)
-}
-
-export function formatDiff(hours: number): string {
-  const rounded = Math.round(hours * 10) / 10
-  if (rounded === 0) return '0.0'
-  return rounded > 0 ? `+${rounded.toFixed(1)}` : `-${Math.abs(rounded).toFixed(1)}`
 }
 
 export function buildWeeklyHoursGroups(

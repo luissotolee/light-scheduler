@@ -638,6 +638,77 @@ describe('SchedulerView', () => {
     expect(wrapper.find('[data-test="weekly-hours-row-member-1-diff"]').text()).toBe('-38.0')
   })
 
+  it('asks for confirmation before saving a shift with less than 12 hours of rest', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada])
+    workspace.setShiftsForWeek('2026-10-26', [
+      { id: 'previous', memberId: 'member-1', weekday: 'sunday', startMinute: 1260, endMinute: 1500 },
+    ])
+    const wrapper = mountView()
+    const grid = wrapper.findComponent(ShiftGrid)
+
+    grid.vm.$emit('create', { memberId: 'member-1', startMinute: 540, endMinute: 600 })
+    await nextTick()
+
+    expect(workspace.currentWeekShifts).toEqual([])
+    const message = wrapper.find('[data-test="confirm-message"]')
+    expect(message.exists()).toBe(true)
+    expect(message.text()).toContain('Ada')
+    expect(message.text()).toContain('21:00–01:00')
+    expect(message.text()).toContain('Sunday, November 1st, 2026')
+
+    await wrapper.find('[data-test="confirm-accept"]').trigger('click')
+
+    expect(workspace.currentWeekShifts).toHaveLength(1)
+    expect(workspace.currentWeekShifts[0]).toMatchObject({ startMinute: 540, endMinute: 600 })
+    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(false)
+  })
+
+  it('keeps the schedule unchanged when the rest warning is cancelled', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada])
+    workspace.setShiftsForWeek('2026-10-26', [
+      { id: 'previous', memberId: 'member-1', weekday: 'sunday', startMinute: 1260, endMinute: 1500 },
+    ])
+    const wrapper = mountView()
+    const grid = wrapper.findComponent(ShiftGrid)
+
+    grid.vm.$emit('create', { memberId: 'member-1', startMinute: 540, endMinute: 600 })
+    await nextTick()
+
+    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(true)
+
+    await wrapper.find('[data-test="confirm-cancel"]').trigger('click')
+
+    expect(workspace.currentWeekShifts).toEqual([])
+    expect(wrapper.find('[data-test="confirm-message"]').exists()).toBe(false)
+  })
+
+  it('renders the rest warning in Spanish', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([ada])
+    workspace.setShiftsForWeek('2026-10-26', [
+      { id: 'previous', memberId: 'member-1', weekday: 'sunday', startMinute: 1260, endMinute: 1500 },
+    ])
+    const wrapper = mountView()
+    const grid = wrapper.findComponent(ShiftGrid)
+
+    useLocaleStore().setLocale('es')
+    await nextTick()
+
+    grid.vm.$emit('create', { memberId: 'member-1', startMinute: 540, endMinute: 600 })
+    await nextTick()
+
+    const message = wrapper.find('[data-test="confirm-message"]')
+    expect(message.text()).toContain('Ada tendrá menos de 12 horas de descanso')
+    expect(message.text()).toContain('domingo, 1 de noviembre de 2026')
+
+    await wrapper.find('[data-test="confirm-cancel"]').trigger('click')
+  })
+
   it('create on capped row relocates nearest shift (integration)', async () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')

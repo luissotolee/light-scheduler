@@ -159,6 +159,27 @@ describe('buildSummaryRows', () => {
     expect(rows[0].isVacation).toBe(false)
     expect(rows[0].cells.monday).toEqual({ kind: 'off' })
     expect(rows[0].cells.sunday).toEqual({ kind: 'off' })
+    expect(rows[0].totalMinutes).toBe(0)
+    expect(rows[0].totalHours).toBe(0)
+    expect(rows[0].contractHours).toBe(40)
+    expect(rows[0].diffHours).toBe(-40)
+  })
+
+  it('sums scheduled minutes into total and diff hours', () => {
+    const rows = buildSummaryRows({
+      members: [member()],
+      shifts: [
+        shift('s1', 'member-1', 'monday', 540, 720),
+        shift('s2', 'member-1', 'wednesday', 840, 1080),
+      ],
+      dayOffs: [],
+      weekKey,
+    })
+
+    expect(rows[0].totalMinutes).toBe(420)
+    expect(rows[0].totalHours).toBe(7)
+    expect(rows[0].contractHours).toBe(40)
+    expect(rows[0].diffHours).toBe(-33)
   })
 
   it('renders one labelled shift', () => {
@@ -203,7 +224,7 @@ describe('buildSummaryRows', () => {
     expect(rows[0].cells.monday).toEqual({ kind: 'off' })
   })
 
-  it('marks a vacation row and hides shifts', () => {
+  it('marks a vacation row, hides shifts, and leaves the diff unset', () => {
     const rows = buildSummaryRows({
       members: [member({ holidays: vacationHoliday() })],
       shifts: [shift('s1', 'member-1', 'monday', 540, 720)],
@@ -215,6 +236,10 @@ describe('buildSummaryRows', () => {
     expect(Object.values(rows[0].cells)).toEqual(
       Array.from({ length: 7 }, () => ({ kind: 'vacations' })),
     )
+    expect(rows[0].totalMinutes).toBe(0)
+    expect(rows[0].totalHours).toBe(0)
+    expect(rows[0].contractHours).toBe(40)
+    expect(rows[0].diffHours).toBeNull()
   })
 
   it('ignores shifts for members that are not shown', () => {
@@ -235,6 +260,10 @@ describe('summaryRowUnits', () => {
       memberId: 'member-1',
       name: 'Ada',
       isVacation: false,
+      totalMinutes: 0,
+      totalHours: 0,
+      contractHours: 40,
+      diffHours: -40,
       cells: {
         monday: { kind: 'off' },
         tuesday: { kind: 'off' },

@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import SummaryTable from '@/modules/summary/components/SummaryTable.vue'
 import type { SummaryDayHeader, SummaryRow } from '@/modules/summary/types'
+import { en } from '@/shared/i18n/messages/en'
 import { WEEKDAY_ORDER, weekdayDayOfMonth } from '@/shared/utils/calendar'
 
 const days: SummaryDayHeader[] = WEEKDAY_ORDER.map((weekday) => ({
@@ -15,6 +16,10 @@ function row(overrides: Partial<SummaryRow> = {}): SummaryRow {
     memberId: 'member-1',
     name: 'Ada',
     isVacation: false,
+    totalMinutes: 420,
+    totalHours: 7,
+    contractHours: 40,
+    diffHours: -33,
     cells: {
       monday: {
         kind: 'shifts',
@@ -44,9 +49,9 @@ describe('SummaryTable', () => {
     setActivePinia(pinia)
   })
 
-  function mountTable(rows: SummaryRow[]) {
+  function mountTable(rows: SummaryRow[], showWeeklyHours = false) {
     return mount(SummaryTable, {
-      props: { rows, days, weekRangeLabel: 'Nov 2 – Nov 8, 2026' },
+      props: { rows, days, weekRangeLabel: 'Nov 2 – Nov 8, 2026', showWeeklyHours },
       global: { plugins: [pinia] },
     })
   }
@@ -118,5 +123,50 @@ describe('SummaryTable', () => {
 
     expect(wrapper.findAll('thead th[scope="col"]')).toHaveLength(8)
     expect(wrapper.findAll('tbody th[scope="row"]')).toHaveLength(1)
+  })
+
+  it('adds total, contract, and diff columns when weekly hours are enabled', () => {
+    const wrapper = mountTable([row()], true)
+
+    expect(wrapper.findAll('thead th[scope="col"]')).toHaveLength(11)
+    expect(wrapper.get('[data-test="summary-hours-header-total"]').text()).toBe('Total')
+    expect(wrapper.get('[data-test="summary-hours-header-contract"]').text()).toBe('Contract')
+    expect(wrapper.get('[data-test="summary-hours-header-diff"]').text()).toBe('Diff')
+    expect(wrapper.get('[data-test="summary-hours-total-member-1"]').text()).toBe('7.0')
+    expect(wrapper.get('[data-test="summary-hours-contract-member-1"]').text()).toBe('40.0')
+    expect(wrapper.get('[data-test="summary-hours-diff-member-1"]').text()).toBe('-33.0')
+    expect(wrapper.get('[data-test="summary-hours-diff-member-1"]').classes()).toContain(
+      'summary-table__diff--negative',
+    )
+  })
+
+  it('keeps the vacation row spanning the weekdays and leaves the diff blank', () => {
+    const wrapper = mountTable(
+      [
+        row({
+          isVacation: true,
+          totalMinutes: 0,
+          totalHours: 0,
+          contractHours: 40,
+          diffHours: null,
+          cells: Object.fromEntries(
+            WEEKDAY_ORDER.map((weekday) => [weekday, { kind: 'vacations' }]),
+          ) as SummaryRow['cells'],
+        }),
+      ],
+      true,
+    )
+
+    expect(wrapper.get('[data-test="summary-vacation"]').attributes('colspan')).toBe(
+      String(days.length),
+    )
+    expect(wrapper.get('[data-test="summary-hours-total-member-1"]').text()).toBe('0.0')
+    expect(wrapper.get('[data-test="summary-hours-contract-member-1"]').text()).toBe('40.0')
+    expect(wrapper.get('[data-test="summary-hours-diff-member-1"]').text()).toBe(
+      en['common.dash'],
+    )
+    expect(wrapper.get('[data-test="summary-hours-diff-member-1"]').classes()).not.toContain(
+      'summary-table__diff--negative',
+    )
   })
 })

@@ -32,6 +32,11 @@ export function isoDateToDate(isoDate: string): Date {
   return new Date(year, month - 1, day)
 }
 
+export function isoDateToDayNumber(isoDate: string): number {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return Math.floor(Date.UTC(year, month - 1, day) / 86_400_000)
+}
+
 export function toLocalIsoDate(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import type { TeamMember } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
+import { useSummarySettingsStore } from '@/modules/summary/stores/summarySettings'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import {
@@ -211,6 +212,7 @@ export const useArchiveStore = defineStore('archive', () => {
     if (!settings) return
     if (settings.locale) useLocaleStore().setLocale(settings.locale)
     if (settings.scheduler) useSchedulerSettingsStore().applySettings(settings.scheduler)
+    if (settings.summary) useSummarySettingsStore().applySettings(settings.summary)
   }
 
   function exportSchedule(): void {
@@ -255,6 +257,7 @@ export const useArchiveStore = defineStore('archive', () => {
         {
           locale: useLocaleStore().locale,
           scheduler: { ...useSchedulerSettingsStore().settings },
+          summary: { ...useSummarySettingsStore().settings },
         },
         new Date(),
         workspaceStore.calendar,

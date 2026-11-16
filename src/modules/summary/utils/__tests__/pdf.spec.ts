@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SummaryDayHeader, SummaryRow } from '@/modules/summary/types'
-import { buildSummaryPdf, saveSummaryPdf } from '@/modules/summary/utils/pdf'
+import { buildSummaryPdf, openSummaryPdf } from '@/modules/summary/utils/pdf'
 import { buildSummaryRows } from '@/modules/summary/utils/rows'
 import type { Shift, TeamMember, Weekday } from '@/types'
 import { en } from '@/shared/i18n/messages/en'
@@ -22,6 +22,10 @@ function row(name: string, overrides: Partial<SummaryRow> = {}): SummaryRow {
     memberId: name.toLowerCase(),
     name,
     isVacation: false,
+    totalMinutes: 0,
+    totalHours: 0,
+    contractHours: 40,
+    diffHours: -40,
     cells,
     ...overrides,
   }
@@ -70,6 +74,63 @@ describe('buildSummaryPdf', () => {
     expect(pdf).toContain('09:00')
     expect(pdf).toContain('xref')
     expect(pdf.trimEnd().endsWith('%%EOF')).toBe(true)
+  })
+
+  it('keeps full shift labels when weekly hours columns are enabled', () => {
+    const pdf = decode(
+      buildSummaryPdf({
+        rows: [withShifts('Ada', 'monday', ['10:30–14:30'])],
+        days,
+        weekKey,
+        weekRangeLabel: 'Nov 2 – Nov 8, 2026',
+        locale: 'en',
+        showWeeklyHours: true,
+      }),
+    )
+
+    expect(pdf).toContain('10:30')
+    expect(pdf).toContain('14:30')
+    expect(pdf).not.toContain('\x85')
+  })
+
+  it('adds total, contract, and diff columns when weekly hours are enabled', () => {
+    const pdf = decode(
+      buildSummaryPdf({
+        rows: [row('Ada', { totalMinutes: 420, totalHours: 7, contractHours: 40, diffHours: -33 })],
+        days,
+        weekKey,
+        weekRangeLabel: 'Nov 2 – Nov 8, 2026',
+        locale: 'en',
+        showWeeklyHours: true,
+      }),
+    )
+
+    expect(pdf).toContain(en['summary.total'])
+    expect(pdf).toContain(en['summary.contract'])
+    expect(pdf).toContain(en['summary.diff'])
+    expect(pdf).toContain('7.0')
+    expect(pdf).toContain('40.0')
+    expect(pdf).toContain('-33.0')
+  })
+
+  it('leaves the diff blank for vacation rows when weekly hours are enabled', () => {
+    const pdf = decode(
+      buildSummaryPdf({
+        rows: [row('Ada', { isVacation: true, diffHours: null })],
+        days,
+        weekKey,
+        weekRangeLabel: 'Nov 2 – Nov 8, 2026',
+        locale: 'en',
+        showWeeklyHours: true,
+      }),
+    )
+
+    expect(pdf).toContain(en['summary.total'])
+    expect(pdf).toContain(en['summary.contract'])
+    expect(pdf).toContain('0.0')
+    expect(pdf).toContain('40.0')
+    expect(pdf).toContain('\x97')
+    expect(pdf).not.toContain('-40.0')
   })
 
   it('localizes labels for the active locale', () => {
@@ -193,34 +254,38 @@ describe('buildSummaryPdf', () => {
   })
 })
 
-describe('saveSummaryPdf', () => {
+describe('openSummaryPdf', () => {
   const blobs: Blob[] = []
   const createObjectURL = vi.fn((blob: Blob) => {
     blobs.push(blob)
     return 'blob:test'
   })
   const revokeObjectURL = vi.fn()
-  let downloadName = ''
+  let openTarget = ''
   let clickSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     blobs.length = 0
-    downloadName = ''
+    openTarget = ''
+    createObjectURL.mockClear()
+    revokeObjectURL.mockClear()
+    vi.useFakeTimers()
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL })
     clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
       this: HTMLAnchorElement,
     ) {
-      downloadName = this.download
+      openTarget = this.target
     })
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
 
-  it('downloads the generated PDF using the week month and first weekday', async () => {
-    saveSummaryPdf({
+  it('opens the generated PDF in a new browser tab', async () => {
+    openSummaryPdf({
       rows: [row('Ada')],
       days,
       weekKey,
@@ -230,23 +295,14 @@ describe('saveSummaryPdf', () => {
 
     expect(createObjectURL).toHaveBeenCalledOnce()
     expect(clickSpy).toHaveBeenCalledOnce()
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
-    expect(downloadName).toBe('2026-11_Schedule_2nd.pdf')
+    expect(openTarget).toBe('_blank')
+    expect(document.querySelector('a[download]')).toBeNull()
 
     const blob = blobs[0]
     expect(blob.type).toBe('application/pdf')
     expect(await blob.text()).toContain('%PDF-1.4')
-  })
 
-  it('uses the Spanish file label for Spanish PDFs', () => {
-    saveSummaryPdf({
-      rows: [row('Ada')],
-      days,
-      weekKey,
-      weekRangeLabel: '2 nov – 8 nov, 2026',
-      locale: 'es',
-    })
-
-    expect(downloadName).toBe('2026-11_Horario_2.pdf')
+    vi.advanceTimersByTime(60_000)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
   })
 })

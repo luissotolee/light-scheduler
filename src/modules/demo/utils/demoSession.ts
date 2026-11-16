@@ -2,6 +2,7 @@ import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useSchedulerStore } from '@/modules/scheduler/stores/scheduler'
 import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
+import { useSummarySettingsStore } from '@/modules/summary/stores/summarySettings'
 import { useArchiveStore } from '@/modules/archive/stores/archive'
 import { useCalendarStore } from '@/modules/calendar/stores/calendar'
 import { buildDemoWorkspace } from '@/modules/demo/fixtures/demoWorkspace'
@@ -76,6 +77,8 @@ export async function startDemo(scenarioId: string): Promise<boolean> {
     const schedulerSettingsStore = useSchedulerSettingsStore()
     schedulerSettingsStore.resetSettings()
 
+    useSummarySettingsStore().resetSettings()
+
     const archiveStore = useArchiveStore()
     archiveStore.resetStatus()
 
@@ -137,6 +140,7 @@ export async function stopDemo(): Promise<void> {
 
       restoreAppStorage(appSnapshot)
       useSchedulerSettingsStore().hydrate()
+      useSummarySettingsStore().hydrate()
       restoreSucceeded = true
     } catch {
       demoStore.reportError('demo.error.restore')

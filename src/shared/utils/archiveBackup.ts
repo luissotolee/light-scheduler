@@ -7,6 +7,7 @@ import type {
   HolidayWeek,
   SchedulerSettings,
   Shift,
+  SummarySettings,
   TeamMember,
   Weekday,
   WeekKey,
@@ -15,6 +16,7 @@ import type { MessageKey } from '@/shared/i18n/messages/en'
 import { isLocale } from '@/shared/i18n/types'
 import type { Locale } from '@/shared/i18n/types'
 import { parseSchedulerSettings } from '@/shared/utils/schedulerSettings'
+import { parseSummarySettings } from '@/shared/utils/summarySettings'
 import {
   WEEKDAY_ORDER,
   getIsoWeek,
@@ -74,6 +76,7 @@ export type BackupDayOffs = Record<string, Record<string, Record<string, Weekday
 export interface BackupSettings {
   locale?: Locale
   scheduler?: SchedulerSettings
+  summary?: SummarySettings
 }
 
 export interface BackupCalendarEntry {
@@ -245,9 +248,20 @@ function parseBackupSettings(value: unknown): Parsed<BackupSettings | undefined>
     settings.scheduler = scheduler
   }
 
+  if (value.summary !== undefined) {
+    const summary = parseSummarySettings(value.summary)
+    if (!summary) return { ok: false, error: 'archive.invalidBackup' }
+    settings.summary = summary
+  }
+
   return {
     ok: true,
-    value: settings.locale === undefined && settings.scheduler === undefined ? undefined : settings,
+    value:
+      settings.locale === undefined &&
+      settings.scheduler === undefined &&
+      settings.summary === undefined
+        ? undefined
+        : settings,
   }
 }
 
@@ -543,7 +557,10 @@ export function buildBackup(
     version: BACKUP_VERSION,
     exportedAt: now.toISOString(),
     currentWeekKey,
-    ...(settings && (settings.locale !== undefined || settings.scheduler !== undefined)
+    ...(settings &&
+    (settings.locale !== undefined ||
+      settings.scheduler !== undefined ||
+      settings.summary !== undefined)
       ? { settings: { ...settings } }
       : {}),
     employees: members.map(toBackupEmployee),

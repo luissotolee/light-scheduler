@@ -8,7 +8,7 @@ import {
   pdfNumber,
   assemblePdf,
 } from '@/shared/utils/pdf'
-import { downloadBlob } from '@/shared/utils/download'
+import { openBlobInNewTab } from '@/shared/utils/download'
 import { HOLIDAY_EXPORT_COLUMNS } from '@/modules/employees/utils/holidayExport'
 import type { HolidayExportRows } from '@/modules/employees/types'
 
@@ -24,6 +24,7 @@ const BODY_SIZE = 7
 const HEADER_HEIGHT = 22
 const ROW_HEIGHT = 20
 const CELL_PADDING = 3
+const EMPLOYEE_PADDING = 5
 const GRID_WIDTH = 0.5
 const TITLE_GAP = 12
 const LABEL_SEPARATOR = ' — '
@@ -73,7 +74,7 @@ function drawHeader(ops: string[], input: HolidayPdfInput, top: number): number 
     'employees.exportHolidays.employeeColumn',
   )
   ops.push(
-    ...drawTextAt(MARGIN + CELL_PADDING, centerY, employeeHeader, HEADER_SIZE, true, 'left'),
+    ...drawTextAt(MARGIN + EMPLOYEE_PADDING, centerY, employeeHeader, HEADER_SIZE, true, 'left'),
   )
 
   for (let index = 0; index < HOLIDAY_EXPORT_COLUMNS; index += 1) {
@@ -118,10 +119,10 @@ function drawRow(
     `${pdfNumber(MARGIN)} ${pdfNumber(bottom)} ${pdfNumber(EMPLOYEE_COLUMN_WIDTH)} ${pdfNumber(ROW_HEIGHT)} re S`,
   )
 
-  const name = fitText(row.name, EMPLOYEE_COLUMN_WIDTH - CELL_PADDING * 2, BODY_SIZE, true)
+  const name = fitText(row.name, EMPLOYEE_COLUMN_WIDTH - EMPLOYEE_PADDING * 2, BODY_SIZE, true)
   ops.push(
     ...drawTextAt(
-      MARGIN + CELL_PADDING,
+      MARGIN + EMPLOYEE_PADDING,
       top - ROW_HEIGHT / 2,
       name,
       BODY_SIZE,
@@ -175,10 +176,7 @@ export function buildHolidayPdf(input: HolidayPdfInput): Uint8Array<ArrayBuffer>
   return assemblePdf(pages, PAGE_WIDTH, PAGE_HEIGHT)
 }
 
-export function saveHolidayPdf(input: HolidayPdfInput): void {
+export function openHolidayPdf(input: HolidayPdfInput): void {
   const bytes = buildHolidayPdf(input)
-  const prefix = translate(messages[input.locale], 'employees.exportHolidays.filePrefix')
-  const filename = `${prefix}_${input.year}.pdf`
-
-  downloadBlob(filename, new Blob([bytes], { type: 'application/pdf' }))
+  openBlobInNewTab(new Blob([bytes], { type: 'application/pdf' }))
 }

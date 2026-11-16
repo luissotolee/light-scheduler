@@ -5,6 +5,8 @@ import { nextTick } from 'vue'
 import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
 import SummaryView from '@/modules/summary/views/SummaryView.vue'
+import SummarySettingsDialog from '@/modules/summary/components/SummarySettingsDialog.vue'
+import { useSummarySettingsStore } from '@/modules/summary/stores/summarySettings'
 import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import { useLocaleStore } from '@/shared/stores/locale'
@@ -54,6 +56,7 @@ describe('SummaryView', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
@@ -104,6 +107,49 @@ describe('SummaryView', () => {
     expect(table.text()).toContain('Employee')
     expect(table.text()).toContain('Monday')
     expect(table.text()).toContain('Sunday')
+  })
+
+  it('toggles the weekly hours columns from the summary settings dialog', async () => {
+    seed()
+    const wrapper = mountView()
+
+    expect(wrapper.find('[data-test="summary-hours-header-total"]').exists()).toBe(false)
+
+    await wrapper.get('[data-test="summary-settings-open"]').trigger('click')
+
+    const dialog = wrapper.findComponent(SummarySettingsDialog)
+    expect(dialog.props('visible')).toBe(true)
+
+    const toggle = wrapper.find<HTMLInputElement>('[data-test="summary-settings-show-hours"]')
+    toggle.element.checked = true
+    toggle.element.dispatchEvent(new Event('change', { bubbles: true }))
+    await nextTick()
+    await wrapper.get('[data-test="summary-settings-form"]').trigger('submit')
+    await nextTick()
+
+    expect(dialog.props('visible')).toBe(false)
+    expect(useSummarySettingsStore().settings.showWeeklyHours).toBe(true)
+    expect(wrapper.get('[data-test="summary-hours-header-total"]').text()).toBe('Total')
+    expect(wrapper.get('[data-test="summary-hours-total-member-1"]').text()).toBe('3.0')
+    expect(wrapper.get('[data-test="summary-hours-contract-member-1"]').text()).toBe('40.0')
+    expect(wrapper.get('[data-test="summary-hours-diff-member-1"]').text()).toBe('-37.0')
+  })
+
+  it('passes the weekly hours setting to the PDF export', async () => {
+    seed()
+    useSummarySettingsStore().applySettings({ showWeeklyHours: true })
+    const blobs: Blob[] = []
+    const createObjectURL = vi.fn((blob: Blob) => {
+      blobs.push(blob)
+      return 'blob:test'
+    })
+    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const wrapper = mountView()
+
+    await wrapper.get('[data-test="save-summary-pdf"]').trigger('click')
+
+    expect(await blobs[0].text()).toContain('Total')
   })
 
   it('renders two shifts inside one weekday cell', () => {
@@ -210,7 +256,7 @@ describe('SummaryView', () => {
     expect(print).toHaveBeenCalledOnce()
   })
 
-  it('downloads a PDF without opening the print dialog', async () => {
+  it('opens a PDF in a new browser tab without opening the print dialog', async () => {
     seed()
     const print = vi.fn()
     vi.stubGlobal('print', print)
@@ -221,24 +267,28 @@ describe('SummaryView', () => {
     })
     const revokeObjectURL = vi.fn()
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL })
-    let downloadName = ''
+    let openTarget = ''
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
       this: HTMLAnchorElement,
     ) {
-      downloadName = this.download
+      openTarget = this.target
     })
     const wrapper = mountView()
+    vi.useFakeTimers()
 
     await wrapper.get('[data-test="save-summary-pdf"]').trigger('click')
 
     expect(print).not.toHaveBeenCalled()
     expect(createObjectURL).toHaveBeenCalledOnce()
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
-    expect(downloadName).toBe('2026-11_Schedule_2nd.pdf')
+    expect(openTarget).toBe('_blank')
+    expect(document.querySelector('a[download]')).toBeNull()
 
     const blob = blobs[0]
     expect(blob.type).toBe('application/pdf')
     expect(await blob.text()).toContain('%PDF-1.4')
+
+    vi.advanceTimersByTime(60_000)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
   })
 
   it('localizes labels and weekdays to Spanish live', async () => {

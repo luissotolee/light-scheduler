@@ -45,7 +45,7 @@ export const es: Messages = {
     'Mantén los registros de empleados que usan todas las planificaciones.',
   'home.feature.summary.title': 'Horario',
   'home.feature.summary.description':
-    'Revisa la semana en una tabla imprimible y guárdala como PDF.',
+    'Revisa la semana en una tabla imprimible y ábrela como PDF.',
   'home.feature.archive.title': 'Archivo',
   'home.feature.archive.description':
     'Exporta tus datos como archivos o impórtalos para restaurar tu información.',
@@ -80,6 +80,10 @@ export const es: Messages = {
   'scheduler.settings.showHeadcount': 'Mostrar empleados por hora',
   'scheduler.settings.showHeadcountTooltip':
     'Añade una insignia junto a cada hora con el mayor número de empleados trabajando al mismo tiempo durante esa hora.',
+  'scheduler.confirm.restHeader': 'Menos de {hours} horas de descanso',
+  'scheduler.confirm.restMessage':
+    '{name} tendrá menos de {hours} horas de descanso con el turno existente {start}–{end} del {date}. ¿Quieres continuar?',
+  'scheduler.confirm.restLabel': 'Continuar',
   'scheduler.confirm.restartHeader': 'Reiniciar planificación semanal',
   'scheduler.confirm.restartMessage':
     'Esto borra todos los turnos y días libres de la semana actual. Los empleados se conservan. Esta acción no se puede deshacer.',
@@ -220,11 +224,10 @@ export const es: Messages = {
   'employees.exportHolidays.description':
     'Elige el año que quieres incluir en el PDF de vacaciones de los empleados.',
   'employees.exportHolidays.year': 'Año',
-  'employees.exportHolidays.confirm': 'Descargar PDF',
+  'employees.exportHolidays.confirm': 'Abrir PDF',
   'employees.exportHolidays.pdfTitle': 'Vacaciones de Empleados {year}',
   'employees.exportHolidays.employeeColumn': 'Empleado',
   'employees.exportHolidays.weekColumn': 'Semana {number}',
-  'employees.exportHolidays.filePrefix': 'vacaciones_empleados',
 
   'holidays.title': 'Semanas de vacaciones — {name}',
 
@@ -235,9 +238,9 @@ export const es: Messages = {
   'demo.scenario.employees.exportHolidaysYear':
     'En el PDF solo aparecen las vacaciones guardadas para el año seleccionado.',
   'demo.scenario.employees.exportHolidaysConfirm':
-    'El PDF usa el mismo orden de empleados que el planificador y el resumen.',
+    'El PDF se abre en una pestaña nueva del navegador con el mismo orden de empleados que el planificador y el resumen.',
   'demo.scenario.employees.exportHolidaysClose':
-    'Cancelar cierra el diálogo sin descargar durante la demostración.',
+    'Cancelar cierra el diálogo sin abrir un PDF durante la demostración.',
 
 
 
@@ -322,17 +325,24 @@ export const es: Messages = {
   'summary.emptyDescription':
     'Añade empleados en la página de Empleados para que aparezcan en el horario semanal.',
   'summary.description':
-    'Revisa la semana en una tabla imprimible. Imprímela o descárgala como archivo PDF sin abrir el diálogo de impresión.',
+    'Revisa la semana en una tabla imprimible. Imprímela o ábrela como PDF en una pestaña nueva del navegador.',
   'summary.print': 'Imprimir',
-  'summary.savePdf': 'Guardar como PDF',
-  'summary.pdfFileLabel': 'Horario',
+  'summary.openPdf': 'Abrir PDF',
+  'summary.total': 'Total',
+  'summary.contract': 'Contrato',
+  'summary.diff': 'Diferencia',
+  'summary.settings.title': 'Configuración del resumen',
+  'summary.settings.description': 'Elige qué columnas aparecen en la tabla del resumen.',
+  'summary.settings.showWeeklyHours': 'Mostrar horas semanales frente al contrato',
+  'summary.settings.showWeeklyHoursTooltip':
+    'Añade las columnas Total, Contrato y Diferencia para comparar las horas planificadas de cada empleado con su contrato semanal.',
 
   'archive.title': 'Archivo',
   'archive.description':
-    'Descarga una copia comprimida de todos los empleados, turnos, días libres, festivos y eventos, junto con tu idioma y la configuración del planificador, o restaura una copia para reemplazar tu espacio de trabajo actual.',
+    'Descarga una copia comprimida de todos los empleados, turnos, días libres, festivos y eventos, junto con tu idioma, la configuración del planificador y la del resumen, o restaura una copia para reemplazar tu espacio de trabajo actual.',
   'archive.exportHeading': 'Copia de seguridad',
   'archive.exportCopy':
-    'Descarga un archivo JSON comprimido con gzip con todos los empleados, planificaciones, festivos y eventos, además de tu idioma y la configuración del planificador. Conserva los IDs de empleado necesarios para vincular los turnos con las personas.',
+    'Descarga un archivo JSON comprimido con gzip con todos los empleados, planificaciones, festivos y eventos, además de tu idioma, la configuración del planificador y la del resumen. Conserva los IDs de empleado necesarios para vincular los turnos con las personas.',
   'archive.exportEmployees': 'Exportar empleados',
   'archive.exportSchedule': 'Exportar planificación',
   'archive.importHeading': 'Restaurar',
@@ -363,7 +373,7 @@ export const es: Messages = {
   'archive.compressionUnsupported': 'Este navegador no puede leer copias de seguridad comprimidas',
   'archive.confirm.backupHeader': 'Restaurar copia de seguridad',
   'archive.confirm.backupMessage':
-    'Esto reemplaza todos los empleados, turnos, días libres, festivos, eventos y ajustes, incluidos el idioma y la configuración del planificador, con el contenido de la copia de seguridad. Esta acción no se puede deshacer.',
+    'Esto reemplaza todos los empleados, turnos, días libres, festivos, eventos y ajustes, incluidos el idioma, la configuración del planificador y la del resumen, con el contenido de la copia de seguridad. Esta acción no se puede deshacer.',
   'archive.confirm.backupLabel': 'Restaurar',
   'archive.importedOne': 'Se importó {count} empleado',
   'archive.importedMany': 'Se importaron {count} empleados',
@@ -583,6 +593,14 @@ export const es: Messages = {
     'Guarda para aplicar la nueva franja y el tamaño del tramo al planificador.',
   'demo.scenario.scheduler.headcount':
     'Cada insignia por hora muestra ahora cuántos empleados están planificados en esa hora.',
+  'demo.scenario.scheduler.restWarningDay':
+    'La semana termina con un turno que acaba después de medianoche.',
+  'demo.scenario.scheduler.restWarningMove':
+    'Mover ese turno deja menos de 12 horas antes del turno del lunes de la semana siguiente.',
+  'demo.scenario.scheduler.restWarningDialog':
+    'El planificador pide confirmación antes de guardar un cambio que deja menos de 12 horas de descanso.',
+  'demo.scenario.scheduler.restWarningConfirmed':
+    'Confirma para guardar el cambio o cancela para mantener el turno original.',
   'demo.scenario.scheduler.restart':
     'Usa Borrar todo para eliminar todos los turnos y días libres de la semana actual.',
   'demo.scenario.scheduler.confirmRestart':
@@ -650,14 +668,25 @@ export const es: Messages = {
   'demo.scenario.summary.backToThisWeek': 'Usa Esta semana para volver a la semana actual.',
   'demo.scenario.summary.table':
     'Cada fila es un miembro del equipo y cada columna es un día, con turnos y vacaciones en un solo lugar.',
+  'demo.scenario.summary.settingsOpen':
+    'Abre la configuración del resumen para elegir qué columnas se muestran.',
+  'demo.scenario.summary.settingsWindow':
+    'Esta configuración controla las columnas de la tabla del resumen.',
+  'demo.scenario.summary.settingsToggle':
+    'Activa las horas semanales para comparar las horas planificadas y las del contrato.',
+  'demo.scenario.summary.settingsSaved': 'Guarda para aplicar las nuevas columnas a la tabla.',
+  'demo.scenario.summary.hoursColumns':
+    'Las columnas Total, Contrato y Diferencia comparan las horas planificadas de cada empleado con su contrato semanal.',
+  'demo.scenario.summary.hoursRow':
+    'Una diferencia positiva indica más horas planificadas que el contrato; una negativa indica menos.',
   'demo.scenario.summary.vacation':
-    'Los empleados de vacaciones toda la semana aparecen como una única fila de vacaciones.',
+    'Los empleados de vacaciones toda la semana aparecen como una única fila de vacaciones, y su diferencia semanal queda en blanco.',
   'demo.scenario.summary.details':
     'Selecciona un nombre para abrir los detalles del empleado desde el resumen.',
   'demo.scenario.summary.detailsDialog':
     'La misma vista de detalles se abre aquí, con la información de contacto y vacaciones.',
   'demo.scenario.summary.detailsClose': 'Ciérralo para volver al resumen.',
   'demo.scenario.summary.print': 'Imprime el resumen con el diálogo de impresión del navegador.',
-  'demo.scenario.summary.pdf': 'Guarda el resumen como archivo PDF.',
+  'demo.scenario.summary.pdf': 'Abre el resumen como PDF en una pestaña nueva del navegador.',
   'demo.scenario.summary.finish': 'Esto cubre la página de Resumen. Sal para restaurar tus datos.',
 }

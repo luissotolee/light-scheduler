@@ -6,6 +6,7 @@ import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
 import ArchiveView from '@/modules/archive/views/ArchiveView.vue'
 import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
+import { useSummarySettingsStore } from '@/modules/summary/stores/summarySettings'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { buildBackup, gzipJson, type BackupSettings } from '@/shared/utils/archiveBackup'
@@ -190,7 +191,7 @@ describe('ArchiveView', () => {
     })
   })
 
-  it('restores language and scheduler settings from a backup', async () => {
+  it('restores language, scheduler, and summary settings from a backup', async () => {
     seedWorkspace()
     const wrapper = mountView()
 
@@ -204,6 +205,7 @@ describe('ArchiveView', () => {
           slotMinutes: 15,
           showHourlyHeadcount: true,
         },
+        summary: { showWeeklyHours: true },
       }),
     )
     await vi.waitFor(() => {
@@ -219,6 +221,7 @@ describe('ArchiveView', () => {
       slotMinutes: 15,
       showHourlyHeadcount: true,
     })
+    expect(useSummarySettingsStore().settings).toEqual({ showWeeklyHours: true })
     expect(wrapper.find('[data-test="status"]').text()).toBe(
       'Copia de seguridad restaurada',
     )

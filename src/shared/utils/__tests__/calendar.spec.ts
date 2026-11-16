@@ -15,6 +15,7 @@ import {
   getWeekKey,
   holidayToWeekKey,
   isoDateToDate,
+  isoDateToDayNumber,
   parseIsoDate,
   startOfWeek,
   toLocalIsoDate,
@@ -72,6 +73,23 @@ describe('isoDateToDate', () => {
     expect(date.getFullYear()).toBe(2026)
     expect(date.getMonth()).toBe(10)
     expect(date.getDate()).toBe(8)
+  })
+})
+
+describe('isoDateToDayNumber', () => {
+  it('returns the UTC day index for an ISO date', () => {
+    expect(isoDateToDayNumber('1970-01-01')).toBe(0)
+    expect(isoDateToDayNumber('2026-11-02')).toBe(20759)
+  })
+
+  it('advances by one for consecutive days across month and year boundaries', () => {
+    expect(isoDateToDayNumber('2026-11-03') - isoDateToDayNumber('2026-11-02')).toBe(1)
+    expect(isoDateToDayNumber('2027-01-01') - isoDateToDayNumber('2026-12-31')).toBe(1)
+  })
+
+  it('handles leap days', () => {
+    expect(isoDateToDayNumber('2024-02-29') - isoDateToDayNumber('2024-02-28')).toBe(1)
+    expect(isoDateToDayNumber('2024-03-01') - isoDateToDayNumber('2024-02-29')).toBe(1)
   })
 })
 
