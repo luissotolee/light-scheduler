@@ -20,6 +20,7 @@ const member: TeamMember = {
   duty: 'employee',
   contract: 'fulltime',
   weeklyHours: 40,
+  contractHoursPeriod: 'week',
   holidays: [],
   email: 'ada@example.com',
   active: true,
@@ -257,7 +258,7 @@ describe('workspace store', () => {
 
     const store = useWorkspaceStore()
 
-    expect(store.members).toEqual([member])
+    expect(store.members).toEqual([{ ...member, sickLeaves: [] }])
     expect(store.schedules).toEqual({ '2026-11-02': [shift] })
     expect(store.dayOffs).toEqual({ '2026-11-02': [dayOff] })
     expect(store.currentWeekKey).toBe('2026-11-02')
@@ -278,6 +279,7 @@ describe('workspace store', () => {
     expect(readJson(WORKSPACE_STORAGE_KEY, parsePersistedWorkspace)).toEqual({
       version: WORKSPACE_SCHEMA_VERSION,
       ...persistedPayload,
+      members: [{ ...member, sickLeaves: [] }],
     })
   })
 

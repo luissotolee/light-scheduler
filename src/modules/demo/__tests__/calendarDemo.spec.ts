@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { calendarDemoScenario } from '@/modules/demo/scenarios/calendarDemo'
+import {
+  calendarDemoScenario,
+  calendarDemoScenarios,
+} from '@/modules/demo/scenarios/calendarDemo'
 import { demoScenarios } from '@/modules/demo/scenarios'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
@@ -92,10 +95,53 @@ describe('calendarDemo scenario', () => {
   })
 
   it('gives every click at least 1.5 seconds before advancing', () => {
-    calendarDemoScenario.steps.forEach((step) => {
-      if (step.action === 'click' || step.action === 'pointerClick') {
-        expect(step.pauseMs ?? step.durationMs ?? 1500).toBeGreaterThanOrEqual(1500)
-      }
+    calendarDemoScenarios.forEach((scenario) => {
+      scenario.steps.forEach((step) => {
+        if (step.action === 'click' || step.action === 'pointerClick') {
+          expect(step.pauseMs ?? step.durationMs ?? 1500).toBeGreaterThanOrEqual(1500)
+        }
+      })
+    })
+  })
+})
+
+describe('calendar demo journeys', () => {
+  it('exposes the full demo plus focused journeys', () => {
+    expect(calendarDemoScenarios.map((scenario) => scenario.id)).toEqual([
+      'calendar-demo',
+      'calendar-import-demo',
+      'calendar-browse-demo',
+      'calendar-custom-demo',
+    ])
+  })
+
+  it('reuses full-demo steps with translated metadata', () => {
+    const fullStepIds = new Set(calendarDemoScenario.steps.map((step) => step.id))
+
+    calendarDemoScenarios.forEach((scenario) => {
+      expect(scenario.module).toBe('calendar')
+      expect(en[scenario.titleKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.titleKey as keyof typeof es]).toBeDefined()
+      expect(en[scenario.descriptionKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.descriptionKey as keyof typeof es]).toBeDefined()
+
+      const ids = scenario.steps.map((step) => step.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      ids.forEach((id) => expect(fullStepIds).toContain(id))
+
+      scenario.steps.forEach((step) => {
+        expect(en[step.narrationKey as keyof typeof en]).toBeDefined()
+        expect(es[step.narrationKey as keyof typeof es]).toBeDefined()
+        if ('target' in step && step.target?.testId) {
+          expect(knownTargets).toContain(step.target.testId)
+        }
+        if (step.action === 'wait') {
+          expect(knownTargets).toContain(step.waitFor)
+        }
+        if (step.action === 'navigate') {
+          expect(step.route).toBe('/calendar')
+        }
+      })
     })
   })
 })

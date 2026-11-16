@@ -7,6 +7,7 @@ export const en = {
   'common.deactivate': 'Deactivate',
   'common.reactivate': 'Reactivate',
   'common.holidays': 'Holidays',
+  'common.sickLeave': 'Sick leave',
   'common.dash': '—',
   'common.back': 'Back',
 
@@ -104,6 +105,14 @@ export const en = {
   'contract.part_time': 'Part-time',
   'contract.weekends': 'Weekends',
 
+  'contractHours.period.week': 'Per week',
+  'contractHours.period.month': 'Per month',
+  'contractHours.period.year': 'Per year',
+  'contractHours.format.week': '{hours} h/week',
+  'contractHours.format.month': '{hours} h/month',
+  'contractHours.format.year': '{hours} h/year',
+  'contractHours.weeklyEquivalent': '≈ {hours} h/week',
+
   'shiftGrid.employee': 'Employee',
   'shiftGrid.hours': 'Hours',
   'shiftGrid.empty': 'No active employees are available on this day.',
@@ -119,14 +128,21 @@ export const en = {
   'shiftRow.trackAria': 'Shift track for {name}. Press Enter to add a 3 hour shift.',
   'shiftRow.markOff': 'Mark {name} off for this day',
   'shiftRow.markOn': 'Mark {name} back on for this day',
+  'shiftRow.sick': 'Sick leave',
+  'shiftRow.sickFor': 'Sick leave for {name}',
   'shiftRow.daysOffTooltip': '{count} days off scheduled for {name} this week (minimum {min}).',
 
   'weeklyHours.title': 'Weekly hours',
-  'weeklyHours.caption': 'Weekly scheduled and contract hours per employee',
+  'weeklyHours.caption':
+    'Scheduled and contract hours per employee, including monthly totals for monthly or yearly contracts',
   'weeklyHours.metric': 'Metric',
   'weeklyHours.current': 'Current',
   'weeklyHours.contract': 'Contract',
   'weeklyHours.diff': 'Diff',
+  'weeklyHours.monthlyCurrent': 'Month current',
+  'weeklyHours.monthlyContract': 'Month contract',
+  'weeklyHours.monthlyDiff': 'Month diff',
+  'weeklyHours.holidayInMonth': 'This employee has a holiday within the month',
   'weeklyHours.empty': 'No employees are available this week.',
   'hours.group.head_manager': 'Head managers',
   'hours.group.manager': 'Managers',
@@ -152,6 +168,9 @@ export const en = {
   'employees.confirm.holidaysHeader': 'Remove shifts for holiday weeks',
   'employees.confirm.holidaysMessage':
     '{name} already has shifts in the selected holiday weeks. Saving the holiday will remove those shifts.',
+  'employees.confirm.sicknessHeader': 'Remove shifts during sick leave',
+  'employees.confirm.sicknessMessage':
+    '{name} already has shifts during the selected sick leave. Saving it will remove those shifts.',
   'employees.confirm.removeShifts': 'Remove shifts and save',
   'employees.hideInactive': 'Active only',
   'employees.hideInactive.tooltip':
@@ -162,7 +181,7 @@ export const en = {
   'employees.column.name': 'Name',
   'employees.column.duty': 'Duty',
   'employees.column.contract': 'Contract',
-  'employees.column.weeklyHours': 'Weekly hours',
+  'employees.column.contractHours': 'Contract hours',
   'employees.column.contact': 'Contact',
   'employees.column.actions': 'Actions',
   'employees.detailsFor': 'View details for {name}',
@@ -173,6 +192,7 @@ export const en = {
   'employees.email': 'Email: {email}',
   'employees.editAria': 'Edit {name}',
   'employees.holidaysAria': 'Holidays for {name}',
+  'employees.sickAria': 'Sick leave for {name}',
   'employees.deactivateAria': 'Deactivate {name}',
   'employees.reactivateAria': 'Reactivate {name}',
   'employees.removeAria': 'Remove {name}',
@@ -183,7 +203,9 @@ export const en = {
   'employees.form.phone': 'Phone',
   'employees.form.email': 'Email',
   'employees.form.comment': 'Comment',
-  'employees.form.weeklyHours': 'Weekly hours *',
+  'employees.form.contractHours': 'Contract hours *',
+  'employees.form.contractHoursAmount': 'Hours *',
+  'employees.form.contractHoursPeriodGroup': 'Contract hours period',
   'employees.form.startDate': 'Start date',
   'employees.form.contract': 'Contract *',
   'employees.form.contractGroup': 'Contract',
@@ -191,12 +213,15 @@ export const en = {
   'employees.form.phonePlaceholder': 'e.g. 612 345 678 or +34 612 345 678',
   'employees.form.emailPlaceholder': 'e.g. jane@example.com',
   'employees.form.commentPlaceholder': 'e.g. No morning shifts',
-  'employees.form.hoursPlaceholder': 'e.g. 40',
+  'employees.form.hoursPlaceholder.week': 'e.g. 40',
+  'employees.form.hoursPlaceholder.month': 'e.g. 160',
+  'employees.form.hoursPlaceholder.year': 'e.g. 1900',
   'employees.details.title': 'Employee details',
   'employees.details.empId': 'Employee ID',
   'employees.details.duty': 'Duty',
   'employees.details.contract': 'Contract',
-  'employees.details.weeklyHours': 'Weekly hours',
+  'employees.details.contractHours': 'Contract hours',
+  'employees.details.weeklyEquivalent': 'Weekly equivalent',
   'employees.details.email': 'Email',
   'employees.details.phone': 'Phone',
   'employees.details.comment': 'Comment',
@@ -206,6 +231,15 @@ export const en = {
   'employees.details.holidays': 'Holidays',
   'employees.details.noHolidays': 'No holidays',
   'employees.details.holidayItem': 'Week {week} ({range})',
+  'employees.details.sickLeaves': 'Sick leave',
+  'employees.details.noSickLeaves': 'No sick leave',
+  'employees.sick.title': 'Sick leave — {name}',
+  'employees.sick.start': 'Start date',
+  'employees.sick.end': 'End date',
+  'employees.sick.addRange': 'Add range',
+  'employees.sick.empty': 'No sick leave set.',
+  'employees.sick.range': '{start} – {end}',
+  'employees.sick.removeAria': 'Remove sick leave {range}',
   'employees.manage.title': 'Manage employee',
   'employees.manage.actions': 'Actions',
   'employees.status.active': 'Active',
@@ -301,6 +335,7 @@ export const en = {
 
   'summary.employee': 'Employee',
   'summary.off': 'OFF',
+  'summary.sick': 'SICK',
   'summary.vacations': 'VACATIONS',
   'summary.previousWeek': 'Previous week',
   'summary.previousWeekTooltip': 'View previous week summary',
@@ -375,7 +410,10 @@ export const en = {
   'errors.requiredName': 'Name is required',
   'errors.invalidDuty': 'Duty is invalid',
   'errors.invalidContract': 'Contract is invalid',
+  'errors.invalidContractHoursPeriod': 'Contract hours period is invalid',
   'errors.weeklyHours': 'Weekly hours must be a number greater than 0 and at most 168',
+  'errors.contractHours':
+    'Contract hours must be a number greater than 0 within the allowed range for the period',
   'errors.invalidEmail': 'Email is invalid',
   'errors.invalidPhone': 'Phone is invalid',
   'errors.invalidComment': 'Comment is invalid',
@@ -387,6 +425,9 @@ export const en = {
   'errors.endNotAllowedActive': 'End date is not allowed for active employees',
   'errors.invalidActive': 'Active is invalid',
   'errors.invalidHolidays': 'Holidays are invalid',
+  'errors.invalidSickLeave': 'Sick leave dates are invalid',
+  'errors.sickLeaveRequired': 'Select a start and end date',
+  'errors.sickLeaveOverlap': 'This range overlaps an existing sick leave',
   'errors.invalidCalendarDate': 'Date is invalid',
   'errors.invalidCalendarKind': 'Type is invalid',
   'errors.invalidCalendarEntry': 'Calendar entry is invalid',
@@ -431,20 +472,74 @@ export const en = {
   'demo.error.target': 'The demo paused because the next step could not be found.',
   'demo.picker.title': 'Start a guided demo',
   'demo.picker.description':
-    'Choose a page to explore with sample data. Your saved data is restored when you exit the demo.',
-  'demo.picker.optionsAria': 'Demo pages',
+    'Choose a page to explore with sample data, or focus on a specific user journey. Your saved data is restored when you exit the demo.',
+  'demo.picker.optionsAria': 'Demo pages and journeys',
+  'demo.picker.all': 'All',
   'demo.picker.calendar': 'Calendar',
   'demo.picker.calendarDescription':
     'Fetch public holidays by country and region, add custom holidays or events, and see them in the scheduler.',
+  'demo.picker.calendar.importTitle': 'Import public holidays',
+  'demo.picker.calendar.importDescription':
+    'Choose a country, region, and year, then import public holidays.',
+  'demo.picker.calendar.browseTitle': 'Browse the calendar',
+  'demo.picker.calendar.browseDescription':
+    'Move between months and inspect holidays and events by day.',
+  'demo.picker.calendar.customTitle': 'Custom holidays & events',
+  'demo.picker.calendar.customDescription':
+    'Add, edit, and remove your own calendar entries.',
   'demo.picker.employees': 'Employees',
   'demo.picker.employeesDescription':
     'Search, add, edit, deactivate, reactivate and remove team members, and manage holiday weeks.',
+  'demo.picker.employees.addTitle': 'Add & inspect employees',
+  'demo.picker.employees.addDescription':
+    'Search and sort the list, add a new team member, and open their details.',
+  'demo.picker.employees.editTitle': 'Edit employee',
+  'demo.picker.employees.editDescription':
+    'Open the form prefilled with current values, change a field, and save.',
+  'demo.picker.employees.holidaysTitle': 'Holidays & PDF',
+  'demo.picker.employees.holidaysDescription':
+    'Register holiday weeks for an employee and export them as a PDF.',
+  'demo.picker.employees.sickTitle': 'Sick leave',
+  'demo.picker.employees.sickDescription':
+    'Register sick leave ranges and confirm removing overlapping shifts.',
+  'demo.picker.employees.activeTitle': 'Deactivate & reactivate',
+  'demo.picker.employees.activeDescription':
+    'Deactivate an employee, filter the list, and reactivate them.',
   'demo.picker.scheduler': 'Scheduler',
   'demo.picker.schedulerDescription':
     'Navigate weeks and days, create, move, resize and remove shifts, mark days off and review weekly hours.',
+  'demo.picker.scheduler.navigationTitle': 'Weeks & days',
+  'demo.picker.scheduler.navigationDescription':
+    'Move between weeks and days, and jump to any week with the picker.',
+  'demo.picker.scheduler.shiftsTitle': 'Create & edit shifts',
+  'demo.picker.scheduler.shiftsDescription':
+    'Create, resize, move, and remove shifts, including rest warnings.',
+  'demo.picker.scheduler.timeOffTitle': 'Days off & time off',
+  'demo.picker.scheduler.timeOffDescription':
+    'Mark days off and see holidays and sick leave in the schedule.',
+  'demo.picker.scheduler.hoursTitle': 'Weekly hours',
+  'demo.picker.scheduler.hoursDescription':
+    'Compare scheduled and contract hours, including monthly totals.',
+  'demo.picker.scheduler.settingsTitle': 'Schedule settings',
+  'demo.picker.scheduler.settingsDescription':
+    'Change the time window, slot size, and hourly headcount.',
+  'demo.picker.scheduler.clearTitle': 'Clear the week',
+  'demo.picker.scheduler.clearDescription':
+    'Remove every shift and day off from the current week.',
   'demo.picker.summary': 'Summary',
   'demo.picker.summaryDescription':
     'Review the weekly summary, switch weeks and print or save it as a PDF.',
+  'demo.picker.summary.weekTitle': 'Navigate weeks',
+  'demo.picker.summary.weekDescription':
+    'Move between weeks and jump to any week with the picker.',
+  'demo.picker.summary.tableTitle': 'Table & details',
+  'demo.picker.summary.tableDescription':
+    'Review shifts, holidays, and sick leave, and open employee details.',
+  'demo.picker.summary.hoursTitle': 'Weekly hours columns',
+  'demo.picker.summary.hoursDescription':
+    'Enable and review total, contract, and difference columns.',
+  'demo.picker.summary.printTitle': 'Print & PDF',
+  'demo.picker.summary.printDescription': 'Print the summary or open it as a PDF.',
   'demo.scenario.employees.intro': 'Manage your team here. Schedules use these records.',
   'demo.scenario.employees.search': 'Type a name in the search box to filter the list instantly.',
   'demo.scenario.employees.searchTyping': 'The list now shows only matching employees.',
@@ -461,7 +556,12 @@ export const en = {
   'demo.scenario.employees.formDuty':
     'Choose the role that determines the color and grouping in schedules.',
   'demo.scenario.employees.formContract': 'Select the contract type.',
-  'demo.scenario.employees.formHours': 'Set the weekly hours. This field is required.',
+  'demo.scenario.employees.formHoursPeriod':
+    'Choose whether contract hours are weekly, monthly, or yearly. Weekly is the default.',
+  'demo.scenario.employees.formHoursPeriodMonth':
+    'Select Per month to enter the hours agreed for a whole month.',
+  'demo.scenario.employees.formHours':
+    'Type the contract hours for that period. Monthly and yearly amounts are converted to weekly hours for the scheduler and summary.',
   'demo.scenario.employees.formStartDate':
     'Pick the start date used to decide when the employee can be scheduled.',
   'demo.scenario.employees.formComment':
@@ -488,6 +588,16 @@ export const en = {
   'demo.scenario.employees.holidaysSelected':
     'Selected weeks are highlighted. Save when you are done.',
   'demo.scenario.employees.holidaysSaved': 'The holiday weeks are saved for this employee.',
+  'demo.scenario.employees.sick': 'Open the sick leave dialog for an employee.',
+  'demo.scenario.employees.sickDialog':
+    'Choose the date range when the employee is sick. Those days cannot be scheduled.',
+  'demo.scenario.employees.sickRange':
+    'Add the selected start and end dates as a sick leave range.',
+  'demo.scenario.employees.sickSave': 'Save the sick leave for this employee.',
+  'demo.scenario.employees.sickConfirm':
+    'The selected days already have shifts. Confirm to remove them and save the sick leave.',
+  'demo.scenario.employees.sickSaved':
+    'The sick leave is saved. Those days are blocked in the scheduler and marked as sick in the summary.',
   'demo.scenario.employees.edit': 'Use the pencil action to edit an existing employee.',
   'demo.scenario.employees.editForm': 'The form opens prefilled with the current values.',
   'demo.scenario.employees.editName': 'Change any field, for example the name.',
@@ -539,12 +649,20 @@ export const en = {
   'demo.scenario.scheduler.dayOff': 'Select the member name to mark a day off.',
   'demo.scenario.scheduler.dayOffMarked': 'The row is disabled and the days-off counter updates.',
   'demo.scenario.scheduler.dayOffRestored': 'Select the name again to restore the day.',
+  'demo.scenario.scheduler.sickDay':
+    'Select another day to see how a sick leave range affects only those dates.',
+  'demo.scenario.scheduler.sick':
+    'Sick leave days appear disabled, so no shift can be planned for that employee.',
   'demo.scenario.scheduler.holiday':
     'Members on holiday appear disabled and are excluded from the weekly hours table.',
   'demo.scenario.scheduler.hours':
     'The weekly hours table compares scheduled hours with contract hours.',
   'demo.scenario.scheduler.hoursDiff':
     'The difference row highlights under- and over-scheduled hours per employee.',
+  'demo.scenario.scheduler.monthlyHours':
+    'When an employee has monthly or yearly contract hours, the table adds the current month total, its contract, and the difference. The month follows the Monday that starts the displayed week.',
+  'demo.scenario.scheduler.monthlyHoliday':
+    'An asterisk marks employees with a holiday inside the month, so a lower monthly total can be expected.',
   'demo.scenario.scheduler.settingsOpen':
     'Open the schedule settings. Each option has an info icon with the details.',
   'demo.scenario.scheduler.settingsWindow':
@@ -606,7 +724,7 @@ export const en = {
     'Use Clear all to remove every imported public holiday while keeping your own entries.',
   'demo.scenario.calendar.clearConfirm':
     'Confirm the removal. Custom holidays and events remain in the calendar.',
-  'demo.scenario.calendar.cleared': 'Only your custom entries remain. Now add a new one.',
+  'demo.scenario.calendar.cleared': 'Only your custom entries remain in the calendar.',
   'demo.scenario.calendar.add': 'Add a custom holiday or event.',
   'demo.scenario.calendar.form': 'The form collects the date, name and type of the entry.',
   'demo.scenario.calendar.date': 'The date defaults to the selected day. Pick any day you need.',
@@ -644,8 +762,12 @@ export const en = {
   'demo.scenario.summary.settingsSaved': 'Save to apply the new columns to the table.',
   'demo.scenario.summary.hoursColumns':
     'The Total, Contract, and Diff columns compare each employee’s scheduled hours with their weekly contract.',
+  'demo.scenario.summary.hoursContract':
+    'Monthly and yearly contracts are converted to their weekly equivalent here, so the comparison stays weekly.',
   'demo.scenario.summary.hoursRow':
     'A positive diff means the employee is scheduled above the contract; a negative diff means below.',
+  'demo.scenario.summary.sick':
+    'Sick leave days are marked as SICK in the summary and cannot contain shifts.',
   'demo.scenario.summary.vacation':
     'Employees on holiday for the whole week appear as a single vacation row, and their weekly diff is left blank.',
   'demo.scenario.summary.details': 'Select a name to open the employee details from the summary.',

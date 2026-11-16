@@ -2,12 +2,17 @@ import type { DayOff, Shift, TeamMember, WeekKey, Weekday } from '@/types'
 import type { SummaryCell, SummaryRow } from '@/modules/summary/types'
 import { WEEKDAY_ORDER, weekdayIsoDate } from '@/shared/utils/calendar'
 import {
+  contractHoursPeriodOf,
+  weeklyHoursFromContract,
+} from '@/shared/utils/contractHours'
+import {
   compareMembersByDuty,
   isMemberInWeek,
   isMemberOnHoliday,
 } from '@/shared/utils/employee'
 import { minutesToHours, sumShiftMinutes } from '@/shared/utils/hours'
 import { formatExtendedMinutes } from '@/shared/utils/shifts'
+import { isMemberSickOnDate } from '@/shared/utils/sickness'
 
 export const SUMMARY_PRINT_MAX_ROW_UNITS = 30
 export const SUMMARY_PRINT_MIN_ZOOM = 0.5
@@ -54,10 +59,17 @@ export function buildSummaryRows(params: {
     .map((member) => {
       const isVacation = isVacationWeek(member, weekKey)
       const cells = {} as Record<Weekday, SummaryCell>
+      const sickWeekdays = new Set<Weekday>()
 
       for (const weekday of WEEKDAY_ORDER) {
         if (isVacation) {
           cells[weekday] = { kind: 'vacations' }
+          continue
+        }
+
+        if (isMemberSickOnDate(member, weekdayIsoDate(weekKey, weekday))) {
+          sickWeekdays.add(weekday)
+          cells[weekday] = { kind: 'sick' }
           continue
         }
 
@@ -82,8 +94,18 @@ export function buildSummaryRows(params: {
         }
       }
 
-      const totalMinutes = isVacation ? 0 : sumShiftMinutes(shiftsByMember.get(member.id) ?? [])
+      const totalMinutes = isVacation
+        ? 0
+        : sumShiftMinutes(
+            (shiftsByMember.get(member.id) ?? []).filter(
+              (shift) => !sickWeekdays.has(shift.weekday),
+            ),
+          )
       const totalHours = minutesToHours(totalMinutes)
+      const contractHours = weeklyHoursFromContract(
+        member.weeklyHours,
+        contractHoursPeriodOf(member),
+      )
 
       return {
         memberId: member.id,
@@ -92,8 +114,8 @@ export function buildSummaryRows(params: {
         cells,
         totalMinutes,
         totalHours,
-        contractHours: member.weeklyHours,
-        diffHours: isVacation ? null : totalHours - member.weeklyHours,
+        contractHours,
+        diffHours: isVacation ? null : totalHours - contractHours,
       }
     })
 }

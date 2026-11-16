@@ -57,9 +57,9 @@
       </template>
     </Column>
 
-    <Column v-if="!isPhone" field="weeklyHours" :header="t('employees.column.weeklyHours')">
+    <Column v-if="!isPhone" field="weeklyHours" :header="t('employees.column.contractHours')">
       <template #body="{ data }">
-        <span class="employee-table__hours">{{ data.weeklyHours }}</span>
+        <span class="employee-table__hours">{{ contractHoursLabel(data) }}</span>
       </template>
     </Column>
 
@@ -117,6 +117,22 @@
           />
           <Button
             v-if="data.active"
+            v-tooltip.top="t('common.sickLeave')"
+            type="button"
+            size="small"
+            text
+            rounded
+            severity="warn"
+            :aria-label="t('employees.sickAria', { name: data.name })"
+            :data-test="`sick-${data.id}`"
+            @click="emit('sick', data.id)"
+          >
+            <template #icon>
+              <MedicalCrossIcon class="employee-table__sick-cross" />
+            </template>
+          </Button>
+          <Button
+            v-if="data.active"
             v-tooltip.top="t('common.deactivate')"
             type="button"
             icon="pi pi-user-minus"
@@ -164,9 +180,11 @@ import Chip from 'primevue/chip'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import { computed } from 'vue'
+import MedicalCrossIcon from '@/shared/components/MedicalCrossIcon.vue'
 import type { TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { useIsPhone } from '@/shared/composables/useIsPhone'
+import { DEFAULT_CONTRACT_HOURS_PERIOD } from '@/shared/utils/contractHours'
 import {
   CONTRACTS,
   dutyModifier,
@@ -195,6 +213,7 @@ const rows = computed<EmployeeTableRow[]>(() =>
 const emit = defineEmits<{
   edit: [id: string]
   holidays: [id: string]
+  sick: [id: string]
   remove: [id: string]
   details: [id: string]
   manage: [id: string]
@@ -240,6 +259,11 @@ function contractLabel(value: unknown): string {
 
 function contractModifier(value: unknown): string {
   return isContract(value) ? value.replace('_', '-') : ''
+}
+
+function contractHoursLabel(member: TeamMember): string {
+  const period = member.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD
+  return t(`contractHours.format.${period}`, { hours: member.weeklyHours })
 }
 </script>
 
@@ -303,6 +327,11 @@ function contractModifier(value: unknown): string {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
+}
+
+.employee-table__sick-cross {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .employee-table__chip--manager {

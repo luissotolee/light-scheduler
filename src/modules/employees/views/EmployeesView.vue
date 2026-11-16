@@ -83,6 +83,7 @@
       :members="filteredMembers"
       @edit="store.openEdit"
       @holidays="store.openHolidays"
+      @sick="store.openSickness"
       @remove="store.requestRemove"
       @deactivate="store.requestDeactivate"
       @reactivate="store.reactivateMember"
@@ -103,6 +104,14 @@
       :selected="holidayTarget?.holidays ?? []"
       @update:visible="handleHolidayVisibility"
       @save="handleSaveHolidays"
+    />
+
+    <EmployeeSicknessDialog
+      :visible="sicknessVisible"
+      :member-name="sicknessTarget?.name ?? ''"
+      :selected="sicknessTarget?.sickLeaves ?? []"
+      @update:visible="handleSicknessVisibility"
+      @save="handleSaveSickLeaves"
     />
 
     <ConfirmActionDialog
@@ -128,6 +137,7 @@
       @update:visible="handleManageVisibility"
       @edit="handleManageEdit"
       @holidays="handleManageHolidays"
+      @sick="handleManageSick"
       @deactivate="handleManageDeactivate"
       @reactivate="handleManageReactivate"
       @remove="handleManageRemove"
@@ -148,6 +158,7 @@ import ConfirmActionDialog from '@/shared/components/ConfirmActionDialog.vue'
 import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue'
 import EmployeeManageDialog from '@/modules/employees/components/EmployeeManageDialog.vue'
 import EmployeeFormDialog from '@/modules/employees/components/EmployeeFormDialog.vue'
+import EmployeeSicknessDialog from '@/modules/employees/components/EmployeeSicknessDialog.vue'
 import EmployeeTable from '@/modules/employees/components/EmployeeTable.vue'
 import HolidayExportDialog from '@/modules/employees/components/HolidayExportDialog.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
@@ -158,7 +169,7 @@ import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { useI18n } from '@/shared/i18n'
 import type { MessageKey } from '@/shared/i18n/messages/en'
-import type { HolidayWeek, NewTeamMember } from '@/types'
+import type { HolidayWeek, NewTeamMember, SickLeave } from '@/types'
 import { useIsPhone } from '@/shared/composables/useIsPhone'
 import { buildHolidayExportRows } from '@/modules/employees/utils/holidayExport'
 import { openHolidayPdf } from '@/modules/employees/utils/holidayPdf'
@@ -176,6 +187,8 @@ const {
   editingMember,
   holidayVisible,
   holidayTarget,
+  sicknessVisible,
+  sicknessTarget,
   confirmVisible,
   pendingAction,
   pendingMember,
@@ -212,6 +225,7 @@ const confirmHeader = computed(() => {
   const kind = pendingAction.value?.kind
   if (kind === 'remove') return t('employees.confirm.removeHeader')
   if (kind === 'deactivate') return t('employees.confirm.deactivateHeader')
+  if (kind === 'sickness') return t('employees.confirm.sicknessHeader')
   return t('employees.confirm.holidaysHeader')
 })
 
@@ -220,6 +234,7 @@ const confirmMessage = computed(() => {
   const kind = pendingAction.value?.kind
   if (kind === 'remove') return t('employees.confirm.removeMessage', { name })
   if (kind === 'deactivate') return t('employees.confirm.deactivateMessage', { name })
+  if (kind === 'sickness') return t('employees.confirm.sicknessMessage', { name })
   return t('employees.confirm.holidaysMessage', { name })
 })
 
@@ -247,6 +262,10 @@ function handleHolidayVisibility(visible: boolean): void {
   if (!visible) store.closeHolidays()
 }
 
+function handleSicknessVisibility(visible: boolean): void {
+  if (!visible) store.closeSickness()
+}
+
 function handleConfirmVisibility(visible: boolean): void {
   if (!visible) store.cancelAction()
 }
@@ -265,6 +284,10 @@ function handleManageEdit(id: string): void {
 
 function handleManageHolidays(id: string): void {
   store.openHolidays(id)
+}
+
+function handleManageSick(id: string): void {
+  store.openSickness(id)
 }
 
 function handleManageDeactivate(id: string): void {
@@ -297,6 +320,10 @@ function handleSubmit(payload: NewTeamMember): void {
 
 function handleSaveHolidays(holidays: HolidayWeek[]): void {
   if (holidayTarget.value) store.requestSetHolidays(holidayTarget.value.id, holidays)
+}
+
+function handleSaveSickLeaves(leaves: SickLeave[]): void {
+  if (sicknessTarget.value) store.requestSetSickLeaves(sicknessTarget.value.id, leaves)
 }
 
 onUnmounted(() => {

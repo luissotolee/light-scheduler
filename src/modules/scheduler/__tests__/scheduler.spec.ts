@@ -349,6 +349,87 @@ describe('scheduler weekday grid', () => {
     expect(store.currentWeekShifts).toEqual([holidayShift])
   })
 
+  it('keeps sick members visible but disables the row only on sick dates', () => {
+    workspace.setMembers([
+      makeMember({
+        id: 'ada',
+        sickLeaves: [{ id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' }],
+      }),
+      makeMember({ id: 'bo', name: 'Bo' }),
+    ])
+
+    expect(store.dayRows.map((row) => [row.member.id, row.isSick])).toEqual([
+      ['ada', false],
+      ['bo', false],
+    ])
+
+    store.selectWeekday('thursday')
+    expect(store.dayRows.map((row) => [row.member.id, row.isSick])).toEqual([
+      ['ada', true],
+      ['bo', false],
+    ])
+    expect(
+      store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 600 }),
+    ).toBeNull()
+    expect(
+      store.addShift({ memberId: 'ada', weekday: 'thursday', start: '09:00', end: '10:00' }),
+    ).toBeNull()
+    expect(store.currentWeekShifts).toHaveLength(0)
+
+    store.toggleDayOff('ada')
+    expect(store.currentWeekDayOffs).toHaveLength(0)
+
+    store.selectWeekday('tuesday')
+    expect(
+      store.addShift({ memberId: 'ada', weekday: 'tuesday', start: '09:00', end: '10:00' }),
+    ).not.toBeNull()
+  })
+
+  it('rejects moving a shift to a member who is sick on the selected day', () => {
+    workspace.setMembers([
+      makeMember({ id: 'ada' }),
+      makeMember({
+        id: 'bo',
+        name: 'Bo',
+        sickLeaves: [{ id: 'sick', startDate: '2026-11-02', endDate: '2026-11-02' }],
+      }),
+    ])
+    const shift = store.addShiftRange({ memberId: 'ada', startMinute: 540, endMinute: 720 })!
+
+    expect(
+      store.moveShiftToMember({
+        id: shift.id,
+        memberId: 'bo',
+        startMinute: 540,
+        endMinute: 720,
+      }),
+    ).toBeNull()
+    expect(store.currentWeekShifts).toEqual([shift])
+  })
+
+  it('blocks editing or removing existing shifts on sick dates', () => {
+    workspace.setMembers([
+      makeMember({
+        id: 'ada',
+        sickLeaves: [{ id: 'sick', startDate: '2026-11-02', endDate: '2026-11-02' }],
+      }),
+    ])
+    const sickShift: Shift = {
+      id: 'sick-shift',
+      memberId: 'ada',
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 600,
+    }
+    workspace.setShiftsForWeek('2026-11-02', [sickShift])
+
+    store.removeShift(sickShift.id)
+    store.updateShiftRange({ id: sickShift.id, startMinute: 600, endMinute: 660 })
+    store.updateShift(sickShift.id, { start: '10:00', end: '11:00' })
+
+    expect(store.currentWeekShifts).toEqual([sickShift])
+  })
+
   it('builds day rows with only the selected weekday bars', () => {
     const ada = makeMember({ id: 'ada' })
     const bo = makeMember({ id: 'bo' })

@@ -61,14 +61,23 @@ describe('SummaryCell', () => {
     expect(wrapper.text()).toBe('VACATIONS')
   })
 
-  it('localizes OFF and VACATIONS to Spanish', async () => {
+  it('renders the sick label', () => {
+    const wrapper = mountCell({ kind: 'sick' })
+
+    expect(wrapper.get('[data-test="summary-sick"]').text()).toBe('SICK')
+    expect(wrapper.classes()).toContain('summary-cell--sick')
+  })
+
+  it('localizes OFF, SICK, and VACATIONS to Spanish', async () => {
     useLocaleStore().setLocale('es')
     await nextTick()
 
     const off = mountCell({ kind: 'off' })
+    const sick = mountCell({ kind: 'sick' })
     const vacation = mountCell({ kind: 'vacations' })
 
     expect(off.text()).toBe('LIBRE')
+    expect(sick.text()).toBe('BAJA')
     expect(vacation.text()).toBe('VACACIONES')
   })
 })

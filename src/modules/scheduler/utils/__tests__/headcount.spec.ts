@@ -50,6 +50,7 @@ function row(
     dailyHours: 0,
     isOff: false,
     isHoliday: false,
+    isSick: false,
     daysOffCount: 0,
     ...overrides,
   }

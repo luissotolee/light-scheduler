@@ -56,6 +56,7 @@
               v-for="row in flatRows"
               :key="row.memberId"
               class="weekly-hours__col"
+              :title="contractTitle(row)"
               :data-test="`weekly-hours-row-${row.memberId}-contract`"
             >
               {{ formatHours(row.contractHours) }}
@@ -73,6 +74,61 @@
               {{ formatDiff(row.diffHours) }}
             </td>
           </tr>
+
+          <template v-if="showMonthly">
+            <tr class="weekly-hours__month-heading" data-test="weekly-hours-month-heading">
+              <th scope="rowgroup" :colspan="flatRows.length + 1">{{ monthLabel }}</th>
+            </tr>
+            <tr data-test="weekly-hours-metric-month-current">
+              <th scope="row" class="weekly-hours__metric">
+                {{ t('weeklyHours.monthlyCurrent') }}
+              </th>
+              <td
+                v-for="row in flatRows"
+                :key="row.memberId"
+                class="weekly-hours__col"
+                :data-test="`weekly-hours-row-${row.memberId}-month-current`"
+              >
+                {{ formatHours(monthly(row).currentHours) }}
+                <span
+                  v-if="monthly(row).hasHoliday"
+                  class="weekly-hours__holiday"
+                  :data-test="`weekly-hours-row-${row.memberId}-month-holiday`"
+                  :title="t('weeklyHours.holidayInMonth')"
+                  :aria-label="t('weeklyHours.holidayInMonth')"
+                >
+                  *
+                </span>
+              </td>
+            </tr>
+            <tr data-test="weekly-hours-metric-month-contract">
+              <th scope="row" class="weekly-hours__metric">
+                {{ t('weeklyHours.monthlyContract') }}
+              </th>
+              <td
+                v-for="row in flatRows"
+                :key="row.memberId"
+                class="weekly-hours__col"
+                :data-test="`weekly-hours-row-${row.memberId}-month-contract`"
+              >
+                {{ formatHours(monthly(row).contractHours) }}
+              </td>
+            </tr>
+            <tr data-test="weekly-hours-metric-month-diff">
+              <th scope="row" class="weekly-hours__metric">
+                {{ t('weeklyHours.monthlyDiff') }}
+              </th>
+              <td
+                v-for="row in flatRows"
+                :key="row.memberId"
+                class="weekly-hours__col"
+                :class="diffClass(monthly(row).diffHours)"
+                :data-test="`weekly-hours-row-${row.memberId}-month-diff`"
+              >
+                {{ formatDiff(monthly(row).diffHours) }}
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
@@ -83,17 +139,45 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { WeeklyHoursGroup, WeeklyHoursRow } from '@/modules/scheduler/utils/hours'
+import type {
+  MonthlyHoursRow,
+  WeeklyHoursGroup,
+  WeeklyHoursRow,
+} from '@/modules/scheduler/utils/hours'
 import { formatDiff, formatHours } from '@/modules/scheduler/utils/hours'
 import { useI18n } from '@/shared/i18n'
 
-const props = defineProps<{
-  groups: WeeklyHoursGroup[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    groups: WeeklyHoursGroup[]
+    monthLabel?: string
+  }>(),
+  { monthLabel: '' },
+)
 
 const { t } = useI18n()
 
 const flatRows = computed<WeeklyHoursRow[]>(() => props.groups.flatMap((group) => group.rows))
+
+const showMonthly = computed(() =>
+  flatRows.value.some((row) => row.contractHoursPeriod !== 'week'),
+)
+
+const EMPTY_MONTHLY: MonthlyHoursRow = {
+  currentHours: 0,
+  contractHours: 0,
+  diffHours: 0,
+  hasHoliday: false,
+}
+
+function monthly(row: WeeklyHoursRow): MonthlyHoursRow {
+  return row.monthlyHours ?? EMPTY_MONTHLY
+}
+
+function contractTitle(row: WeeklyHoursRow): string | undefined {
+  if (row.contractHoursPeriod === 'week') return undefined
+  return t(`contractHours.format.${row.contractHoursPeriod}`, { hours: row.contractHoursAmount })
+}
 
 function diffClass(hours: number): string[] {
   const rounded = Math.round(hours * 10) / 10
@@ -165,6 +249,22 @@ function diffClass(hours: number): string[] {
 .weekly-hours__metric {
   position: sticky;
   left: 0;
+}
+
+.weekly-hours__month-heading th {
+  padding-top: 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.weekly-hours__holiday {
+  color: var(--color-danger);
+  font-weight: 700;
 }
 
 .weekly-hours__diff--negative {

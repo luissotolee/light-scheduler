@@ -6,6 +6,7 @@ import PrimeVue from 'primevue/config'
 import { useDemoStore } from '@/modules/demo/stores/demo'
 import DemoModeButton from '@/modules/demo/components/DemoModeButton.vue'
 import { startDemo } from '@/modules/demo/utils/demoSession'
+import { demoScenarioGroups } from '@/modules/demo/scenarios'
 import { en } from '@/shared/i18n/messages/en'
 
 vi.mock('@/modules/demo/utils/demoSession', () => ({
@@ -69,7 +70,14 @@ describe('DemoModeButton', () => {
     expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-pressed')).toBe('true')
   })
 
-  it('opens the picker with all demo options', async () => {
+  async function openGroup(module: string): Promise<void> {
+    body()
+      .find(`[data-test="demo-group-toggle-${module}"]`)
+      .element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+  }
+
+  it('shows modules as accordions and expands one module at a time', async () => {
     const wrapper = mountButton()
 
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
@@ -77,17 +85,48 @@ describe('DemoModeButton', () => {
 
     expect(wrapper.find('[data-test="demo-start-button"]').attributes('aria-expanded')).toBe('true')
     expect(body().find('[data-test="demo-picker"]').exists()).toBe(true)
-    expect(body().find('[data-test="demo-option-employees"]').text()).toContain(
-      en['demo.picker.employees'],
+
+    demoScenarioGroups.forEach((group) => {
+      const groupElement = body().find(`[data-test="demo-group-${group.module}"]`)
+      expect(groupElement.exists()).toBe(true)
+      expect(groupElement.text()).toContain(en[`demo.picker.${group.module}` as keyof typeof en])
+      expect(
+        body().find(`[data-test="demo-group-toggle-${group.module}"]`).attributes('aria-expanded'),
+      ).toBe('false')
+    })
+
+    expect(body().findAll('[data-test^="demo-option-"]')).toHaveLength(0)
+
+    await openGroup('employees')
+
+    expect(
+      body().find('[data-test="demo-group-toggle-employees"]').attributes('aria-expanded'),
+    ).toBe('true')
+    expect(body().find('[data-test="demo-group-panel-employees"]').exists()).toBe(true)
+    expect(body().find('[data-test="demo-option-employees-demo"]').text()).toContain(
+      en['demo.picker.employeesDescription'],
     )
-    expect(body().find('[data-test="demo-option-scheduler"]').text()).toContain(
-      en['demo.picker.scheduler'],
+    expect(body().find('[data-test="demo-option-employees-holidays-demo"]').text()).toContain(
+      en['demo.picker.employees.holidaysTitle'],
     )
-    expect(body().find('[data-test="demo-option-calendar"]').text()).toContain(
-      en['demo.picker.calendar'],
+    expect(
+      body().findAll('[data-test^="demo-option-"]'),
+    ).toHaveLength(
+      demoScenarioGroups.find((group) => group.module === 'employees')!.scenarios.length,
     )
-    expect(body().find('[data-test="demo-option-summary"]').text()).toContain(
-      en['demo.picker.summary'],
+
+    await openGroup('scheduler')
+
+    expect(
+      body().find('[data-test="demo-group-toggle-employees"]').attributes('aria-expanded'),
+    ).toBe('false')
+    expect(body().find('[data-test="demo-group-panel-employees"]').exists()).toBe(false)
+    expect(body().find('[data-test="demo-group-panel-scheduler"]').exists()).toBe(true)
+    expect(body().find('[data-test="demo-option-scheduler-shifts-demo"]').text()).toContain(
+      en['demo.picker.scheduler.shiftsTitle'],
+    )
+    expect(body().findAll('[data-test^="demo-option-"]')).toHaveLength(
+      demoScenarioGroups.find((group) => group.module === 'scheduler')!.scenarios.length,
     )
     expect(body().find('[data-test="demo-option-archive"]').exists()).toBe(false)
     expect(startDemo).not.toHaveBeenCalled()
@@ -100,7 +139,9 @@ describe('DemoModeButton', () => {
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
     await nextTick()
 
-    body().find('[data-test="demo-option-employees"]').element.dispatchEvent(
+    await openGroup('employees')
+
+    body().find('[data-test="demo-option-employees-demo"]').element.dispatchEvent(
       new MouseEvent('click', { bubbles: true }),
     )
     await nextTick()
@@ -115,7 +156,9 @@ describe('DemoModeButton', () => {
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
     await nextTick()
 
-    body().find('[data-test="demo-option-scheduler"]').element.dispatchEvent(
+    await openGroup('scheduler')
+
+    body().find('[data-test="demo-option-scheduler-demo"]').element.dispatchEvent(
       new MouseEvent('click', { bubbles: true }),
     )
     await nextTick()
@@ -130,7 +173,9 @@ describe('DemoModeButton', () => {
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
     await nextTick()
 
-    body().find('[data-test="demo-option-calendar"]').element.dispatchEvent(
+    await openGroup('calendar')
+
+    body().find('[data-test="demo-option-calendar-demo"]').element.dispatchEvent(
       new MouseEvent('click', { bubbles: true }),
     )
     await nextTick()
@@ -145,12 +190,31 @@ describe('DemoModeButton', () => {
     await wrapper.find('[data-test="demo-start-button"]').trigger('click')
     await nextTick()
 
-    body().find('[data-test="demo-option-summary"]').element.dispatchEvent(
+    await openGroup('summary')
+
+    body().find('[data-test="demo-option-summary-demo"]').element.dispatchEvent(
       new MouseEvent('click', { bubbles: true }),
     )
     await nextTick()
 
     expect(startDemo).toHaveBeenCalledWith('summary-demo')
+  })
+
+  it('starts a focused journey from its option', async () => {
+    vi.mocked(startDemo).mockResolvedValue(true)
+    const wrapper = mountButton()
+
+    await wrapper.find('[data-test="demo-start-button"]').trigger('click')
+    await nextTick()
+
+    await openGroup('employees')
+
+    body().find('[data-test="demo-option-employees-holidays-demo"]').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    )
+    await nextTick()
+
+    expect(startDemo).toHaveBeenCalledWith('employees-holidays-demo')
   })
 
   it('closes the picker without starting a demo when cancelled', async () => {
@@ -182,7 +246,9 @@ describe('DemoModeButton', () => {
 
     await button.trigger('click')
     await nextTick()
-    body().find('[data-test="demo-option-scheduler"]').element.dispatchEvent(
+    await openGroup('scheduler')
+
+    body().find('[data-test="demo-option-scheduler-demo"]').element.dispatchEvent(
       new MouseEvent('click', { bubbles: true }),
     )
     await nextTick()

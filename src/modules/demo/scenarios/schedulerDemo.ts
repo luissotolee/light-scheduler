@@ -1,7 +1,11 @@
-import type { DemoScenario } from '@/modules/demo/types'
+import type { DemoScenarioDefinition } from '@/modules/demo/types'
+import { createSubScenario } from '@/modules/demo/scenarios/scenarioFactory'
 
-export const schedulerDemoScenario: DemoScenario = {
+export const schedulerDemoScenario: DemoScenarioDefinition = {
   id: 'scheduler-demo',
+  module: 'scheduler',
+  titleKey: 'demo.picker.all',
+  descriptionKey: 'demo.picker.schedulerDescription',
   steps: [
     {
       id: 'scheduler-intro',
@@ -151,6 +155,20 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 2400,
     },
     {
+      id: 'scheduler-sick-day',
+      action: 'click',
+      target: { testId: 'weekday-tab-thursday' },
+      narrationKey: 'demo.scenario.scheduler.sickDay',
+      pauseMs: 2400,
+    },
+    {
+      id: 'scheduler-sick-row',
+      action: 'spotlight',
+      target: { testId: 'shift-row-emp-mock-03' },
+      narrationKey: 'demo.scenario.scheduler.sick',
+      pauseMs: 2700,
+    },
+    {
       id: 'scheduler-weekly-hours',
       action: 'spotlight',
       target: { testId: 'weekly-hours' },
@@ -162,6 +180,20 @@ export const schedulerDemoScenario: DemoScenario = {
       action: 'spotlight',
       target: { testId: 'weekly-hours-metric-diff' },
       narrationKey: 'demo.scenario.scheduler.hoursDiff',
+      pauseMs: 2700,
+    },
+    {
+      id: 'scheduler-monthly-hours',
+      action: 'spotlight',
+      target: { testId: 'weekly-hours-metric-month-current' },
+      narrationKey: 'demo.scenario.scheduler.monthlyHours',
+      pauseMs: 2900,
+    },
+    {
+      id: 'scheduler-monthly-holiday',
+      action: 'spotlight',
+      target: { testId: 'weekly-hours-row-emp-mock-03-month-holiday' },
+      narrationKey: 'demo.scenario.scheduler.monthlyHoliday',
       pauseMs: 2700,
     },
     {
@@ -322,3 +354,119 @@ export const schedulerDemoScenario: DemoScenario = {
     },
   ],
 }
+
+const navigationStepIds = [
+  'scheduler-intro',
+  'scheduler-previous-week',
+  'scheduler-next-week',
+  'scheduler-weekday-tabs',
+  'scheduler-calendar-markers',
+  'scheduler-day-entries',
+  'scheduler-week-picker-open',
+  'scheduler-week-picker-dialog',
+  'scheduler-week-picker-select',
+  'scheduler-finish',
+]
+
+const shiftsStepIds = [
+  'scheduler-intro',
+  'scheduler-grid',
+  'scheduler-phone-pan',
+  'scheduler-create-shift',
+  'scheduler-create-shift-phone',
+  'scheduler-created-shift',
+  'scheduler-resize',
+  'scheduler-resize-apply',
+  'scheduler-move-shift',
+  'scheduler-move-between-rows',
+  'scheduler-remove-shift',
+  'scheduler-rest-warning-day',
+  'scheduler-rest-warning-move',
+  'scheduler-rest-warning-dialog',
+  'scheduler-rest-warning-confirm',
+  'scheduler-finish',
+]
+
+const timeOffStepIds = [
+  'scheduler-intro',
+  'scheduler-day-off',
+  'scheduler-day-off-marked',
+  'scheduler-day-off-restore',
+  'scheduler-holiday',
+  'scheduler-sick-day',
+  'scheduler-sick-row',
+  'scheduler-finish',
+]
+
+const hoursStepIds = [
+  'scheduler-intro',
+  'scheduler-weekly-hours',
+  'scheduler-hours-diff',
+  'scheduler-monthly-hours',
+  'scheduler-monthly-holiday',
+  'scheduler-finish',
+]
+
+const settingsStepIds = [
+  'scheduler-intro',
+  'scheduler-settings-open',
+  'scheduler-settings-wait',
+  'scheduler-settings-start',
+  'scheduler-settings-end',
+  'scheduler-settings-tooltips',
+  'scheduler-settings-overnight',
+  'scheduler-settings-slot',
+  'scheduler-settings-headcount',
+  'scheduler-settings-headcount-toggle',
+  'scheduler-settings-save',
+  'scheduler-headcount',
+  'scheduler-finish',
+]
+
+const clearWeekStepIds = [
+  'scheduler-intro',
+  'scheduler-restart',
+  'scheduler-restart-wait',
+  'scheduler-restart-confirm',
+  'scheduler-finish',
+]
+
+export const schedulerDemoScenarios: DemoScenarioDefinition[] = [
+  schedulerDemoScenario,
+  createSubScenario(schedulerDemoScenario, {
+    id: 'scheduler-navigation-demo',
+    titleKey: 'demo.picker.scheduler.navigationTitle',
+    descriptionKey: 'demo.picker.scheduler.navigationDescription',
+    steps: navigationStepIds,
+  }),
+  createSubScenario(schedulerDemoScenario, {
+    id: 'scheduler-shifts-demo',
+    titleKey: 'demo.picker.scheduler.shiftsTitle',
+    descriptionKey: 'demo.picker.scheduler.shiftsDescription',
+    steps: shiftsStepIds,
+  }),
+  createSubScenario(schedulerDemoScenario, {
+    id: 'scheduler-time-off-demo',
+    titleKey: 'demo.picker.scheduler.timeOffTitle',
+    descriptionKey: 'demo.picker.scheduler.timeOffDescription',
+    steps: timeOffStepIds,
+  }),
+  createSubScenario(schedulerDemoScenario, {
+    id: 'scheduler-hours-demo',
+    titleKey: 'demo.picker.scheduler.hoursTitle',
+    descriptionKey: 'demo.picker.scheduler.hoursDescription',
+    steps: hoursStepIds,
+  }),
+  createSubScenario(schedulerDemoScenario, {
+    id: 'scheduler-settings-demo',
+    titleKey: 'demo.picker.scheduler.settingsTitle',
+    descriptionKey: 'demo.picker.scheduler.settingsDescription',
+    steps: settingsStepIds,
+  }),
+  createSubScenario(schedulerDemoScenario, {
+    id: 'scheduler-clear-demo',
+    titleKey: 'demo.picker.scheduler.clearTitle',
+    descriptionKey: 'demo.picker.scheduler.clearDescription',
+    steps: clearWeekStepIds,
+  }),
+]

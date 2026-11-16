@@ -74,6 +74,7 @@ describe('EmployeeManageDialog', () => {
     expect(body.find('[data-test="details-contract"]').text()).toBe('Part-time')
     expect(body.find('[data-test="edit-member-1"]').text()).toContain(en['common.edit'])
     expect(body.find('[data-test="holidays-member-1"]').text()).toContain(en['common.holidays'])
+    expect(body.find('[data-test="sick-member-1"]').text()).toContain(en['common.sickLeave'])
     expect(body.find('[data-test="deactivate-member-1"]').text()).toContain(
       en['common.deactivate'],
     )
@@ -93,6 +94,7 @@ describe('EmployeeManageDialog', () => {
     expect(body.find('[data-test="remove-member-2"]').text()).toContain(en['common.remove'])
     expect(body.find('[data-test="edit-member-2"]').exists()).toBe(false)
     expect(body.find('[data-test="holidays-member-2"]').exists()).toBe(false)
+    expect(body.find('[data-test="sick-member-2"]').exists()).toBe(false)
     expect(body.find('[data-test="deactivate-member-2"]').exists()).toBe(false)
   })
 
@@ -101,11 +103,13 @@ describe('EmployeeManageDialog', () => {
 
     await dialogBody().find('[data-test="edit-member-1"]').trigger('click')
     await dialogBody().find('[data-test="holidays-member-1"]').trigger('click')
+    await dialogBody().find('[data-test="sick-member-1"]').trigger('click')
     await dialogBody().find('[data-test="deactivate-member-1"]').trigger('click')
     await dialogBody().find('[data-test="remove-member-1"]').trigger('click')
 
     expect(wrapper.emitted('edit')).toEqual([['member-1']])
     expect(wrapper.emitted('holidays')).toEqual([['member-1']])
+    expect(wrapper.emitted('sick')).toEqual([['member-1']])
     expect(wrapper.emitted('deactivate')).toEqual([['member-1']])
     expect(wrapper.emitted('remove')).toEqual([['member-1']])
   })

@@ -119,9 +119,9 @@ describe('archive store', () => {
       new Uint8Array([0xef, 0xbb, 0xbf]),
     )
     expect(await blob.slice(3).text()).toBe(
-      'emp_id,name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate,comment\r\n' +
-        'EMP-0001,Ada,manager,fulltime,40,2026-W10;2026-W11,ada@example.com,+1 555 010 0000,true,2025-01-15,,No morning shifts\r\n' +
-        'EMP-0002,Bo,employee,part_time,20,,,,true,2026-02-01,,',
+      'emp_id,name,duty,contract,weeklyHours,contractHoursPeriod,holidays,email,phone,active,startDate,endDate,comment\r\n' +
+        'EMP-0001,Ada,manager,fulltime,40,week,2026-W10;2026-W11,ada@example.com,+1 555 010 0000,true,2025-01-15,,No morning shifts\r\n' +
+        'EMP-0002,Bo,employee,part_time,20,week,,,,true,2026-02-01,,',
     )
   })
 
@@ -470,7 +470,7 @@ describe('archive store', () => {
     )
     expect(enMembers).toContain('\r\n')
     expect(enMembers).toContain(
-      'name,duty,contract,weeklyHours,holidays,email,phone,active,startDate,endDate,comment',
+      'name,duty,contract,weeklyHours,contractHoursPeriod,holidays,email,phone,active,startDate,endDate,comment',
     )
     expect(enMembers).toContain('true,')
     expect(enMembers).toContain('part_time')

@@ -138,25 +138,56 @@
         </small>
       </div>
 
-      <div class="employee-form__field">
+      <fieldset class="employee-form__field employee-form__field--full">
+        <legend class="employee-form__label">{{ t('employees.form.contractHours') }}</legend>
+        <div
+          class="employee-form__radio-group"
+          role="radiogroup"
+          data-test="employee-hours-period-group"
+          :aria-label="t('employees.form.contractHoursPeriodGroup')"
+        >
+          <div v-for="period in CONTRACT_HOURS_PERIODS" :key="period" class="employee-form__radio">
+            <RadioButton
+              v-model="form.contractHoursPeriod"
+              :input-id="`employee-hours-period-${period}`"
+              name="contract-hours-period"
+              :value="period"
+              :data-test="`employee-hours-period-${period}`"
+            />
+            <label
+              class="employee-form__radio-label"
+              :for="`employee-hours-period-${period}`"
+              :data-test="`employee-hours-period-${period}-label`"
+            >
+              {{ t(`contractHours.period.${period}`) }}
+            </label>
+          </div>
+        </div>
         <label class="employee-form__label" for="employee-hours">
-          {{ t('employees.form.weeklyHours') }}
+          {{ t('employees.form.contractHoursAmount') }}
         </label>
         <InputNumber
           input-id="employee-hours"
           :model-value="form.weeklyHours"
           :min="0"
-          :max="168"
+          :max="maxHours"
           :step="0.5"
           :use-grouping="false"
           required
           aria-required="true"
           data-test="employee-hours-input"
-          :placeholder="t('employees.form.hoursPlaceholder')"
+          :placeholder="hoursPlaceholder"
           :aria-invalid="hoursError ? 'true' : undefined"
           :aria-describedby="hoursError ? 'employee-hours-error' : undefined"
           @update:model-value="handleHours"
         />
+        <small
+          v-if="weeklyEquivalent !== null"
+          class="employee-form__hint"
+          data-test="employee-hours-weekly-equivalent"
+        >
+          {{ t('contractHours.weeklyEquivalent', { hours: weeklyEquivalent }) }}
+        </small>
         <small
           v-if="hoursError"
           id="employee-hours-error"
@@ -165,7 +196,7 @@
         >
           {{ hoursError }}
         </small>
-      </div>
+      </fieldset>
 
       <div class="employee-form__field">
         <label class="employee-form__label" for="employee-start-date">
@@ -237,10 +268,24 @@ import InputText from 'primevue/inputtext'
 import RadioButton from 'primevue/radiobutton'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
-import type { Contract, Duty, EmployeeFormErrors, NewTeamMember, TeamMember } from '@/types'
+import type {
+  Contract,
+  ContractHoursPeriod,
+  Duty,
+  EmployeeFormErrors,
+  NewTeamMember,
+  TeamMember,
+} from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { isoDateToDate, toLocalIsoDate } from '@/shared/utils/calendar'
+import {
+  CONTRACT_HOURS_PERIODS,
+  DEFAULT_CONTRACT_HOURS_PERIOD,
+  maxContractHours,
+  weeklyHoursFromContract,
+} from '@/shared/utils/contractHours'
 import { CONTRACTS, DUTIES, validateEmployeeForm } from '@/shared/utils/employee'
+import { formatHours } from '@/shared/utils/hours'
 
 const props = defineProps<{
   visible: boolean
@@ -259,6 +304,7 @@ type FormState = {
   duty: Duty
   contract: Contract
   weeklyHours: number | null
+  contractHoursPeriod: ContractHoursPeriod
   email: string
   phone: string
   comment: string
@@ -270,6 +316,7 @@ const form = reactive<FormState>({
   duty: 'employee',
   contract: 'fulltime',
   weeklyHours: null,
+  contractHoursPeriod: DEFAULT_CONTRACT_HOURS_PERIOD,
   email: '',
   phone: '',
   comment: '',
@@ -305,6 +352,16 @@ const dutyError = computed(() => errorText(visibleErrors.value.duty))
 const phoneError = computed(() => errorText(visibleErrors.value.phone))
 const emailError = computed(() => errorText(visibleErrors.value.email))
 const hoursError = computed(() => errorText(visibleErrors.value.weeklyHours))
+const maxHours = computed(() => maxContractHours(form.contractHoursPeriod))
+const hoursPlaceholder = computed(() =>
+  t(`employees.form.hoursPlaceholder.${form.contractHoursPeriod}`),
+)
+const weeklyEquivalent = computed(() => {
+  if (form.contractHoursPeriod === 'week' || form.weeklyHours === null) return null
+  if (!Number.isFinite(form.weeklyHours) || form.weeklyHours <= 0) return null
+  if (form.weeklyHours > maxHours.value) return null
+  return formatHours(weeklyHoursFromContract(form.weeklyHours, form.contractHoursPeriod))
+})
 const contractError = computed(() => errorText(visibleErrors.value.contract))
 const startDateError = computed(() => errorText(visibleErrors.value.startDate))
 const holidaysError = computed(() => errorText(visibleErrors.value.holidays))
@@ -319,6 +376,8 @@ function resetForm(): void {
   form.duty = props.member?.duty ?? 'employee'
   form.contract = props.member?.contract ?? 'fulltime'
   form.weeklyHours = props.member?.weeklyHours ?? null
+  form.contractHoursPeriod =
+    props.member?.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD
   form.email = props.member?.email ?? ''
   form.phone = props.member?.phone ?? ''
   form.comment = props.member?.comment ?? ''
@@ -379,6 +438,11 @@ function handleSubmit(): void {
 
 .employee-form__error {
   color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+.employee-form__hint {
+  color: var(--color-muted);
   font-size: 0.8rem;
 }
 

@@ -11,6 +11,13 @@
       {{ shift.label }}
     </span>
   </div>
+  <span
+    v-else-if="cell.kind === 'sick'"
+    class="summary-cell summary-cell--sick"
+    data-test="summary-sick"
+  >
+    {{ t('summary.sick') }}
+  </span>
   <span v-else class="summary-cell summary-cell--vacations">
     {{ t('summary.vacations') }}
   </span>
@@ -60,6 +67,17 @@ const { t } = useI18n()
   padding-top: 0.25rem;
 }
 
+.summary-cell--sick {
+  display: inline-block;
+  min-width: 2.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-summary-sick-bg);
+  color: var(--color-summary-sick-text);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .summary-cell--vacations {
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -71,7 +89,8 @@ const { t } = useI18n()
     padding: 0.05rem 0.15rem;
   }
 
-  .summary-cell--off {
+  .summary-cell--off,
+  .summary-cell--sick {
     min-width: 2rem;
   }
 }
@@ -86,6 +105,12 @@ const { t } = useI18n()
     min-width: 0;
     background: transparent;
     color: var(--color-sheet-off-text);
+  }
+
+  .summary-cell--sick {
+    min-width: 0;
+    background: var(--color-sheet-sick-bg);
+    color: var(--color-sheet-sick-text);
   }
 
   .summary-cell--shifts {

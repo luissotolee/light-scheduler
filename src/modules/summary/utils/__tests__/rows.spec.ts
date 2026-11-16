@@ -182,6 +182,23 @@ describe('buildSummaryRows', () => {
     expect(rows[0].diffHours).toBe(-33)
   })
 
+  it('converts monthly and yearly contracts to weekly contract hours', () => {
+    const rows = buildSummaryRows({
+      members: [
+        member({ id: 'monthly', weeklyHours: 160, contractHoursPeriod: 'month' }),
+        member({ id: 'yearly', weeklyHours: 1900, contractHoursPeriod: 'year' }),
+      ],
+      shifts: [],
+      dayOffs: [],
+      weekKey,
+    })
+
+    expect(rows[0]?.contractHours).toBeCloseTo((160 * 12) / 52)
+    expect(rows[1]?.contractHours).toBeCloseTo(1900 / 52)
+    expect(rows[0]?.diffHours).toBeCloseTo(-(160 * 12) / 52)
+    expect(rows[1]?.diffHours).toBeCloseTo(-1900 / 52)
+  })
+
   it('renders one labelled shift', () => {
     const rows = buildSummaryRows({
       members: [member()],
@@ -240,6 +257,29 @@ describe('buildSummaryRows', () => {
     expect(rows[0].totalHours).toBe(0)
     expect(rows[0].contractHours).toBe(40)
     expect(rows[0].diffHours).toBeNull()
+  })
+
+  it('marks sick dates, hides their shifts, and excludes them from totals', () => {
+    const rows = buildSummaryRows({
+      members: [
+        member({
+          sickLeaves: [{ id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' }],
+        }),
+      ],
+      shifts: [
+        shift('s1', 'member-1', 'monday', 540, 720),
+        shift('s2', 'member-1', 'thursday', 540, 720),
+      ],
+      dayOffs: [],
+      weekKey,
+    })
+
+    expect(rows[0].cells.monday.kind).toBe('shifts')
+    expect(rows[0].cells.thursday).toEqual({ kind: 'sick' })
+    expect(rows[0].cells.friday).toEqual({ kind: 'off' })
+    expect(rows[0].totalMinutes).toBe(180)
+    expect(rows[0].totalHours).toBe(3)
+    expect(rows[0].diffHours).toBe(-37)
   })
 
   it('ignores shifts for members that are not shown', () => {

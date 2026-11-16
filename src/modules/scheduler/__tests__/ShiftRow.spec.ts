@@ -39,6 +39,7 @@ function makeRow(bars: Shift[] = [], overrides: Partial<DayRow> = {}): DayRow {
     dailyHours: minutes / 60,
     isOff: false,
     isHoliday: false,
+    isSick: false,
     daysOffCount: 0,
     ...overrides,
   }
@@ -122,7 +123,7 @@ describe('ShiftRow', () => {
   ] as const)('applies the %s modifier to the name cell', (duty, modifier) => {
     const wrapper = mount(ShiftRow, {
       props: {
-        row: { member: { ...member, duty }, bars: [], dailyHours: 0, isOff: false, isHoliday: false, daysOffCount: 0 },
+        row: { member: { ...member, duty }, bars: [], dailyHours: 0, isOff: false, isHoliday: false, isSick: false, daysOffCount: 0 },
         slots: buildDaySlots(),
       },
     })
@@ -146,6 +147,7 @@ describe('ShiftRow', () => {
           dailyHours: 0,
           isOff: false,
           isHoliday: false,
+          isSick: false,
           daysOffCount: 0,
         },
         slots: buildDaySlots(),

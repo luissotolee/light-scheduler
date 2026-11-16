@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { filterScenarioForViewport } from '@/modules/demo/player/engine'
-import { employeesDemoScenario } from '@/modules/demo/scenarios/employeesDemo'
+import {
+  employeesDemoScenario,
+  employeesDemoScenarios,
+} from '@/modules/demo/scenarios/employeesDemo'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 
@@ -17,6 +20,8 @@ const knownTargets = [
   'employee-email-input',
   'employee-duty-select',
   'employee-contract-group',
+  'employee-hours-period-group',
+  'employee-hours-period-month-label',
   'employee-hours-input',
   'employee-start-date',
   'employee-comment-input',
@@ -26,6 +31,10 @@ const knownTargets = [
   'details-comment',
   'close-details',
   'holidays-emp-mock-02',
+  'sick-emp-mock-02',
+  'employee-sickness',
+  'sick-add-range',
+  'sick-save',
   'week-20',
   'next-year',
   'save-holidays',
@@ -131,5 +140,65 @@ describe('employeesDemo scenario', () => {
     expect(targets).toContain('deactivate-emp-mock-02')
     expect(targets).toContain('reactivate-emp-mock-02')
     expect(targets).toContain('remove-emp-mock-02')
+  })
+})
+
+describe('employees demo journeys', () => {
+  it('exposes the full demo plus focused journeys', () => {
+    expect(employeesDemoScenarios.map((scenario) => scenario.id)).toEqual([
+      'employees-demo',
+      'employees-add-demo',
+      'employees-edit-demo',
+      'employees-holidays-demo',
+      'employees-sick-demo',
+      'employees-active-demo',
+    ])
+  })
+
+  it('reuses full-demo steps with translated metadata', () => {
+    const fullStepIds = new Set(employeesDemoScenario.steps.map((step) => step.id))
+    const focusedOnlyStepIds = new Set(['employees-manage-close'])
+
+    employeesDemoScenarios.forEach((scenario) => {
+      expect(scenario.module).toBe('employees')
+      expect(en[scenario.titleKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.titleKey as keyof typeof es]).toBeDefined()
+      expect(en[scenario.descriptionKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.descriptionKey as keyof typeof es]).toBeDefined()
+
+      const ids = scenario.steps.map((step) => step.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      ids.forEach((id) => {
+        expect(fullStepIds.has(id) || focusedOnlyStepIds.has(id)).toBe(true)
+      })
+
+      scenario.steps.forEach((step) => {
+        expect(en[step.narrationKey as keyof typeof en]).toBeDefined()
+        expect(es[step.narrationKey as keyof typeof es]).toBeDefined()
+        if ('target' in step && step.target?.testId) {
+          expect(knownTargets).toContain(step.target.testId)
+        }
+        if (step.action === 'navigate') {
+          expect(step.route).toBe('/employees')
+        }
+      })
+    })
+  })
+
+  it('keeps phone action journeys usable by opening the manage dialog first', () => {
+    const focusedIds = [
+      'employees-edit-demo',
+      'employees-holidays-demo',
+      'employees-sick-demo',
+      'employees-active-demo',
+    ]
+    const focused = employeesDemoScenarios.filter((scenario) =>
+      focusedIds.includes(scenario.id),
+    )
+
+    focused.forEach((scenario) => {
+      const phoneSteps = filterScenarioForViewport(scenario, true).steps
+      expect(phoneSteps.some((step) => step.id === 'employees-actions-manage-open')).toBe(true)
+    })
   })
 })

@@ -128,6 +128,23 @@ describe('demoWorkspace', () => {
     expect(mondayShift!.startMinute + 1440 - lateSunday!.endMinute).toBeLessThan(12 * 60)
   })
 
+  it('includes a sick leave for a sample member without shifts on that date', () => {
+    const now = new Date('2026-11-09T12:00:00')
+    const workspace = buildDemoWorkspace(now)
+    const memberId = 'emp-mock-03'
+    const sickDate = weekdayIsoDate(workspace.currentWeekKey, 'thursday')
+
+    const member = workspace.members.find((item) => item.id === memberId)
+    expect(member?.sickLeaves).toEqual([
+      { id: 'sick-demo-01', startDate: sickDate, endDate: sickDate },
+    ])
+    expect(
+      workspace.schedules[workspace.currentWeekKey].some(
+        (shift) => shift.memberId === memberId && shift.weekday === 'thursday',
+      ),
+    ).toBe(false)
+  })
+
   it('includes a holiday for a sample member in the current week', () => {
     const now = new Date('2026-11-09T12:00:00')
     const workspace = buildDemoWorkspace(now)

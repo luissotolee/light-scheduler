@@ -2,6 +2,7 @@ import type {
   CalendarData,
   CalendarEntryKind,
   Contract,
+  ContractHoursPeriod,
   DayOff,
   Duty,
   HolidayWeek,
@@ -26,13 +27,12 @@ import {
   isoDateToDate,
   parseIsoDate,
 } from '@/shared/utils/calendar'
+import { isContract, isDuty, isValidEmpId, normalizeHolidays } from '@/shared/utils/employee'
 import {
-  isContract,
-  isDuty,
-  isValidEmpId,
-  normalizeHolidays,
-  parseWeeklyHours,
-} from '@/shared/utils/employee'
+  DEFAULT_CONTRACT_HOURS_PERIOD,
+  parseContractHoursAmount,
+  parseContractHoursPeriod,
+} from '@/shared/utils/contractHours'
 import {
   MAX_CALENDAR_NAME_LENGTH,
   createDefaultCalendarData,
@@ -41,6 +41,7 @@ import {
 } from '@/shared/utils/calendarEntries'
 import { createId } from '@/shared/utils/id'
 import { isWeekday } from '@/shared/utils/persistence'
+import { normalizeSickLeaves } from '@/shared/utils/sickness'
 
 export const BACKUP_FORMAT = 'light-scheduler-backup'
 export const BACKUP_VERSION = 1
@@ -54,13 +55,20 @@ export interface BackupShift {
   endMinute: number
 }
 
+export interface BackupSickLeave {
+  startDate: string
+  endDate: string
+}
+
 export interface BackupEmployee {
   emp_id: string
   name: string
   duty: Duty
   contract: Contract
   weeklyHours: number
+  contractHoursPeriod?: ContractHoursPeriod
   holidays: HolidayWeek[]
+  sickLeaves?: BackupSickLeave[]
   email?: string
   phone?: string
   comment?: string
@@ -152,6 +160,29 @@ function parseHolidays(value: unknown): HolidayWeek[] | null {
   return normalizeHolidays(holidays)
 }
 
+function parseBackupSickLeaves(value: unknown): Parsed<BackupSickLeave[]> {
+  if (value === undefined) return { ok: true, value: [] }
+  if (!Array.isArray(value)) return { ok: false, error: 'errors.invalidSickLeave' }
+
+  const leaves: BackupSickLeave[] = []
+  for (const item of value) {
+    if (!isRecord(item)) return { ok: false, error: 'errors.invalidSickLeave' }
+
+    const startDate = parseIsoDate(item.startDate)
+    const endDate = parseIsoDate(item.endDate)
+    if (startDate === null || endDate === null || startDate > endDate) {
+      return { ok: false, error: 'errors.invalidSickLeave' }
+    }
+
+    leaves.push({ startDate, endDate })
+  }
+
+  leaves.sort(
+    (a, b) => a.startDate.localeCompare(b.startDate) || a.endDate.localeCompare(b.endDate),
+  )
+  return { ok: true, value: leaves }
+}
+
 function parseBackupEmployee(value: unknown): Parsed<BackupEmployee> {
   if (!isRecord(value)) return { ok: false, error: 'archive.invalidBackup' }
 
@@ -168,11 +199,27 @@ function parseBackupEmployee(value: unknown): Parsed<BackupEmployee> {
   if (!isDuty(value.duty)) return { ok: false, error: 'errors.invalidDuty' }
   if (!isContract(value.contract)) return { ok: false, error: 'errors.invalidContract' }
 
-  const weeklyHours = parseWeeklyHours(value.weeklyHours)
-  if (weeklyHours === null) return { ok: false, error: 'errors.weeklyHours' }
+  const contractHoursPeriod =
+    value.contractHoursPeriod === undefined
+      ? DEFAULT_CONTRACT_HOURS_PERIOD
+      : parseContractHoursPeriod(value.contractHoursPeriod)
+  if (contractHoursPeriod === null) {
+    return { ok: false, error: 'errors.invalidContractHoursPeriod' }
+  }
+
+  const weeklyHours = parseContractHoursAmount(value.weeklyHours, contractHoursPeriod)
+  if (weeklyHours === null) {
+    return {
+      ok: false,
+      error: contractHoursPeriod === 'week' ? 'errors.weeklyHours' : 'errors.contractHours',
+    }
+  }
 
   const holidays = parseHolidays(value.holidays)
   if (holidays === null) return { ok: false, error: 'errors.invalidHolidays' }
+
+  const sickLeaves = parseBackupSickLeaves(value.sickLeaves)
+  if (!sickLeaves.ok) return sickLeaves
 
   if (typeof value.active !== 'boolean') {
     return { ok: false, error: 'errors.invalidActive' }
@@ -220,7 +267,9 @@ function parseBackupEmployee(value: unknown): Parsed<BackupEmployee> {
       duty: value.duty,
       contract: value.contract,
       weeklyHours,
+      contractHoursPeriod,
       holidays,
+      sickLeaves: sickLeaves.value,
       ...(email ? { email } : {}),
       ...(phone ? { phone } : {}),
       ...(comment?.trim() ? { comment: comment.trim() } : {}),
@@ -448,9 +497,14 @@ function toBackupEmployee(member: TeamMember): BackupEmployee {
     duty: member.duty,
     contract: member.contract,
     weeklyHours: member.weeklyHours,
+    contractHoursPeriod: member.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
     holidays: normalizeHolidays(member.holidays).map((holiday) => ({
       year: holiday.year,
       week: holiday.week,
+    })),
+    sickLeaves: normalizeSickLeaves(member.sickLeaves ?? []).map((leave) => ({
+      startDate: leave.startDate,
+      endDate: leave.endDate,
     })),
     ...(member.email ? { email: member.email } : {}),
     ...(member.phone ? { phone: member.phone } : {}),
@@ -611,7 +665,13 @@ export function parseBackup(value: unknown): BackupParseResult {
       duty: employee.duty,
       contract: employee.contract,
       weeklyHours: employee.weeklyHours,
+      contractHoursPeriod: employee.contractHoursPeriod,
       holidays: employee.holidays,
+      sickLeaves: (employee.sickLeaves ?? []).map((leave) => ({
+        id: createId(),
+        startDate: leave.startDate,
+        endDate: leave.endDate,
+      })),
       ...(employee.email ? { email: employee.email } : {}),
       ...(employee.phone ? { phone: employee.phone } : {}),
       ...(employee.comment ? { comment: employee.comment } : {}),

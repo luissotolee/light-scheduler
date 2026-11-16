@@ -10,24 +10,63 @@
     <p class="demo-picker__description">{{ t('demo.picker.description') }}</p>
 
     <div
-      class="demo-picker__options"
+      class="demo-picker__groups"
       role="group"
       :aria-label="t('demo.picker.optionsAria')"
     >
-      <button
-        v-for="option in options"
-        :key="option.id"
-        type="button"
-        class="demo-picker__option"
-        :data-test="`demo-option-${option.key}`"
-        @click="emit('select', option.id)"
+      <section
+        v-for="group in groups"
+        :key="group.module"
+        class="demo-picker__group"
+        :data-test="`demo-group-${group.module}`"
       >
-        <i class="demo-picker__icon" :class="option.icon" aria-hidden="true" />
-        <span class="demo-picker__option-body">
-          <span class="demo-picker__option-title">{{ t(option.titleKey) }}</span>
-          <span class="demo-picker__option-description">{{ t(option.descriptionKey) }}</span>
-        </span>
-      </button>
+        <h3 class="demo-picker__group-heading">
+          <button
+            type="button"
+            class="demo-picker__group-toggle"
+            :aria-expanded="openModule === group.module"
+            :aria-controls="`demo-group-panel-${group.module}`"
+            :data-test="`demo-group-toggle-${group.module}`"
+            @click="toggleGroup(group.module)"
+          >
+            <span class="demo-picker__group-title">
+              <i class="demo-picker__icon" :class="group.icon" aria-hidden="true" />
+              <span>{{ t(group.labelKey) }}</span>
+            </span>
+            <i
+              class="pi demo-picker__group-chevron"
+              :class="openModule === group.module ? 'pi-chevron-up' : 'pi-chevron-down'"
+              aria-hidden="true"
+            />
+          </button>
+        </h3>
+
+        <div
+          v-if="openModule === group.module"
+          :id="`demo-group-panel-${group.module}`"
+          class="demo-picker__group-panel"
+          role="region"
+          :aria-label="t(group.labelKey)"
+          :data-test="`demo-group-panel-${group.module}`"
+        >
+          <div class="demo-picker__options">
+            <button
+              v-for="option in group.options"
+              :key="option.id"
+              type="button"
+              class="demo-picker__option"
+              :data-test="`demo-option-${option.id}`"
+              @click="emit('select', option.id)"
+            >
+              <span class="demo-picker__option-body">
+                <span class="demo-picker__option-title">{{ t(option.titleKey) }}</span>
+                <span class="demo-picker__option-description">{{ t(option.descriptionKey) }}</span>
+              </span>
+              <i class="pi pi-angle-right demo-picker__option-arrow" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="demo-picker__actions">
@@ -43,12 +82,15 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import Button from 'primevue/button'
 import AppDialog from '@/shared/components/AppDialog.vue'
 import { useI18n } from '@/shared/i18n'
 import type { MessageKey } from '@/shared/i18n'
+import type { DemoModuleId } from '@/modules/demo/types'
+import { demoScenarioGroups } from '@/modules/demo/scenarios'
 
-defineProps<{
+const props = defineProps<{
   visible: boolean
 }>()
 
@@ -57,55 +99,52 @@ const emit = defineEmits<{
   select: [scenarioId: string]
 }>()
 
-interface DemoPickerOption {
-  id: string
-  key: string
+interface DemoModuleMeta {
   icon: string
-  titleKey: MessageKey
-  descriptionKey: MessageKey
+  labelKey: MessageKey
 }
 
-const options: DemoPickerOption[] = [
-  {
-    id: 'employees-demo',
-    key: 'employees',
-    icon: 'pi pi-users',
-    titleKey: 'demo.picker.employees',
-    descriptionKey: 'demo.picker.employeesDescription',
+const moduleMeta: Record<DemoModuleId, DemoModuleMeta> = {
+  scheduler: { icon: 'pi pi-calendar', labelKey: 'demo.picker.scheduler' },
+  summary: { icon: 'pi pi-table', labelKey: 'demo.picker.summary' },
+  calendar: { icon: 'pi pi-calendar-plus', labelKey: 'demo.picker.calendar' },
+  employees: { icon: 'pi pi-users', labelKey: 'demo.picker.employees' },
+}
+
+const groups = demoScenarioGroups.map((group) => ({
+  module: group.module,
+  icon: moduleMeta[group.module].icon,
+  labelKey: moduleMeta[group.module].labelKey,
+  options: group.scenarios.map((scenario) => ({
+    id: scenario.id,
+    titleKey: scenario.titleKey as MessageKey,
+    descriptionKey: scenario.descriptionKey as MessageKey,
+  })),
+}))
+
+const openModule = ref<DemoModuleId | null>(null)
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) openModule.value = null
   },
-  {
-    id: 'scheduler-demo',
-    key: 'scheduler',
-    icon: 'pi pi-calendar',
-    titleKey: 'demo.picker.scheduler',
-    descriptionKey: 'demo.picker.schedulerDescription',
-  },
-  {
-    id: 'calendar-demo',
-    key: 'calendar',
-    icon: 'pi pi-calendar-plus',
-    titleKey: 'demo.picker.calendar',
-    descriptionKey: 'demo.picker.calendarDescription',
-  },
-  {
-    id: 'summary-demo',
-    key: 'summary',
-    icon: 'pi pi-table',
-    titleKey: 'demo.picker.summary',
-    descriptionKey: 'demo.picker.summaryDescription',
-  },
-]
+)
+
+function toggleGroup(module: DemoModuleId): void {
+  openModule.value = openModule.value === module ? null : module
+}
 
 const { t } = useI18n()
 </script>
 
 <style scoped>
-.demo-picker {
-  width: min(32rem, 92vw);
+:global(.demo-picker.p-dialog) {
+  width: min(40rem, 92vw);
   max-height: calc(100dvh - 2rem);
 }
 
-.demo-picker :deep(.p-dialog-content) {
+:global(.demo-picker .p-dialog-content) {
   max-height: calc(100dvh - 10rem);
   overflow-y: auto;
 }
@@ -116,17 +155,77 @@ const { t } = useI18n()
   line-height: 1.5;
 }
 
+.demo-picker__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.demo-picker__group {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.demo-picker__group-heading {
+  margin: 0;
+}
+
+.demo-picker__group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.demo-picker__group-toggle:hover {
+  background: var(--color-surface-alt);
+}
+
+.demo-picker__group-toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.demo-picker__group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.demo-picker__group-chevron {
+  flex: 0 0 auto;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.demo-picker__group-panel {
+  padding: 0 0.5rem 0.5rem;
+}
+
 .demo-picker__options {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .demo-picker__option {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
-  padding: 1rem;
+  padding: 0.75rem 0.9rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -149,14 +248,21 @@ const { t } = useI18n()
 
 .demo-picker__icon {
   color: var(--color-accent);
-  font-size: 1.25rem;
-  line-height: 1.4;
+  font-size: 0.9rem;
 }
 
 .demo-picker__option-body {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.demo-picker__option-arrow {
+  flex: 0 0 auto;
+  color: var(--color-muted);
+  font-size: 0.85rem;
 }
 
 .demo-picker__option-title {
@@ -186,12 +292,12 @@ const { t } = useI18n()
 }
 
 @media (max-width: 640px), (max-height: 480px) and (max-width: 1024px) {
-  .demo-picker {
+  :global(.demo-picker.p-dialog) {
     width: 100vw;
     max-height: none;
   }
 
-  .demo-picker :deep(.p-dialog-content) {
+  :global(.demo-picker .p-dialog-content) {
     max-height: none;
   }
 

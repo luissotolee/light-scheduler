@@ -21,6 +21,8 @@
   --color-sheet-muted: #5b6b80;
   --color-sheet-off-bg: #e2e8f0;
   --color-sheet-off-text: #475569;
+  --color-sheet-sick-bg: #fee2e2;
+  --color-sheet-sick-text: #991b1b;
   --color-sheet-vacation-bg: #fdf0c8;
   --color-sheet-vacation-text: #8a5a00;
   --color-summary-bg: #101a2c;
@@ -33,6 +35,8 @@
   --color-summary-muted: #7dd3fc;
   --color-summary-off-bg: rgba(148, 163, 184, 0.22);
   --color-summary-off-text: #b6c2d4;
+  --color-summary-sick-bg: rgba(248, 113, 113, 0.18);
+  --color-summary-sick-text: #fca5a5;
   --color-summary-vacation-bg: rgba(251, 191, 36, 0.18);
   --color-summary-vacation-text: #fcd34d;
   --color-duty-manager: #fbbf24;

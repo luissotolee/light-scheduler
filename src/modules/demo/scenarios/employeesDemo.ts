@@ -1,7 +1,11 @@
-import type { DemoScenario } from '@/modules/demo/types'
+import type { DemoScenarioDefinition, DemoStep } from '@/modules/demo/types'
+import { createSubScenario } from '@/modules/demo/scenarios/scenarioFactory'
 
-export const employeesDemoScenario: DemoScenario = {
+export const employeesDemoScenario: DemoScenarioDefinition = {
   id: 'employees-demo',
+  module: 'employees',
+  titleKey: 'demo.picker.all',
+  descriptionKey: 'demo.picker.employeesDescription',
   steps: [
     {
       id: 'employees-intro',
@@ -107,12 +111,26 @@ export const employeesDemoScenario: DemoScenario = {
       pauseMs: 1500,
     },
     {
+      id: 'employees-form-hours-period',
+      action: 'spotlight',
+      target: { testId: 'employee-hours-period-group' },
+      narrationKey: 'demo.scenario.employees.formHoursPeriod',
+      pauseMs: 1700,
+    },
+    {
+      id: 'employees-form-hours-period-month',
+      action: 'click',
+      target: { testId: 'employee-hours-period-month-label' },
+      narrationKey: 'demo.scenario.employees.formHoursPeriodMonth',
+      pauseMs: 1600,
+    },
+    {
       id: 'employees-form-hours',
       action: 'fill',
       target: { testId: 'employee-hours-input' },
-      value: '32',
+      value: '160',
       narrationKey: 'demo.scenario.employees.formHours',
-      pauseMs: 1500,
+      pauseMs: 1600,
     },
     {
       id: 'employees-form-start-date',
@@ -189,6 +207,14 @@ export const employeesDemoScenario: DemoScenario = {
       pauseMs: 1500,
     },
     {
+      id: 'employees-actions-manage-open',
+      viewport: 'phone',
+      action: 'click',
+      target: { testId: 'details-emp-mock-02' },
+      narrationKey: 'demo.scenario.employees.manageOpen',
+      pauseMs: 1500,
+    },
+    {
       id: 'employees-holidays-open',
       action: 'click',
       target: { testId: 'holidays-emp-mock-02' },
@@ -208,6 +234,13 @@ export const employeesDemoScenario: DemoScenario = {
       target: { testId: 'next-year' },
       narrationKey: 'demo.scenario.employees.holidaysNextYear',
       pauseMs: 1500,
+    },
+    {
+      id: 'employees-holidays-select',
+      action: 'click',
+      target: { testId: 'week-20' },
+      narrationKey: 'demo.scenario.employees.holidaysSelected',
+      pauseMs: 1600,
     },
     {
       id: 'employees-holidays-save',
@@ -250,6 +283,48 @@ export const employeesDemoScenario: DemoScenario = {
       target: { testId: 'cancel-holiday-export' },
       narrationKey: 'demo.scenario.employees.exportHolidaysClose',
       pauseMs: 1500,
+    },
+    {
+      id: 'employees-sick-open',
+      action: 'click',
+      target: { testId: 'sick-emp-mock-02' },
+      narrationKey: 'demo.scenario.employees.sick',
+      pauseMs: 1500,
+    },
+    {
+      id: 'employees-sick-dialog',
+      action: 'wait',
+      waitFor: 'employee-sickness',
+      narrationKey: 'demo.scenario.employees.sickDialog',
+      pauseMs: 1800,
+    },
+    {
+      id: 'employees-sick-range',
+      action: 'click',
+      target: { testId: 'sick-add-range' },
+      narrationKey: 'demo.scenario.employees.sickRange',
+      pauseMs: 1500,
+    },
+    {
+      id: 'employees-sick-save',
+      action: 'click',
+      target: { testId: 'sick-save' },
+      narrationKey: 'demo.scenario.employees.sickSave',
+      pauseMs: 1500,
+    },
+    {
+      id: 'employees-sick-confirm-wait',
+      action: 'wait',
+      waitFor: 'confirm-message',
+      narrationKey: 'demo.scenario.employees.sickConfirm',
+      pauseMs: 1600,
+    },
+    {
+      id: 'employees-sick-saved',
+      action: 'click',
+      target: { testId: 'confirm-accept' },
+      narrationKey: 'demo.scenario.employees.sickSaved',
+      pauseMs: 1800,
     },
     {
       id: 'employees-edit-open',
@@ -367,3 +442,132 @@ export const employeesDemoScenario: DemoScenario = {
     },
   ],
 }
+
+const closeManageStep: DemoStep = {
+  id: 'employees-manage-close',
+  viewport: 'phone',
+  action: 'click',
+  target: { testId: 'close-details' },
+  narrationKey: 'demo.scenario.employees.closeDetails',
+  pauseMs: 1500,
+}
+
+const addAndInspectStepIds = [
+  'employees-intro',
+  'employees-search-spotlight',
+  'employees-search-fill',
+  'employees-search-clear',
+  'employees-sort-duty',
+  'employees-sort-name',
+  'employees-add',
+  'employees-form-wait',
+  'employees-form-name',
+  'employees-form-name-fill',
+  'employees-form-duty',
+  'employees-form-contract',
+  'employees-form-phone',
+  'employees-form-email',
+  'employees-form-hours-period',
+  'employees-form-hours-period-month',
+  'employees-form-hours',
+  'employees-form-start-date',
+  'employees-form-comment',
+  'employees-form-save',
+  'employees-added',
+  'employees-details-open',
+  'employees-manage-details',
+  'employees-details-wait',
+  'employees-details-comment',
+  'employees-details-close',
+  'employees-finish',
+]
+
+const editStepIds = [
+  'employees-intro',
+  'employees-actions-manage-open',
+  'employees-edit-open',
+  'employees-edit-wait',
+  'employees-edit-name',
+  'employees-edit-save',
+  closeManageStep,
+  'employees-finish',
+]
+
+const holidaysStepIds = [
+  'employees-intro',
+  'employees-actions-manage-open',
+  'employees-holidays-open',
+  'employees-holidays-wait',
+  'employees-holidays-next-year',
+  'employees-holidays-select',
+  'employees-holidays-save',
+  'employees-export-holidays-open',
+  'employees-export-holidays-dialog',
+  'employees-export-holidays-year',
+  'employees-export-holidays-confirm',
+  'employees-export-holidays-cancel',
+  closeManageStep,
+  'employees-finish',
+]
+
+const sickStepIds = [
+  'employees-intro',
+  'employees-actions-manage-open',
+  'employees-sick-open',
+  'employees-sick-dialog',
+  'employees-sick-range',
+  'employees-sick-save',
+  'employees-sick-confirm-wait',
+  'employees-sick-saved',
+  closeManageStep,
+  'employees-finish',
+]
+
+const activeStepIds = [
+  'employees-intro',
+  'employees-actions-manage-open',
+  'employees-deactivate',
+  'employees-deactivate-wait',
+  'employees-deactivate-confirm',
+  'employees-hide-inactive',
+  'employees-hide-inactive-toggle',
+  'employees-hide-inactive-restore',
+  'employees-manage-reopen',
+  'employees-reactivate',
+  closeManageStep,
+  'employees-finish',
+]
+
+export const employeesDemoScenarios: DemoScenarioDefinition[] = [
+  employeesDemoScenario,
+  createSubScenario(employeesDemoScenario, {
+    id: 'employees-add-demo',
+    titleKey: 'demo.picker.employees.addTitle',
+    descriptionKey: 'demo.picker.employees.addDescription',
+    steps: addAndInspectStepIds,
+  }),
+  createSubScenario(employeesDemoScenario, {
+    id: 'employees-edit-demo',
+    titleKey: 'demo.picker.employees.editTitle',
+    descriptionKey: 'demo.picker.employees.editDescription',
+    steps: editStepIds,
+  }),
+  createSubScenario(employeesDemoScenario, {
+    id: 'employees-holidays-demo',
+    titleKey: 'demo.picker.employees.holidaysTitle',
+    descriptionKey: 'demo.picker.employees.holidaysDescription',
+    steps: holidaysStepIds,
+  }),
+  createSubScenario(employeesDemoScenario, {
+    id: 'employees-sick-demo',
+    titleKey: 'demo.picker.employees.sickTitle',
+    descriptionKey: 'demo.picker.employees.sickDescription',
+    steps: sickStepIds,
+  }),
+  createSubScenario(employeesDemoScenario, {
+    id: 'employees-active-demo',
+    titleKey: 'demo.picker.employees.activeTitle',
+    descriptionKey: 'demo.picker.employees.activeDescription',
+    steps: activeStepIds,
+  }),
+]

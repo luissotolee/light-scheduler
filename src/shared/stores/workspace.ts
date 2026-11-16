@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import type { CalendarData, DayOff, Shift, TeamMember, WeekKey } from '@/types'
-import { getWeekKey } from '@/shared/utils/calendar'
+import type { CalendarData, DayOff, Shift, SickLeave, TeamMember, WeekKey } from '@/types'
+import { getWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
+import { isDateInSickLeaves } from '@/shared/utils/sickness'
 import { createDefaultCalendarData } from '@/shared/utils/calendarEntries'
 import {
   parsePersistedWorkspace,
@@ -138,6 +139,32 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     if (changed) schedules.value = nextSchedules
   }
 
+  function removeMemberShiftsForSickLeaves(
+    memberId: string,
+    leaves: readonly SickLeave[],
+  ): void {
+    if (leaves.length === 0) return
+
+    let changed = false
+    const nextSchedules: Record<WeekKey, Shift[]> = {}
+    for (const [weekKey, shifts] of Object.entries(schedules.value)) {
+      const remaining = shifts.filter((shift) => {
+        if (shift.memberId !== memberId) return true
+        return !isDateInSickLeaves(leaves, weekdayIsoDate(weekKey, shift.weekday))
+      })
+
+      if (remaining.length === shifts.length) {
+        nextSchedules[weekKey] = shifts
+        continue
+      }
+
+      changed = true
+      if (remaining.length > 0) nextSchedules[weekKey] = remaining
+    }
+
+    if (changed) schedules.value = nextSchedules
+  }
+
   function replaceScheduleData(
     nextSchedules: Record<WeekKey, Shift[]>,
     nextDayOffs: Record<WeekKey, DayOff[]>,
@@ -205,6 +232,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     findMember,
     setShiftsForWeek,
     removeMemberShiftsForWeeks,
+    removeMemberShiftsForSickLeaves,
     replaceScheduleData,
     setDayOffsForWeek,
     setCurrentWeekKey,

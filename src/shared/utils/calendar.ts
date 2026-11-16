@@ -153,6 +153,13 @@ export function formatWeekRange(weekKey: WeekKey, locale: Locale = 'en'): string
   return `${formatWeekRangeShort(weekKey, locale)}, ${end.getFullYear()}`
 }
 
+export function formatMonthLabel(date: Date, locale: Locale = 'en'): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
+
 export function getIsoWeek(date: Date): { year: number; week: number } {
   const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNum = target.getUTCDay() || 7

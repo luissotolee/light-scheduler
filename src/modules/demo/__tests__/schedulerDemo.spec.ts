@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { filterScenarioForViewport } from '@/modules/demo/player/engine'
-import { schedulerDemoScenario } from '@/modules/demo/scenarios/schedulerDemo'
-import { demoScenarios, getDemoScenario, listDemoScenarios } from '@/modules/demo/scenarios'
+import {
+  schedulerDemoScenario,
+  schedulerDemoScenarios,
+} from '@/modules/demo/scenarios/schedulerDemo'
+import {
+  demoScenarioGroups,
+  demoScenarios,
+  getDemoScenario,
+  listDemoScenarios,
+} from '@/modules/demo/scenarios'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 
@@ -12,6 +20,8 @@ const knownTargets = [
   'week-1',
   'weekday-tab-tuesday',
   'weekday-tab-sunday',
+  'weekday-tab-thursday',
+  'shift-row-emp-mock-03',
   'shift-row-emp-mock-04',
   'weekday-calendar-marker-tuesday',
   'scheduler-day-entries',
@@ -25,6 +35,8 @@ const knownTargets = [
   'day-off-count',
   'weekly-hours',
   'weekly-hours-metric-diff',
+  'weekly-hours-metric-month-current',
+  'weekly-hours-row-emp-mock-03-month-holiday',
   'scheduler-settings',
   'scheduler-settings-form',
   'settings-start',
@@ -128,23 +140,70 @@ describe('schedulerDemo scenario', () => {
   })
 })
 
+describe('scheduler demo journeys', () => {
+  it('exposes the full demo plus focused journeys', () => {
+    expect(schedulerDemoScenarios.map((scenario) => scenario.id)).toEqual([
+      'scheduler-demo',
+      'scheduler-navigation-demo',
+      'scheduler-shifts-demo',
+      'scheduler-time-off-demo',
+      'scheduler-hours-demo',
+      'scheduler-settings-demo',
+      'scheduler-clear-demo',
+    ])
+  })
+
+  it('reuses full-demo steps with translated metadata', () => {
+    const fullStepIds = new Set(schedulerDemoScenario.steps.map((step) => step.id))
+
+    schedulerDemoScenarios.forEach((scenario) => {
+      expect(scenario.module).toBe('scheduler')
+      expect(en[scenario.titleKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.titleKey as keyof typeof es]).toBeDefined()
+      expect(en[scenario.descriptionKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.descriptionKey as keyof typeof es]).toBeDefined()
+
+      const ids = scenario.steps.map((step) => step.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      ids.forEach((id) => expect(fullStepIds).toContain(id))
+
+      scenario.steps.forEach((step) => {
+        expect(en[step.narrationKey as keyof typeof en]).toBeDefined()
+        expect(es[step.narrationKey as keyof typeof es]).toBeDefined()
+        if ('target' in step && step.target?.testId) {
+          expect(knownTargets).toContain(step.target.testId)
+        }
+        if (step.action === 'wait') {
+          expect(knownTargets).toContain(step.waitFor)
+        }
+        if (step.action === 'navigate') {
+          expect(step.route).toBe('/scheduler')
+        }
+      })
+    })
+  })
+})
+
 describe('demoScenarios registry', () => {
   it('registers all demo scenarios', () => {
     expect(demoScenarios['employees-demo']).toBeDefined()
     expect(demoScenarios['scheduler-demo']).toBeDefined()
     expect(demoScenarios['calendar-demo']).toBeDefined()
     expect(demoScenarios['summary-demo']).toBeDefined()
+    expect(demoScenarios['scheduler-navigation-demo']).toBeDefined()
+    expect(demoScenarios['employees-holidays-demo']).toBeDefined()
+    expect(demoScenarios['calendar-custom-demo']).toBeDefined()
+    expect(demoScenarios['summary-print-demo']).toBeDefined()
     expect(getDemoScenario('scheduler-demo')).toBe(schedulerDemoScenario)
   })
 
-  it('listDemoScenarios returns all scenarios', () => {
+  it('listDemoScenarios returns every grouped scenario in order', () => {
     const list = listDemoScenarios()
-    expect(list).toHaveLength(4)
-    expect(list.map((scenario) => scenario.id)).toEqual([
-      'employees-demo',
-      'scheduler-demo',
-      'calendar-demo',
-      'summary-demo',
-    ])
+    const expectedIds = demoScenarioGroups.flatMap((group) =>
+      group.scenarios.map((scenario) => scenario.id),
+    )
+
+    expect(list.map((scenario) => scenario.id)).toEqual(expectedIds)
+    expect(list).toHaveLength(expectedIds.length)
   })
 })

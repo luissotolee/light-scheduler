@@ -76,6 +76,7 @@ describe('employee constants', () => {
       'duty',
       'contract',
       'weeklyHours',
+      'contractHoursPeriod',
       'holidays',
       'email',
       'phone',
@@ -300,6 +301,7 @@ describe('validateEmployeeForm', () => {
         duty: 'manager',
         contract: 'fulltime',
         weeklyHours: 40,
+        contractHoursPeriod: 'week',
         email: 'ada@example.com',
         phone: '+1 555 010 0000',
         comment: 'No morning shifts',
@@ -374,6 +376,53 @@ describe('validateEmployeeForm', () => {
     if (result.ok) {
       expect(result.value.weeklyHours).toBe(weeklyHours)
     }
+  })
+
+  it('defaults a missing contract hours period to weekly', () => {
+    const result = validateEmployeeForm(validInput)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value.contractHoursPeriod).toBe('week')
+    }
+  })
+
+  it.each(['month', 'year'] as const)('accepts contract hours above 168 for a %s period', (period) => {
+    const result = validateEmployeeForm({
+      ...validInput,
+      contractHoursPeriod: period,
+      weeklyHours: period === 'month' ? 160 : 1900,
+    })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value.contractHoursPeriod).toBe(period)
+      expect(result.value.weeklyHours).toBe(period === 'month' ? 160 : 1900)
+    }
+  })
+
+  it('rejects an invalid contract hours period', () => {
+    expect(
+      validateEmployeeForm({ ...validInput, contractHoursPeriod: 'day' }),
+    ).toEqual({
+      ok: false,
+      errors: { contractHoursPeriod: 'errors.invalidContractHoursPeriod' },
+      message: 'errors.invalidContractHoursPeriod',
+    })
+  })
+
+  it('rejects monthly hours above the monthly limit', () => {
+    expect(
+      validateEmployeeForm({
+        ...validInput,
+        contractHoursPeriod: 'month',
+        weeklyHours: 800,
+      }),
+    ).toEqual({
+      ok: false,
+      errors: { weeklyHours: 'errors.contractHours' },
+      message: 'errors.contractHours',
+    })
   })
 
   it('rejects invalid email and phone values', () => {
@@ -572,6 +621,7 @@ describe('validateEmployees', () => {
           duty: 'manager',
           contract: 'fulltime',
           weeklyHours: 40,
+          contractHoursPeriod: 'week',
           holidays: [
             { year: 2026, week: 10 },
             { year: 2026, week: 12 },
@@ -585,6 +635,7 @@ describe('validateEmployees', () => {
           duty: 'employee',
           contract: 'part_time',
           weeklyHours: 20,
+          contractHoursPeriod: 'week',
           holidays: [],
           active: true,
         },
@@ -606,10 +657,43 @@ describe('validateEmployees', () => {
           duty: 'assistant',
           contract: 'weekends',
           weeklyHours: 37.5,
+          contractHoursPeriod: 'week',
           holidays: [{ year: 2026, week: 2 }],
           active: true,
         },
       ],
+    })
+  })
+
+  it('imports an optional contract hours period column', () => {
+    const result = validateEmployees([...headers, 'contractHoursPeriod'], [
+      ['Ada', 'manager', 'fulltime', '160', '', '', '', '', '', '', '', 'month'],
+    ])
+
+    expect(result).toEqual({
+      ok: true,
+      data: [
+        {
+          name: 'Ada',
+          duty: 'manager',
+          contract: 'fulltime',
+          weeklyHours: 160,
+          contractHoursPeriod: 'month',
+          holidays: [],
+          active: true,
+        },
+      ],
+    })
+  })
+
+  it('rejects an invalid contract hours period column', () => {
+    const result = validateEmployees([...headers, 'contractHoursPeriod'], [
+      ['Ada', 'manager', 'fulltime', '40', '', '', '', '', '', '', '', 'day'],
+    ])
+
+    expect(result).toEqual({
+      ok: false,
+      errors: [{ row: 2, message: 'errors.invalidContractHoursPeriod' }],
     })
   })
 
@@ -732,6 +816,7 @@ describe('validateEmployees', () => {
           duty: 'manager',
           contract: 'fulltime',
           weeklyHours: 40,
+          contractHoursPeriod: 'week',
           holidays: [],
           email: 'ada@example.com',
           active: true,
@@ -756,6 +841,7 @@ describe('validateEmployees', () => {
           duty: 'manager',
           contract: 'fulltime',
           weeklyHours: 40,
+          contractHoursPeriod: 'week',
           holidays: [],
           active: true,
           comment: 'No morning shifts',
@@ -765,6 +851,7 @@ describe('validateEmployees', () => {
           duty: 'employee',
           contract: 'part_time',
           weeklyHours: 20,
+          contractHoursPeriod: 'week',
           holidays: [],
           active: true,
         },
@@ -786,6 +873,7 @@ describe('validateEmployees', () => {
           duty: 'manager',
           contract: 'fulltime',
           weeklyHours: 40,
+          contractHoursPeriod: 'week',
           holidays: [],
           active: false,
           startDate: '2020-01-01',
@@ -796,6 +884,7 @@ describe('validateEmployees', () => {
           duty: 'employee',
           contract: 'part_time',
           weeklyHours: 20,
+          contractHoursPeriod: 'week',
           holidays: [],
           active: true,
           startDate: '2024-05-01',
@@ -818,6 +907,7 @@ describe('validateEmployees', () => {
           duty: 'manager',
           contract: 'fulltime',
           weeklyHours: 40,
+          contractHoursPeriod: 'week',
           holidays: [],
           active: true,
         },
@@ -880,6 +970,7 @@ describe('row mapping', () => {
       'head_manager',
       'part_time',
       37.5,
+      'week',
       '2026-W12;2026-W10',
       'ada@example.com',
       '+1 555 010 0000',
@@ -909,6 +1000,7 @@ describe('row mapping', () => {
       'employee',
       'fulltime',
       40,
+      'week',
       '',
       '',
       '',
@@ -939,6 +1031,7 @@ describe('row mapping', () => {
       'assistant',
       'weekends',
       12,
+      'week',
       '',
       '',
       '',
