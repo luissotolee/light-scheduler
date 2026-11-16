@@ -144,6 +144,17 @@
       @confirm="confirmReset"
     />
 
+    <ConfirmActionDialog
+      :visible="pendingRestWarning !== null"
+      :header="t('scheduler.confirm.restHeader', { hours: MIN_REST_MINUTES / 60 })"
+      :message="restWarningMessage"
+      :confirm-label="t('scheduler.confirm.restLabel')"
+      severity="warn"
+      data-test="rest-confirm-dialog"
+      @update:visible="handleRestWarningVisibility"
+      @confirm="store.confirmRestWarning"
+    />
+
     <SchedulerSettingsDialog
       :visible="settingsDialogVisible"
       :settings="settings"
@@ -181,7 +192,8 @@ import {
   weekdayIsoDate,
 } from '@/shared/utils/calendar'
 import { calendarKindLabelKey, entriesForDate } from '@/shared/utils/calendarEntries'
-import { buildDaySlots } from '@/shared/utils/shifts'
+import { buildDaySlots, formatExtendedMinutes } from '@/shared/utils/shifts'
+import { MIN_REST_MINUTES } from '@/modules/scheduler/utils/rest'
 import { useIsPhone } from '@/shared/composables/useIsPhone'
 
 const store = useSchedulerStore()
@@ -191,6 +203,7 @@ const {
   currentWeekKey,
   dayRows,
   error,
+  pendingRestWarning,
   selectedWeekday,
   selectedWeekdayDate,
   weeklyHoursGroups,
@@ -217,6 +230,19 @@ const selectedDayEntries = computed(() =>
 )
 const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value, locale.value))
 const errorMessage = computed(() => (error.value ? t(error.value.key, error.value.params) : ''))
+const restWarningMessage = computed(() => {
+  const warning = pendingRestWarning.value
+  const conflict = warning?.conflicts[0]
+  if (!warning || !conflict) return ''
+
+  return t('scheduler.confirm.restMessage', {
+    name: warning.memberName,
+    hours: MIN_REST_MINUTES / 60,
+    start: formatExtendedMinutes(conflict.shift.startMinute),
+    end: formatExtendedMinutes(conflict.shift.endMinute),
+    date: formatFullDate(weekdayIsoDate(conflict.weekKey, conflict.shift.weekday), locale.value),
+  })
+})
 const slots = computed(() => buildDaySlots(schedulingWindow.value))
 const resetDialogVisible = ref(false)
 const settingsDialogVisible = ref(false)
@@ -239,6 +265,10 @@ function handleResetVisibility(visible: boolean): void {
 function confirmReset(): void {
   store.resetCurrentWeek()
   resetDialogVisible.value = false
+}
+
+function handleRestWarningVisibility(visible: boolean): void {
+  if (!visible) store.cancelRestWarning()
 }
 
 function handleCreate(input: ShiftRangeInput): void {

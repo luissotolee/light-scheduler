@@ -6,6 +6,7 @@ import {
   isMemberInWeek,
   isMemberOnHoliday,
 } from '@/shared/utils/employee'
+import { minutesToHours, sumShiftMinutes } from '@/shared/utils/hours'
 import { formatExtendedMinutes } from '@/shared/utils/shifts'
 
 export const SUMMARY_PRINT_MAX_ROW_UNITS = 30
@@ -35,11 +36,16 @@ export function buildSummaryRows(params: {
   const dayOffKeys = new Set(dayOffs.map((off) => cellKey(off.memberId, off.weekday)))
 
   const shiftsByDay = new Map<string, Shift[]>()
+  const shiftsByMember = new Map<string, Shift[]>()
   for (const shift of shifts) {
     const key = cellKey(shift.memberId, shift.weekday)
     const existing = shiftsByDay.get(key)
     if (existing) existing.push(shift)
     else shiftsByDay.set(key, [shift])
+
+    const memberShifts = shiftsByMember.get(shift.memberId)
+    if (memberShifts) memberShifts.push(shift)
+    else shiftsByMember.set(shift.memberId, [shift])
   }
 
   return members
@@ -76,11 +82,18 @@ export function buildSummaryRows(params: {
         }
       }
 
+      const totalMinutes = isVacation ? 0 : sumShiftMinutes(shiftsByMember.get(member.id) ?? [])
+      const totalHours = minutesToHours(totalMinutes)
+
       return {
         memberId: member.id,
         name: member.name,
         isVacation,
         cells,
+        totalMinutes,
+        totalHours,
+        contractHours: member.weeklyHours,
+        diffHours: isVacation ? null : totalHours - member.weeklyHours,
       }
     })
 }

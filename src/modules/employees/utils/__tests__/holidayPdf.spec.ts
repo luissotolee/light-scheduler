@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildHolidayPdf, saveHolidayPdf } from '@/modules/employees/utils/holidayPdf'
+import { buildHolidayPdf, openHolidayPdf } from '@/modules/employees/utils/holidayPdf'
 import type { HolidayExportRows } from '@/modules/employees/types'
 
 function decode(bytes: Uint8Array): string {
@@ -83,48 +83,49 @@ describe('buildHolidayPdf', () => {
   })
 })
 
-describe('saveHolidayPdf', () => {
+describe('openHolidayPdf', () => {
   const blobs: Blob[] = []
   const createObjectURL = vi.fn((blob: Blob) => {
     blobs.push(blob)
     return 'blob:test'
   })
   const revokeObjectURL = vi.fn()
-  let downloadName = ''
+  let openTarget = ''
   let clickSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     blobs.length = 0
-    downloadName = ''
+    openTarget = ''
+    createObjectURL.mockClear()
+    revokeObjectURL.mockClear()
+    vi.useFakeTimers()
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL })
     clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
       this: HTMLAnchorElement,
     ) {
-      downloadName = this.download
+      openTarget = this.target
     })
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
 
-  it('downloads the English filename and PDF blob', async () => {
-    saveHolidayPdf({ rows, year: 2026, locale: 'en' })
+  it('opens the generated PDF in a new browser tab', async () => {
+    openHolidayPdf({ rows, year: 2026, locale: 'en' })
 
     expect(createObjectURL).toHaveBeenCalledOnce()
     expect(clickSpy).toHaveBeenCalledOnce()
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
-    expect(downloadName).toBe('holidays_employees_2026.pdf')
+    expect(openTarget).toBe('_blank')
+    expect(document.querySelector('a[download]')).toBeNull()
 
     const blob = blobs[0]
     expect(blob.type).toBe('application/pdf')
     expect(await blob.text()).toContain('%PDF-1.4')
-  })
 
-  it('uses the Spanish filename', () => {
-    saveHolidayPdf({ rows, year: 2026, locale: 'es' })
-
-    expect(downloadName).toBe('vacaciones_empleados_2026.pdf')
+    vi.advanceTimersByTime(60_000)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
   })
 })

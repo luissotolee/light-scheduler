@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { downloadTextFile, timestampedName } from '@/shared/utils/download'
+import { downloadTextFile, openBlobInNewTab, timestampedName } from '@/shared/utils/download'
 
 describe('timestampedName', () => {
   afterEach(() => {
@@ -61,6 +61,58 @@ describe('downloadTextFile', () => {
 
     const blob = blobs[0]
     expect(blob.type).toBe('text/plain')
+    expect(await blob.text()).toBe('hello')
+  })
+})
+
+describe('openBlobInNewTab', () => {
+  const blobs: Blob[] = []
+  const createObjectURL = vi.fn((blob: Blob) => {
+    blobs.push(blob)
+    return 'blob:test'
+  })
+  const revokeObjectURL = vi.fn()
+  let openTarget = ''
+  let downloadName = ''
+  let clickSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    blobs.length = 0
+    openTarget = ''
+    downloadName = ''
+    createObjectURL.mockClear()
+    revokeObjectURL.mockClear()
+    vi.useFakeTimers()
+    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL })
+    clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        openTarget = this.target
+        downloadName = this.download
+      })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  it('opens a blob URL in a new tab and revokes it later', async () => {
+    openBlobInNewTab(new Blob(['hello'], { type: 'application/pdf' }))
+
+    expect(createObjectURL).toHaveBeenCalledOnce()
+    expect(clickSpy).toHaveBeenCalledOnce()
+    expect(openTarget).toBe('_blank')
+    expect(downloadName).toBe('')
+    expect(document.querySelector('a[download]')).toBeNull()
+    expect(revokeObjectURL).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(60_000)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test')
+
+    const blob = blobs[0]
+    expect(blob.type).toBe('application/pdf')
     expect(await blob.text()).toBe('hello')
   })
 })

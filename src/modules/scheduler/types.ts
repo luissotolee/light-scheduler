@@ -1,4 +1,4 @@
-import type { SchedulerSettings, Shift, SlotMinutes, TeamMember } from '@/types'
+import type { SchedulerSettings, Shift, SlotMinutes, TeamMember, WeekKey } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 
 export type { SchedulerSettings, SlotMinutes }
@@ -41,4 +41,18 @@ export interface DayRow {
 export interface SchedulerError {
   key: MessageKey
   params?: Record<string, string | number>
+}
+
+export interface RestConflict {
+  shift: Shift
+  weekKey: WeekKey
+  restMinutes: number
+}
+
+export interface PendingRestWarning {
+  memberId: string
+  memberName: string
+  candidate: Shift
+  weekKey: WeekKey
+  conflicts: RestConflict[]
 }

@@ -19,9 +19,9 @@
           <Button
             type="button"
             icon="pi pi-file-pdf"
-            :label="t('summary.savePdf')"
+            :label="t('summary.openPdf')"
             data-test="save-summary-pdf"
-            @click="savePdf"
+            @click="openPdf"
           />
         </template>
       </PageHeader>
@@ -70,6 +70,20 @@
     </div>
 
     <div class="summary__sheet" :style="{ '--summary-print-zoom': String(printZoom) }">
+      <div class="summary__sheet-actions summary__screen-only">
+        <Button
+          v-tooltip.top="t('summary.settings.title')"
+          type="button"
+          icon="pi pi-cog"
+          size="small"
+          text
+          rounded
+          :aria-label="t('summary.settings.title')"
+          data-test="summary-settings-open"
+          @click="settingsDialogVisible = true"
+        />
+      </div>
+
       <header class="summary__sheet-header">
         <h2 class="summary__sheet-title">{{ t('summary.title') }}</h2>
         <p class="summary__sheet-range">{{ weekRangeLabel }}</p>
@@ -80,6 +94,7 @@
         :rows="rows"
         :days="dayHeaders"
         :week-range-label="weekRangeLabel"
+        :show-weekly-hours="settings.showWeeklyHours"
         @details="openDetails"
       />
       <EmptyState
@@ -102,6 +117,13 @@
       @update:visible="weekPickerVisible = $event"
       @select="store.setWeekKey"
     />
+
+    <SummarySettingsDialog
+      :visible="settingsDialogVisible"
+      :settings="settings"
+      @update:visible="settingsDialogVisible = $event"
+      @save="handleSaveSettings"
+    />
   </section>
 </template>
 
@@ -113,19 +135,25 @@ import EmployeeDetailsDialog from '@/shared/components/EmployeeDetailsDialog.vue
 import EmptyState from '@/shared/components/EmptyState.vue'
 import HolidayWeeksDialog from '@/shared/components/HolidayWeeksDialog.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
+import SummarySettingsDialog from '@/modules/summary/components/SummarySettingsDialog.vue'
 import SummaryTable from '@/modules/summary/components/SummaryTable.vue'
 import { useSummaryStore } from '@/modules/summary/stores/summary'
-import { saveSummaryPdf } from '@/modules/summary/utils/pdf'
+import { useSummarySettingsStore } from '@/modules/summary/stores/summarySettings'
+import { openSummaryPdf } from '@/modules/summary/utils/pdf'
+import type { SummarySettings } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 
 const store = useSummaryStore()
+const settingsStore = useSummarySettingsStore()
 const workspaceStore = useWorkspaceStore()
 const { rows, dayHeaders, weekRangeLabel, printZoom, currentWeekKey } = storeToRefs(store)
+const { settings } = storeToRefs(settingsStore)
 const { t, locale } = useI18n()
 
 const detailsTargetId = ref<string | null>(null)
 const weekPickerVisible = ref(false)
+const settingsDialogVisible = ref(false)
 const detailsTarget = computed(() =>
   detailsTargetId.value ? (workspaceStore.findMember(detailsTargetId.value) ?? null) : null,
 )
@@ -143,13 +171,20 @@ function printSummary(): void {
   window.print()
 }
 
-function savePdf(): void {
-  saveSummaryPdf({
+function handleSaveSettings(next: SummarySettings): void {
+  if (settingsStore.applySettings(next)) {
+    settingsDialogVisible.value = false
+  }
+}
+
+function openPdf(): void {
+  openSummaryPdf({
     rows: rows.value,
     days: dayHeaders.value,
     weekKey: currentWeekKey.value,
     weekRangeLabel: weekRangeLabel.value,
     locale: locale.value,
+    showWeeklyHours: settings.value.showWeeklyHours,
   })
 }
 </script>
@@ -197,6 +232,12 @@ function savePdf(): void {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+}
+
+.summary__sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
 }
 
 .summary__sheet-header {
@@ -266,6 +307,10 @@ function savePdf(): void {
 
   .summary__sheet {
     padding: 0.5rem;
+  }
+
+  .summary__sheet-actions {
+    margin-bottom: 0.125rem;
   }
 }
 </style>

@@ -11,15 +11,18 @@ export interface StoredUserSettings {
   version: typeof USER_SETTINGS_SCHEMA_VERSION
   locale?: Locale
   scheduler?: unknown
+  summary?: unknown
 }
 
 export interface UserSettingsSnapshot {
   locale: Locale | null
   scheduler: unknown
   hasScheduler: boolean
+  summary: unknown
+  hasSummary: boolean
 }
 
-interface SchedulerSection {
+interface SettingsSection {
   found: boolean
   value: unknown
 }
@@ -35,6 +38,8 @@ export function parseUserSettings(value: unknown): UserSettingsSnapshot | null {
     locale: isLocale(value.locale) ? value.locale : null,
     scheduler: value.scheduler,
     hasScheduler: Object.prototype.hasOwnProperty.call(value, 'scheduler'),
+    summary: value.summary,
+    hasSummary: Object.prototype.hasOwnProperty.call(value, 'summary'),
   }
 }
 
@@ -53,7 +58,7 @@ function readLegacyLocale(): Locale | null {
   return isLocale(raw) ? raw : null
 }
 
-function readLegacyScheduler(): SchedulerSection {
+function readLegacyScheduler(): SettingsSection {
   const raw = readStorageValue(LEGACY_SCHEDULER_SETTINGS_STORAGE_KEY)
   if (raw === null) return { found: false, value: undefined }
 
@@ -66,7 +71,7 @@ function readLegacyScheduler(): SchedulerSection {
 
 export function readUserSettings(): UserSettingsSnapshot {
   const stored = readJson(USER_SETTINGS_STORAGE_KEY, parseUserSettings)
-  const scheduler: SchedulerSection = stored?.hasScheduler
+  const scheduler: SettingsSection = stored?.hasScheduler
     ? { found: true, value: stored.scheduler }
     : readLegacyScheduler()
 
@@ -74,13 +79,20 @@ export function readUserSettings(): UserSettingsSnapshot {
     locale: stored?.locale ?? readLegacyLocale(),
     scheduler: scheduler.value,
     hasScheduler: scheduler.found,
+    summary: stored?.summary,
+    hasSummary: stored?.hasSummary ?? false,
   }
 }
 
-function persistUserSettings(locale: Locale | null, scheduler: SchedulerSection): boolean {
+function persistUserSettings(
+  locale: Locale | null,
+  scheduler: SettingsSection,
+  summary: SettingsSection,
+): boolean {
   const payload: StoredUserSettings = { version: USER_SETTINGS_SCHEMA_VERSION }
   if (locale !== null) payload.locale = locale
   if (scheduler.found) payload.scheduler = scheduler.value
+  if (summary.found) payload.summary = summary.value
 
   return writeJson(USER_SETTINGS_STORAGE_KEY, payload)
 }
@@ -92,15 +104,30 @@ function clearLegacySettings(): void {
 
 export function writeUserSettingsLocale(locale: Locale): void {
   const current = readUserSettings()
-  const written = persistUserSettings(locale, {
-    found: current.hasScheduler,
-    value: current.scheduler,
-  })
+  const written = persistUserSettings(
+    locale,
+    { found: current.hasScheduler, value: current.scheduler },
+    { found: current.hasSummary, value: current.summary },
+  )
   if (written) clearLegacySettings()
 }
 
 export function writeUserSettingsScheduler(scheduler: unknown): void {
   const current = readUserSettings()
-  const written = persistUserSettings(current.locale, { found: true, value: scheduler })
+  const written = persistUserSettings(
+    current.locale,
+    { found: true, value: scheduler },
+    { found: current.hasSummary, value: current.summary },
+  )
+  if (written) clearLegacySettings()
+}
+
+export function writeUserSettingsSummary(summary: unknown): void {
+  const current = readUserSettings()
+  const written = persistUserSettings(
+    current.locale,
+    { found: current.hasScheduler, value: current.scheduler },
+    { found: true, value: summary },
+  )
   if (written) clearLegacySettings()
 }

@@ -14,6 +14,10 @@ export interface SchedulerSettings {
   showHourlyHeadcount: boolean
 }
 
+export interface SummarySettings {
+  showWeeklyHours: boolean
+}
+
 export type Duty = 'manager' | 'employee' | 'assistant' | 'head_manager'
 
 export type Contract = 'fulltime' | 'part_time' | 'weekends'

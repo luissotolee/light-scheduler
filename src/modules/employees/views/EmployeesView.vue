@@ -161,7 +161,7 @@ import type { MessageKey } from '@/shared/i18n/messages/en'
 import type { HolidayWeek, NewTeamMember } from '@/types'
 import { useIsPhone } from '@/shared/composables/useIsPhone'
 import { buildHolidayExportRows } from '@/modules/employees/utils/holidayExport'
-import { saveHolidayPdf } from '@/modules/employees/utils/holidayPdf'
+import { openHolidayPdf } from '@/modules/employees/utils/holidayPdf'
 
 const store = useEmployeesStore()
 const workspaceStore = useWorkspaceStore()
@@ -287,7 +287,7 @@ function handleExportVisibility(visible: boolean): void {
 
 function handleExportHolidays(year: number): void {
   const rows = buildHolidayExportRows(workspaceStore.members, year)
-  saveHolidayPdf({ rows, year, locale: locale.value })
+  openHolidayPdf({ rows, year, locale: locale.value })
   store.closeExport()
 }
 

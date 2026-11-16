@@ -203,6 +203,7 @@ describe('buildBackup', () => {
           slotMinutes: 15,
           showHourlyHeadcount: true,
         },
+        summary: { showWeeklyHours: true },
       },
       new Date('2026-11-09T20:57:00.000Z'),
     )
@@ -215,6 +216,7 @@ describe('buildBackup', () => {
         slotMinutes: 15,
         showHourlyHeadcount: true,
       },
+      summary: { showWeeklyHours: true },
     })
     expect(backup.exportedAt).toBe('2026-11-09T20:57:00.000Z')
   })
@@ -530,6 +532,7 @@ describe('parseBackup', () => {
             slotMinutes: 15,
             showHourlyHeadcount: true,
           },
+          summary: { showWeeklyHours: true },
         },
       }),
     )
@@ -544,7 +547,19 @@ describe('parseBackup', () => {
         slotMinutes: 15,
         showHourlyHeadcount: true,
       },
+      summary: { showWeeklyHours: true },
     })
+  })
+
+  it('restores a legacy summary section without the weekly hours setting', () => {
+    const parsed = parseBackup(backupRecord({ settings: { summary: {} } }))
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.settings?.summary?.showWeeklyHours).toBe(false)
+
+    const reexported = buildBackup([ada], {}, {}, '2026-11-02', parsed.data.settings)
+    expect(reexported.settings?.summary?.showWeeklyHours).toBe(false)
   })
 
   it('restores a legacy scheduler section without the headcount setting', () => {
@@ -616,6 +631,13 @@ describe('parseBackup', () => {
         showHourlyHeadcount: false,
       },
     })
+
+    const summaryOnly = parseBackup(
+      backupRecord({ settings: { summary: { showWeeklyHours: true } } }),
+    )
+    expect(summaryOnly.ok).toBe(true)
+    if (!summaryOnly.ok) return
+    expect(summaryOnly.data.settings).toEqual({ summary: { showWeeklyHours: true } })
   })
 
   it('validates user settings', () => {
@@ -650,6 +672,9 @@ describe('parseBackup', () => {
     ).toEqual({ ok: false, error: 'archive.invalidBackup' })
     expect(
       parseBackup(backupRecord({ settings: { scheduler: { slotMinutes: 15 } } })),
+    ).toEqual({ ok: false, error: 'archive.invalidBackup' })
+    expect(
+      parseBackup(backupRecord({ settings: { summary: { showWeeklyHours: 'yes' } } })),
     ).toEqual({ ok: false, error: 'archive.invalidBackup' })
   })
 

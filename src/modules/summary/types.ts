@@ -27,6 +27,10 @@ export interface SummaryRow {
   name: string
   isVacation: boolean
   cells: Record<Weekday, SummaryCell>
+  totalMinutes: number
+  totalHours: number
+  contractHours: number
+  diffHours: number | null
 }
 
 export interface SummaryDayHeader {

@@ -8,6 +8,7 @@ import {
   readUserSettings,
   writeUserSettingsLocale,
   writeUserSettingsScheduler,
+  writeUserSettingsSummary,
 } from '@/shared/utils/userSettings'
 
 const CUSTOM_SETTINGS = { startTime: '08:00', endTime: '16:00', slotMinutes: 15 }
@@ -56,6 +57,41 @@ describe('user settings storage', () => {
       locale: 'es',
       scheduler: CUSTOM_SETTINGS,
       hasScheduler: true,
+      summary: undefined,
+      hasSummary: false,
+    })
+  })
+
+  it('stores summary settings alongside the other settings', () => {
+    writeUserSettingsLocale('es')
+    writeUserSettingsScheduler(CUSTOM_SETTINGS)
+    writeUserSettingsSummary({ showWeeklyHours: true })
+
+    expect(storedSettings()).toEqual({
+      version: 1,
+      locale: 'es',
+      scheduler: CUSTOM_SETTINGS,
+      summary: { showWeeklyHours: true },
+    })
+    expect(readUserSettings()).toEqual({
+      locale: 'es',
+      scheduler: CUSTOM_SETTINGS,
+      hasScheduler: true,
+      summary: { showWeeklyHours: true },
+      hasSummary: true,
+    })
+  })
+
+  it('preserves existing settings when summary settings change', () => {
+    writeUserSettingsSummary({ showWeeklyHours: true })
+    writeUserSettingsScheduler(CUSTOM_SETTINGS)
+    writeUserSettingsLocale('es')
+
+    expect(storedSettings()).toEqual({
+      version: 1,
+      locale: 'es',
+      scheduler: CUSTOM_SETTINGS,
+      summary: { showWeeklyHours: true },
     })
   })
 
@@ -67,6 +103,8 @@ describe('user settings storage', () => {
       locale: 'es',
       scheduler: CUSTOM_SETTINGS,
       hasScheduler: true,
+      summary: undefined,
+      hasSummary: false,
     })
 
     writeUserSettingsLocale('en')
@@ -88,6 +126,8 @@ describe('user settings storage', () => {
       locale: null,
       scheduler: undefined,
       hasScheduler: false,
+      summary: undefined,
+      hasSummary: false,
     })
   })
 
@@ -108,6 +148,8 @@ describe('user settings storage', () => {
       locale: 'es',
       scheduler: undefined,
       hasScheduler: false,
+      summary: undefined,
+      hasSummary: false,
     })
     expect(parseUserSettingsEntry('{not json')).toBeNull()
     expect(parseUserSettingsEntry(null)).toBeNull()

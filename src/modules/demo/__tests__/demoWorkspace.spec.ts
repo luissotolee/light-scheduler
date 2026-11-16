@@ -105,6 +105,29 @@ describe('demoWorkspace', () => {
     expect(workspace1.members.map((m) => m.id)).toEqual(workspace2.members.map((m) => m.id))
   })
 
+  it('seeds a late Sunday shift that leaves less than 12 hours before next week', () => {
+    const now = new Date('2026-11-09T12:00:00')
+    const workspace = buildDemoWorkspace(now)
+    const lateSunday = workspace.schedules[workspace.currentWeekKey].find(
+      (shift) =>
+        shift.memberId === 'emp-mock-04' &&
+        shift.weekday === 'sunday' &&
+        shift.startMinute === 21 * 60,
+    )
+
+    expect(lateSunday).toBeDefined()
+
+    const nextWeekKey = Object.keys(workspace.schedules).find(
+      (weekKey) => weekKey > workspace.currentWeekKey,
+    )
+    const mondayShift = workspace.schedules[nextWeekKey!].find(
+      (shift) => shift.memberId === 'emp-mock-04' && shift.weekday === 'monday',
+    )
+
+    expect(mondayShift).toBeDefined()
+    expect(mondayShift!.startMinute + 1440 - lateSunday!.endMinute).toBeLessThan(12 * 60)
+  })
+
   it('includes a holiday for a sample member in the current week', () => {
     const now = new Date('2026-11-09T12:00:00')
     const workspace = buildDemoWorkspace(now)

@@ -9,7 +9,7 @@ import EmployeesView from '@/modules/employees/views/EmployeesView.vue'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import { saveHolidayPdf } from '@/modules/employees/utils/holidayPdf'
+import { openHolidayPdf } from '@/modules/employees/utils/holidayPdf'
 import { exportYearOptions } from '@/modules/employees/utils/holidayExport'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
@@ -17,7 +17,7 @@ import type { TeamMember } from '@/types'
 
 vi.mock('@/modules/employees/utils/holidayPdf', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/modules/employees/utils/holidayPdf')>()
-  return { ...actual, saveHolidayPdf: vi.fn() }
+  return { ...actual, openHolidayPdf: vi.fn() }
 })
 
 const ada: TeamMember = {
@@ -348,7 +348,7 @@ describe('EmployeesView', () => {
     )
   })
 
-  it('opens the export dialog and downloads active employees for the selected year', async () => {
+  it('opens the export dialog and opens the active employees PDF in a new tab', async () => {
     const workspace = useWorkspaceStore()
     workspace.setMembers([ada, bo])
     const store = useEmployeesStore()
@@ -367,7 +367,7 @@ describe('EmployeesView', () => {
     await wrapper.find('[data-test="confirm-holiday-export"]').trigger('click')
     await nextTick()
 
-    expect(saveHolidayPdf).toHaveBeenCalledWith({
+    expect(openHolidayPdf).toHaveBeenCalledWith({
       rows: [{ memberId: ada.id, name: ada.name, weeks: [] }],
       year: nextYear,
       locale: 'en',

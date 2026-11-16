@@ -1,3 +1,5 @@
+const NEW_TAB_REVOKE_DELAY_MS = 60_000
+
 export function downloadBlob(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
@@ -7,6 +9,18 @@ export function downloadBlob(filename: string, blob: Blob): void {
   anchor.click()
   anchor.remove()
   URL.revokeObjectURL(url)
+}
+
+export function openBlobInNewTab(blob: Blob): void {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.target = '_blank'
+  anchor.rel = 'noopener noreferrer'
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(url), NEW_TAB_REVOKE_DELAY_MS)
 }
 
 export function downloadTextFile(
