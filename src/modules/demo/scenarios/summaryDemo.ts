@@ -1,7 +1,11 @@
-import type { DemoScenario } from '@/modules/demo/types'
+import type { DemoScenarioDefinition } from '@/modules/demo/types'
+import { createSubScenario } from '@/modules/demo/scenarios/scenarioFactory'
 
-export const summaryDemoScenario: DemoScenario = {
+export const summaryDemoScenario: DemoScenarioDefinition = {
   id: 'summary-demo',
+  module: 'summary',
+  titleKey: 'demo.picker.all',
+  descriptionKey: 'demo.picker.summaryDescription',
   steps: [
     {
       id: 'summary-intro',
@@ -181,3 +185,75 @@ export const summaryDemoScenario: DemoScenario = {
     },
   ],
 }
+
+const weekStepIds = [
+  'summary-intro',
+  'summary-week',
+  'summary-previous-week',
+  'summary-next-week',
+  'summary-this-week',
+  'summary-week-picker-open',
+  'summary-week-picker-dialog',
+  'summary-week-picker-select',
+  'summary-week-picker-back',
+  'summary-finish',
+]
+
+const tableStepIds = [
+  'summary-intro',
+  'summary-table',
+  'summary-vacation',
+  'summary-sick',
+  'summary-details-open',
+  'summary-details-wait',
+  'summary-details-close',
+  'summary-finish',
+]
+
+const hoursStepIds = [
+  'summary-intro',
+  'summary-settings-open',
+  'summary-settings-wait',
+  'summary-settings-toggle',
+  'summary-settings-save',
+  'summary-hours-columns',
+  'summary-hours-row',
+  'summary-hours-contract',
+  'summary-finish',
+]
+
+const printStepIds = [
+  'summary-intro',
+  'summary-table',
+  'summary-print',
+  'summary-pdf',
+  'summary-finish',
+]
+
+export const summaryDemoScenarios: DemoScenarioDefinition[] = [
+  summaryDemoScenario,
+  createSubScenario(summaryDemoScenario, {
+    id: 'summary-week-demo',
+    titleKey: 'demo.picker.summary.weekTitle',
+    descriptionKey: 'demo.picker.summary.weekDescription',
+    steps: weekStepIds,
+  }),
+  createSubScenario(summaryDemoScenario, {
+    id: 'summary-table-demo',
+    titleKey: 'demo.picker.summary.tableTitle',
+    descriptionKey: 'demo.picker.summary.tableDescription',
+    steps: tableStepIds,
+  }),
+  createSubScenario(summaryDemoScenario, {
+    id: 'summary-hours-demo',
+    titleKey: 'demo.picker.summary.hoursTitle',
+    descriptionKey: 'demo.picker.summary.hoursDescription',
+    steps: hoursStepIds,
+  }),
+  createSubScenario(summaryDemoScenario, {
+    id: 'summary-print-demo',
+    titleKey: 'demo.picker.summary.printTitle',
+    descriptionKey: 'demo.picker.summary.printDescription',
+    steps: printStepIds,
+  }),
+]

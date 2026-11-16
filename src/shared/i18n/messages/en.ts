@@ -472,20 +472,74 @@ export const en = {
   'demo.error.target': 'The demo paused because the next step could not be found.',
   'demo.picker.title': 'Start a guided demo',
   'demo.picker.description':
-    'Choose a page to explore with sample data. Your saved data is restored when you exit the demo.',
-  'demo.picker.optionsAria': 'Demo pages',
+    'Choose a page to explore with sample data, or focus on a specific user journey. Your saved data is restored when you exit the demo.',
+  'demo.picker.optionsAria': 'Demo pages and journeys',
+  'demo.picker.all': 'All',
   'demo.picker.calendar': 'Calendar',
   'demo.picker.calendarDescription':
     'Fetch public holidays by country and region, add custom holidays or events, and see them in the scheduler.',
+  'demo.picker.calendar.importTitle': 'Import public holidays',
+  'demo.picker.calendar.importDescription':
+    'Choose a country, region, and year, then import public holidays.',
+  'demo.picker.calendar.browseTitle': 'Browse the calendar',
+  'demo.picker.calendar.browseDescription':
+    'Move between months and inspect holidays and events by day.',
+  'demo.picker.calendar.customTitle': 'Custom holidays & events',
+  'demo.picker.calendar.customDescription':
+    'Add, edit, and remove your own calendar entries.',
   'demo.picker.employees': 'Employees',
   'demo.picker.employeesDescription':
     'Search, add, edit, deactivate, reactivate and remove team members, and manage holiday weeks.',
+  'demo.picker.employees.addTitle': 'Add & inspect employees',
+  'demo.picker.employees.addDescription':
+    'Search and sort the list, add a new team member, and open their details.',
+  'demo.picker.employees.editTitle': 'Edit employee',
+  'demo.picker.employees.editDescription':
+    'Open the form prefilled with current values, change a field, and save.',
+  'demo.picker.employees.holidaysTitle': 'Holidays & PDF',
+  'demo.picker.employees.holidaysDescription':
+    'Register holiday weeks for an employee and export them as a PDF.',
+  'demo.picker.employees.sickTitle': 'Sick leave',
+  'demo.picker.employees.sickDescription':
+    'Register sick leave ranges and confirm removing overlapping shifts.',
+  'demo.picker.employees.activeTitle': 'Deactivate & reactivate',
+  'demo.picker.employees.activeDescription':
+    'Deactivate an employee, filter the list, and reactivate them.',
   'demo.picker.scheduler': 'Scheduler',
   'demo.picker.schedulerDescription':
     'Navigate weeks and days, create, move, resize and remove shifts, mark days off and review weekly hours.',
+  'demo.picker.scheduler.navigationTitle': 'Weeks & days',
+  'demo.picker.scheduler.navigationDescription':
+    'Move between weeks and days, and jump to any week with the picker.',
+  'demo.picker.scheduler.shiftsTitle': 'Create & edit shifts',
+  'demo.picker.scheduler.shiftsDescription':
+    'Create, resize, move, and remove shifts, including rest warnings.',
+  'demo.picker.scheduler.timeOffTitle': 'Days off & time off',
+  'demo.picker.scheduler.timeOffDescription':
+    'Mark days off and see holidays and sick leave in the schedule.',
+  'demo.picker.scheduler.hoursTitle': 'Weekly hours',
+  'demo.picker.scheduler.hoursDescription':
+    'Compare scheduled and contract hours, including monthly totals.',
+  'demo.picker.scheduler.settingsTitle': 'Schedule settings',
+  'demo.picker.scheduler.settingsDescription':
+    'Change the time window, slot size, and hourly headcount.',
+  'demo.picker.scheduler.clearTitle': 'Clear the week',
+  'demo.picker.scheduler.clearDescription':
+    'Remove every shift and day off from the current week.',
   'demo.picker.summary': 'Summary',
   'demo.picker.summaryDescription':
     'Review the weekly summary, switch weeks and print or save it as a PDF.',
+  'demo.picker.summary.weekTitle': 'Navigate weeks',
+  'demo.picker.summary.weekDescription':
+    'Move between weeks and jump to any week with the picker.',
+  'demo.picker.summary.tableTitle': 'Table & details',
+  'demo.picker.summary.tableDescription':
+    'Review shifts, holidays, and sick leave, and open employee details.',
+  'demo.picker.summary.hoursTitle': 'Weekly hours columns',
+  'demo.picker.summary.hoursDescription':
+    'Enable and review total, contract, and difference columns.',
+  'demo.picker.summary.printTitle': 'Print & PDF',
+  'demo.picker.summary.printDescription': 'Print the summary or open it as a PDF.',
   'demo.scenario.employees.intro': 'Manage your team here. Schedules use these records.',
   'demo.scenario.employees.search': 'Type a name in the search box to filter the list instantly.',
   'demo.scenario.employees.searchTyping': 'The list now shows only matching employees.',
@@ -670,7 +724,7 @@ export const en = {
     'Use Clear all to remove every imported public holiday while keeping your own entries.',
   'demo.scenario.calendar.clearConfirm':
     'Confirm the removal. Custom holidays and events remain in the calendar.',
-  'demo.scenario.calendar.cleared': 'Only your custom entries remain. Now add a new one.',
+  'demo.scenario.calendar.cleared': 'Only your custom entries remain in the calendar.',
   'demo.scenario.calendar.add': 'Add a custom holiday or event.',
   'demo.scenario.calendar.form': 'The form collects the date, name and type of the entry.',
   'demo.scenario.calendar.date': 'The date defaults to the selected day. Pick any day you need.',

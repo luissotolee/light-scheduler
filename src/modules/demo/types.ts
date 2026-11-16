@@ -76,6 +76,14 @@ export interface DemoScenario {
   steps: DemoStep[]
 }
 
+export type DemoModuleId = 'scheduler' | 'summary' | 'calendar' | 'employees'
+
+export interface DemoScenarioDefinition extends DemoScenario {
+  module: DemoModuleId
+  titleKey: string
+  descriptionKey: string
+}
+
 export type DemoStatus = 'idle' | 'running' | 'paused' | 'finishing' | 'error'
 
 export interface DemoCursor {

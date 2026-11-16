@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { summaryDemoScenario } from '@/modules/demo/scenarios/summaryDemo'
+import { summaryDemoScenario, summaryDemoScenarios } from '@/modules/demo/scenarios/summaryDemo'
 import { en } from '@/shared/i18n/messages/en'
 import { es } from '@/shared/i18n/messages/es'
 
@@ -66,6 +66,45 @@ describe('summaryDemo scenario', () => {
       if (step.action === 'navigate') {
         expect(step.route).toBe('/summary')
       }
+    })
+  })
+})
+
+describe('summary demo journeys', () => {
+  it('exposes the full demo plus focused journeys', () => {
+    expect(summaryDemoScenarios.map((scenario) => scenario.id)).toEqual([
+      'summary-demo',
+      'summary-week-demo',
+      'summary-table-demo',
+      'summary-hours-demo',
+      'summary-print-demo',
+    ])
+  })
+
+  it('reuses full-demo steps with translated metadata', () => {
+    const fullStepIds = new Set(summaryDemoScenario.steps.map((step) => step.id))
+
+    summaryDemoScenarios.forEach((scenario) => {
+      expect(scenario.module).toBe('summary')
+      expect(en[scenario.titleKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.titleKey as keyof typeof es]).toBeDefined()
+      expect(en[scenario.descriptionKey as keyof typeof en]).toBeDefined()
+      expect(es[scenario.descriptionKey as keyof typeof es]).toBeDefined()
+
+      const ids = scenario.steps.map((step) => step.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      ids.forEach((id) => expect(fullStepIds).toContain(id))
+
+      scenario.steps.forEach((step) => {
+        expect(en[step.narrationKey as keyof typeof en]).toBeDefined()
+        expect(es[step.narrationKey as keyof typeof es]).toBeDefined()
+        if ('target' in step && step.target?.testId) {
+          expect(knownTargets).toContain(step.target.testId)
+        }
+        if (step.action === 'navigate') {
+          expect(step.route).toBe('/summary')
+        }
+      })
     })
   })
 })

@@ -1,20 +1,31 @@
-import type { DemoScenario } from '@/modules/demo/types'
-import { calendarDemoScenario } from './calendarDemo'
-import { employeesDemoScenario } from './employeesDemo'
-import { schedulerDemoScenario } from './schedulerDemo'
-import { summaryDemoScenario } from './summaryDemo'
+import type { DemoModuleId, DemoScenarioDefinition } from '@/modules/demo/types'
+import { calendarDemoScenarios } from './calendarDemo'
+import { employeesDemoScenarios } from './employeesDemo'
+import { schedulerDemoScenarios } from './schedulerDemo'
+import { summaryDemoScenarios } from './summaryDemo'
 
-export const demoScenarios: Record<string, DemoScenario> = {
-  [schedulerDemoScenario.id]: schedulerDemoScenario,
-  [summaryDemoScenario.id]: summaryDemoScenario,
-  [calendarDemoScenario.id]: calendarDemoScenario,
-  [employeesDemoScenario.id]: employeesDemoScenario,
+export interface DemoScenarioGroup {
+  module: DemoModuleId
+  scenarios: DemoScenarioDefinition[]
 }
 
-export function getDemoScenario(id: string): DemoScenario | undefined {
+export const demoScenarioGroups: DemoScenarioGroup[] = [
+  { module: 'scheduler', scenarios: schedulerDemoScenarios },
+  { module: 'summary', scenarios: summaryDemoScenarios },
+  { module: 'calendar', scenarios: calendarDemoScenarios },
+  { module: 'employees', scenarios: employeesDemoScenarios },
+]
+
+const allDemoScenarios = demoScenarioGroups.flatMap((group) => group.scenarios)
+
+export const demoScenarios: Record<string, DemoScenarioDefinition> = Object.fromEntries(
+  allDemoScenarios.map((scenario) => [scenario.id, scenario]),
+)
+
+export function getDemoScenario(id: string): DemoScenarioDefinition | undefined {
   return demoScenarios[id]
 }
 
-export function listDemoScenarios(): DemoScenario[] {
-  return Object.values(demoScenarios)
+export function listDemoScenarios(): DemoScenarioDefinition[] {
+  return allDemoScenarios
 }

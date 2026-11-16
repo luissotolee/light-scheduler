@@ -1,7 +1,11 @@
-import type { DemoScenario } from '@/modules/demo/types'
+import type { DemoScenarioDefinition } from '@/modules/demo/types'
+import { createSubScenario } from '@/modules/demo/scenarios/scenarioFactory'
 
-export const calendarDemoScenario: DemoScenario = {
+export const calendarDemoScenario: DemoScenarioDefinition = {
   id: 'calendar-demo',
+  module: 'calendar',
+  titleKey: 'demo.picker.all',
+  descriptionKey: 'demo.picker.calendarDescription',
   steps: [
     {
       id: 'calendar-intro',
@@ -203,3 +207,67 @@ export const calendarDemoScenario: DemoScenario = {
     },
   ],
 }
+
+const importStepIds = [
+  'calendar-intro',
+  'calendar-country',
+  'calendar-region',
+  'calendar-year',
+  'calendar-fetch',
+  'calendar-fetched',
+  'calendar-clear',
+  'calendar-clear-wait',
+  'calendar-clear-confirm',
+  'calendar-finish',
+]
+
+const browseStepIds = [
+  'calendar-intro',
+  'calendar-month',
+  'calendar-previous-month',
+  'calendar-next-month',
+  'calendar-select-day',
+  'calendar-finish',
+]
+
+const customStepIds = [
+  'calendar-intro',
+  'calendar-select-day',
+  'calendar-add',
+  'calendar-form',
+  'calendar-date',
+  'calendar-name',
+  'calendar-kind',
+  'calendar-save',
+  'calendar-saved',
+  'calendar-edit',
+  'calendar-edit-form',
+  'calendar-edit-name',
+  'calendar-edit-save',
+  'calendar-remove',
+  'calendar-remove-wait',
+  'calendar-remove-confirm',
+  'calendar-finish',
+]
+
+export const calendarDemoScenarios: DemoScenarioDefinition[] = [
+  calendarDemoScenario,
+  createSubScenario(calendarDemoScenario, {
+    id: 'calendar-import-demo',
+    titleKey: 'demo.picker.calendar.importTitle',
+    descriptionKey: 'demo.picker.calendar.importDescription',
+    steps: importStepIds,
+  }),
+  createSubScenario(calendarDemoScenario, {
+    id: 'calendar-browse-demo',
+    titleKey: 'demo.picker.calendar.browseTitle',
+    descriptionKey: 'demo.picker.calendar.browseDescription',
+    steps: browseStepIds,
+  }),
+  createSubScenario(calendarDemoScenario, {
+    id: 'calendar-custom-demo',
+    titleKey: 'demo.picker.calendar.customTitle',
+    descriptionKey: 'demo.picker.calendar.customDescription',
+    steps: customStepIds,
+  }),
+]

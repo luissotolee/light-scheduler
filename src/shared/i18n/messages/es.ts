@@ -485,20 +485,74 @@ export const es: Messages = {
   'demo.error.target': 'La demostración se pausó porque no se encontró el siguiente paso.',
   'demo.picker.title': 'Iniciar una demostración guiada',
   'demo.picker.description':
-    'Elige una página para explorar con datos de ejemplo. Tus datos guardados se restauran al salir de la demostración.',
-  'demo.picker.optionsAria': 'Páginas de la demostración',
+    'Elige una página para explorar con datos de ejemplo o céntrate en un recorrido concreto. Tus datos guardados se restauran al salir de la demostración.',
+  'demo.picker.optionsAria': 'Páginas y recorridos de la demostración',
+  'demo.picker.all': 'Todo',
   'demo.picker.calendar': 'Calendario',
   'demo.picker.calendarDescription':
     'Importa días festivos por país y región, añade festivos o eventos personalizados y vélos en el planificador.',
+  'demo.picker.calendar.importTitle': 'Importar días festivos',
+  'demo.picker.calendar.importDescription':
+    'Elige país, región y año, y luego importa los días festivos.',
+  'demo.picker.calendar.browseTitle': 'Explorar el calendario',
+  'demo.picker.calendar.browseDescription':
+    'Cambia de mes y consulta festivos y eventos por día.',
+  'demo.picker.calendar.customTitle': 'Festivos y eventos personalizados',
+  'demo.picker.calendar.customDescription':
+    'Añade, edita y elimina tus propias entradas del calendario.',
   'demo.picker.employees': 'Empleados',
   'demo.picker.employeesDescription':
     'Busca, añade, edita, desactiva, reactiva y elimina miembros del equipo, y gestiona sus semanas de vacaciones.',
+  'demo.picker.employees.addTitle': 'Añadir y consultar empleados',
+  'demo.picker.employees.addDescription':
+    'Busca y ordena la lista, añade un miembro del equipo y abre sus detalles.',
+  'demo.picker.employees.editTitle': 'Editar empleado',
+  'demo.picker.employees.editDescription':
+    'Abre el formulario con los valores actuales, cambia un campo y guarda.',
+  'demo.picker.employees.holidaysTitle': 'Vacaciones y PDF',
+  'demo.picker.employees.holidaysDescription':
+    'Registra semanas de vacaciones de un empleado y expórtalas como PDF.',
+  'demo.picker.employees.sickTitle': 'Baja por enfermedad',
+  'demo.picker.employees.sickDescription':
+    'Registra periodos de baja y confirma la retirada de turnos solapados.',
+  'demo.picker.employees.activeTitle': 'Desactivar y reactivar',
+  'demo.picker.employees.activeDescription':
+    'Desactiva un empleado, filtra la lista y vuelve a activarlo.',
   'demo.picker.scheduler': 'Planificador',
   'demo.picker.schedulerDescription':
     'Navega por semanas y días, crea, mueve, redimensiona y elimina turnos, marca días libres y revisa las horas semanales.',
+  'demo.picker.scheduler.navigationTitle': 'Semanas y días',
+  'demo.picker.scheduler.navigationDescription':
+    'Cambia de semana y de día, y salta a cualquier semana con el selector.',
+  'demo.picker.scheduler.shiftsTitle': 'Crear y editar turnos',
+  'demo.picker.scheduler.shiftsDescription':
+    'Crea, redimensiona, mueve y elimina turnos, incluidos los avisos de descanso.',
+  'demo.picker.scheduler.timeOffTitle': 'Días libres y ausencias',
+  'demo.picker.scheduler.timeOffDescription':
+    'Marca días libres y consulta vacaciones y bajas en el horario.',
+  'demo.picker.scheduler.hoursTitle': 'Horas semanales',
+  'demo.picker.scheduler.hoursDescription':
+    'Compara horas planificadas y de contrato, incluidos los totales mensuales.',
+  'demo.picker.scheduler.settingsTitle': 'Configuración del horario',
+  'demo.picker.scheduler.settingsDescription':
+    'Cambia la franja horaria, el tamaño del tramo y el personal por hora.',
+  'demo.picker.scheduler.clearTitle': 'Vaciar la semana',
+  'demo.picker.scheduler.clearDescription':
+    'Elimina todos los turnos y días libres de la semana actual.',
   'demo.picker.summary': 'Resumen',
   'demo.picker.summaryDescription':
     'Revisa el resumen semanal, cambia de semana e imprímelo o guárdalo como PDF.',
+  'demo.picker.summary.weekTitle': 'Navegar por semanas',
+  'demo.picker.summary.weekDescription':
+    'Cambia de semana y salta a cualquiera con el selector.',
+  'demo.picker.summary.tableTitle': 'Tabla y detalles',
+  'demo.picker.summary.tableDescription':
+    'Revisa turnos, vacaciones y bajas, y abre los detalles de los empleados.',
+  'demo.picker.summary.hoursTitle': 'Columnas de horas semanales',
+  'demo.picker.summary.hoursDescription':
+    'Activa y revisa las columnas de total, contrato y diferencia.',
+  'demo.picker.summary.printTitle': 'Imprimir y PDF',
+  'demo.picker.summary.printDescription': 'Imprime el resumen o ábrelo como PDF.',
   'demo.scenario.employees.intro':
     'Gestiona tu equipo aquí. Las planificaciones usan estos registros.',
   'demo.scenario.employees.search':
@@ -698,7 +752,7 @@ export const es: Messages = {
   'demo.scenario.calendar.clearConfirm':
     'Confirma la eliminación. Los festivos y eventos personalizados permanecen en el calendario.',
   'demo.scenario.calendar.cleared':
-    'Solo quedan tus entradas personalizadas. Ahora añade una nueva.',
+    'Solo quedan tus entradas personalizadas en el calendario.',
   'demo.scenario.calendar.add': 'Añade un festivo o evento personalizado.',
   'demo.scenario.calendar.form':
     'El formulario recopila la fecha, el nombre y el tipo de la entrada.',
