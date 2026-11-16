@@ -14,9 +14,15 @@
         <dd class="employee-details__value" data-test="details-contract">{{ contractLabel }}</dd>
       </div>
       <div class="employee-details__item">
-        <dt class="employee-details__label">{{ t('employees.details.weeklyHours') }}</dt>
+        <dt class="employee-details__label">{{ t('employees.details.contractHours') }}</dt>
         <dd class="employee-details__value" data-test="details-hours">
-          {{ member.weeklyHours }}
+          {{ contractHoursLabel }}
+        </dd>
+      </div>
+      <div v-if="weeklyEquivalent" class="employee-details__item">
+        <dt class="employee-details__label">{{ t('employees.details.weeklyEquivalent') }}</dt>
+        <dd class="employee-details__value" data-test="details-weekly-equivalent">
+          {{ weeklyEquivalent }}
         </dd>
       </div>
       <div class="employee-details__item">
@@ -76,6 +82,23 @@
         {{ t('employees.details.noHolidays') }}
       </p>
     </div>
+
+    <div class="employee-details__holidays">
+      <h3 class="employee-details__section-title">{{ t('employees.details.sickLeaves') }}</h3>
+      <ul v-if="sickLeaves.length > 0" class="employee-details__holiday-list">
+        <li v-for="leave in sickLeaves" :key="leave.id" :data-test="`details-sick-${leave.id}`">
+          {{
+            t('employees.sick.range', {
+              start: formatIsoDate(leave.startDate, locale),
+              end: formatIsoDate(leave.endDate, locale),
+            })
+          }}
+        </li>
+      </ul>
+      <p v-else class="employee-details__empty" data-test="details-no-sick">
+        {{ t('employees.details.noSickLeaves') }}
+      </p>
+    </div>
   </div>
 </template>
 
@@ -84,7 +107,10 @@ import { computed } from 'vue'
 import type { TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
 import { formatIsoDate, formatWeekRange, holidayToWeekKey } from '@/shared/utils/calendar'
+import { contractHoursPeriodOf, weeklyHoursFromContract } from '@/shared/utils/contractHours'
 import { isContract, isDuty } from '@/shared/utils/employee'
+import { formatHours } from '@/shared/utils/hours'
+import { sickLeavesOf } from '@/shared/utils/sickness'
 
 const props = defineProps<{
   member: TeamMember
@@ -99,6 +125,22 @@ const dutyLabel = computed(() =>
 const contractLabel = computed(() =>
   isContract(props.member.contract) ? t(`contract.${props.member.contract}`) : t('common.dash'),
 )
+
+const contractHoursLabel = computed(() =>
+  t(`contractHours.format.${contractHoursPeriodOf(props.member)}`, {
+    hours: props.member.weeklyHours,
+  }),
+)
+
+const sickLeaves = computed(() => sickLeavesOf(props.member))
+
+const weeklyEquivalent = computed(() => {
+  const period = contractHoursPeriodOf(props.member)
+  if (period === 'week') return ''
+  return t('contractHours.weeklyEquivalent', {
+    hours: formatHours(weeklyHoursFromContract(props.member.weeklyHours, period)),
+  })
+})
 </script>
 
 <style scoped>

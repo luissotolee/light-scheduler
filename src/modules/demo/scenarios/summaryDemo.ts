@@ -117,10 +117,24 @@ export const summaryDemoScenario: DemoScenario = {
       pauseMs: 2200,
     },
     {
+      id: 'summary-hours-contract',
+      action: 'spotlight',
+      target: { testId: 'summary-hours-contract-emp-mock-02' },
+      narrationKey: 'demo.scenario.summary.hoursContract',
+      pauseMs: 2400,
+    },
+    {
       id: 'summary-vacation',
       action: 'spotlight',
       target: { testId: 'summary-vacation' },
       narrationKey: 'demo.scenario.summary.vacation',
+      pauseMs: 2100,
+    },
+    {
+      id: 'summary-sick',
+      action: 'spotlight',
+      target: { testId: 'summary-cell-emp-mock-03-thursday' },
+      narrationKey: 'demo.scenario.summary.sick',
       pauseMs: 2100,
     },
     {

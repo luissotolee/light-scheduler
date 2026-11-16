@@ -151,6 +151,20 @@ export const schedulerDemoScenario: DemoScenario = {
       pauseMs: 2400,
     },
     {
+      id: 'scheduler-sick-day',
+      action: 'click',
+      target: { testId: 'weekday-tab-thursday' },
+      narrationKey: 'demo.scenario.scheduler.sickDay',
+      pauseMs: 2400,
+    },
+    {
+      id: 'scheduler-sick-row',
+      action: 'spotlight',
+      target: { testId: 'shift-row-emp-mock-03' },
+      narrationKey: 'demo.scenario.scheduler.sick',
+      pauseMs: 2700,
+    },
+    {
       id: 'scheduler-weekly-hours',
       action: 'spotlight',
       target: { testId: 'weekly-hours' },
@@ -162,6 +176,20 @@ export const schedulerDemoScenario: DemoScenario = {
       action: 'spotlight',
       target: { testId: 'weekly-hours-metric-diff' },
       narrationKey: 'demo.scenario.scheduler.hoursDiff',
+      pauseMs: 2700,
+    },
+    {
+      id: 'scheduler-monthly-hours',
+      action: 'spotlight',
+      target: { testId: 'weekly-hours-metric-month-current' },
+      narrationKey: 'demo.scenario.scheduler.monthlyHours',
+      pauseMs: 2900,
+    },
+    {
+      id: 'scheduler-monthly-holiday',
+      action: 'spotlight',
+      target: { testId: 'weekly-hours-row-emp-mock-03-month-holiday' },
+      narrationKey: 'demo.scenario.scheduler.monthlyHoliday',
       pauseMs: 2700,
     },
     {

@@ -157,6 +157,9 @@ describe('buildWeeklyHoursGroups', () => {
       currentHours: 1.5,
       contractHours: 20,
       diffHours: -18.5,
+      contractHoursAmount: 20,
+      contractHoursPeriod: 'week',
+      monthlyHours: null,
     })
     expect(groups[1].rows[0]).toEqual({
       memberId: 'ada',
@@ -165,7 +168,66 @@ describe('buildWeeklyHoursGroups', () => {
       currentHours: 5,
       contractHours: 40,
       diffHours: -35,
+      contractHoursAmount: 40,
+      contractHoursPeriod: 'week',
+      monthlyHours: null,
     })
+  })
+
+  it('converts monthly and yearly contracts to weekly contract hours', () => {
+    const members = [
+      makeMember({ id: 'monthly', name: 'Mia Monthly', weeklyHours: 160, contractHoursPeriod: 'month' }),
+      makeMember({ id: 'yearly', name: 'Yan Yearly', weeklyHours: 1820, contractHoursPeriod: 'year' }),
+    ]
+
+    const groups = buildWeeklyHoursGroups(members, [])
+
+    expect(groups[0].rows[0]?.contractHours).toBeCloseTo((160 * 12) / 52)
+    expect(groups[0].rows[1]?.contractHours).toBeCloseTo(1820 / 52)
+  })
+
+  it('counts the current month from its first day and flags holidays in the month', () => {
+    const members = [
+      makeMember({
+        id: 'monthly',
+        name: 'Mia Monthly',
+        weeklyHours: 160,
+        contractHoursPeriod: 'month',
+        holidays: [{ year: 2026, week: 46 }],
+      }),
+    ]
+    const schedules: Record<string, Shift[]> = {
+      '2026-11-02': [
+        makeShift({ id: 'nov-1', memberId: 'monthly', weekday: 'monday', startMinute: 540, endMinute: 900 }),
+        makeShift({ id: 'nov-2', memberId: 'monthly', weekday: 'sunday', startMinute: 540, endMinute: 900 }),
+      ],
+      '2026-11-30': [
+        makeShift({ id: 'nov-3', memberId: 'monthly', weekday: 'monday', startMinute: 540, endMinute: 900 }),
+        makeShift({ id: 'dec-1', memberId: 'monthly', weekday: 'tuesday', startMinute: 540, endMinute: 900 }),
+      ],
+    }
+
+    const groups = buildWeeklyHoursGroups(members, [], schedules, '2026-11-30')
+
+    const monthly = groups[0].rows[0]?.monthlyHours
+    expect(monthly?.currentHours).toBe(18)
+    expect(monthly?.contractHours).toBe(160)
+    expect(monthly?.diffHours).toBe(-142)
+    expect(monthly?.hasHoliday).toBe(true)
+  })
+
+  it('uses the month of the Monday that starts the displayed week', () => {
+    const members = [makeMember({ id: 'monthly', weeklyHours: 160, contractHoursPeriod: 'month' })]
+    const schedules: Record<string, Shift[]> = {
+      '2026-11-30': [
+        makeShift({ id: 'nov-30', memberId: 'monthly', weekday: 'monday', startMinute: 540, endMinute: 600 }),
+        makeShift({ id: 'dec-1', memberId: 'monthly', weekday: 'tuesday', startMinute: 540, endMinute: 600 }),
+      ],
+    }
+
+    const groups = buildWeeklyHoursGroups(members, [], schedules, '2026-11-30')
+
+    expect(groups[0].rows[0]?.monthlyHours?.currentHours).toBe(1)
   })
 
   it('includes inactive members because filtering belongs to the store', () => {

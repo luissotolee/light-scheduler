@@ -9,6 +9,7 @@ export const es: Messages = {
   'common.deactivate': 'Desactivar',
   'common.reactivate': 'Reactivar',
   'common.holidays': 'Vacaciones',
+  'common.sickLeave': 'Baja por enfermedad',
   'common.dash': '—',
   'common.back': 'Volver',
 
@@ -108,6 +109,14 @@ export const es: Messages = {
   'contract.part_time': 'Media jornada',
   'contract.weekends': 'Fines de semana',
 
+  'contractHours.period.week': 'Por semana',
+  'contractHours.period.month': 'Por mes',
+  'contractHours.period.year': 'Por año',
+  'contractHours.format.week': '{hours} h/semana',
+  'contractHours.format.month': '{hours} h/mes',
+  'contractHours.format.year': '{hours} h/año',
+  'contractHours.weeklyEquivalent': '≈ {hours} h/semana',
+
   'shiftGrid.employee': 'Empleado',
   'shiftGrid.hours': 'Horas',
   'shiftGrid.empty': 'No hay empleados activos disponibles para este día.',
@@ -124,15 +133,22 @@ export const es: Messages = {
   'shiftRow.trackAria': 'Pista de turnos de {name}. Pulsa Intro para añadir un turno de 3 horas.',
   'shiftRow.markOff': 'Marcar a {name} como libre este día',
   'shiftRow.markOn': 'Marcar a {name} como disponible este día',
+  'shiftRow.sick': 'Baja por enfermedad',
+  'shiftRow.sickFor': 'Baja por enfermedad de {name}',
   'shiftRow.daysOffTooltip':
     '{count} días libres programados para {name} esta semana (mínimo {min}).',
 
   'weeklyHours.title': 'Horas semanales',
-  'weeklyHours.caption': 'Horas semanales planificadas y contratadas por empleado',
+  'weeklyHours.caption':
+    'Horas planificadas y contratadas por empleado, con los totales mensuales para contratos mensuales o anuales',
   'weeklyHours.metric': 'Métrica',
   'weeklyHours.current': 'Actual',
   'weeklyHours.contract': 'Contrato',
   'weeklyHours.diff': 'Diferencia',
+  'weeklyHours.monthlyCurrent': 'Actual del mes',
+  'weeklyHours.monthlyContract': 'Contrato del mes',
+  'weeklyHours.monthlyDiff': 'Diferencia del mes',
+  'weeklyHours.holidayInMonth': 'Este empleado tiene vacaciones dentro del mes',
   'weeklyHours.empty': 'No hay empleados disponibles esta semana.',
   'hours.group.head_manager': 'Gerentes',
   'hours.group.manager': 'Encargados',
@@ -159,6 +175,9 @@ export const es: Messages = {
   'employees.confirm.holidaysHeader': 'Eliminar turnos por vacaciones',
   'employees.confirm.holidaysMessage':
     '{name} ya tiene turnos en las semanas de vacaciones seleccionadas. Guardar las vacaciones eliminará esos turnos.',
+  'employees.confirm.sicknessHeader': 'Eliminar turnos durante la baja',
+  'employees.confirm.sicknessMessage':
+    '{name} ya tiene turnos durante la baja seleccionada. Al guardarla se eliminarán esos turnos.',
   'employees.confirm.removeShifts': 'Eliminar turnos y guardar',
   'employees.hideInactive': 'Solo activos',
   'employees.hideInactive.tooltip':
@@ -169,7 +188,7 @@ export const es: Messages = {
   'employees.column.name': 'Nombre',
   'employees.column.duty': 'Puesto',
   'employees.column.contract': 'Contrato',
-  'employees.column.weeklyHours': 'Horas semanales',
+  'employees.column.contractHours': 'Horas de contrato',
   'employees.column.contact': 'Contacto',
   'employees.column.actions': 'Acciones',
   'employees.detailsFor': 'Ver detalles de {name}',
@@ -180,6 +199,7 @@ export const es: Messages = {
   'employees.email': 'Correo: {email}',
   'employees.editAria': 'Editar {name}',
   'employees.holidaysAria': 'Vacaciones de {name}',
+  'employees.sickAria': 'Baja por enfermedad de {name}',
   'employees.deactivateAria': 'Desactivar {name}',
   'employees.reactivateAria': 'Reactivar {name}',
   'employees.removeAria': 'Eliminar {name}',
@@ -190,7 +210,9 @@ export const es: Messages = {
   'employees.form.phone': 'Teléfono',
   'employees.form.email': 'Correo electrónico',
   'employees.form.comment': 'Comentario',
-  'employees.form.weeklyHours': 'Horas semanales *',
+  'employees.form.contractHours': 'Horas de contrato *',
+  'employees.form.contractHoursAmount': 'Horas *',
+  'employees.form.contractHoursPeriodGroup': 'Periodo de las horas de contrato',
   'employees.form.startDate': 'Fecha de inicio',
   'employees.form.contract': 'Contrato *',
   'employees.form.contractGroup': 'Contrato',
@@ -198,12 +220,15 @@ export const es: Messages = {
   'employees.form.phonePlaceholder': 'p. ej. 612 345 678 o +34 612 345 678',
   'employees.form.emailPlaceholder': 'p. ej. juana@example.com',
   'employees.form.commentPlaceholder': 'p. ej. Sin turnos de mañana',
-  'employees.form.hoursPlaceholder': 'p. ej. 40',
+  'employees.form.hoursPlaceholder.week': 'p. ej. 40',
+  'employees.form.hoursPlaceholder.month': 'p. ej. 160',
+  'employees.form.hoursPlaceholder.year': 'p. ej. 1900',
   'employees.details.title': 'Detalles del empleado',
   'employees.details.empId': 'ID de empleado',
   'employees.details.duty': 'Puesto',
   'employees.details.contract': 'Contrato',
-  'employees.details.weeklyHours': 'Horas semanales',
+  'employees.details.contractHours': 'Horas de contrato',
+  'employees.details.weeklyEquivalent': 'Equivalente semanal',
   'employees.details.email': 'Correo electrónico',
   'employees.details.phone': 'Teléfono',
   'employees.details.comment': 'Comentario',
@@ -213,6 +238,15 @@ export const es: Messages = {
   'employees.details.holidays': 'Vacaciones',
   'employees.details.noHolidays': 'Sin vacaciones',
   'employees.details.holidayItem': 'Semana {week} ({range})',
+  'employees.details.sickLeaves': 'Baja por enfermedad',
+  'employees.details.noSickLeaves': 'Sin baja por enfermedad',
+  'employees.sick.title': 'Baja por enfermedad — {name}',
+  'employees.sick.start': 'Fecha de inicio',
+  'employees.sick.end': 'Fecha de fin',
+  'employees.sick.addRange': 'Añadir periodo',
+  'employees.sick.empty': 'No hay ninguna baja configurada.',
+  'employees.sick.range': '{start} – {end}',
+  'employees.sick.removeAria': 'Eliminar la baja {range}',
   'employees.manage.title': 'Gestionar empleado',
   'employees.manage.actions': 'Acciones',
   'employees.status.active': 'Activo',
@@ -314,6 +348,7 @@ export const es: Messages = {
 
   'summary.employee': 'Empleado',
   'summary.off': 'LIBRE',
+  'summary.sick': 'BAJA',
   'summary.vacations': 'VACACIONES',
   'summary.previousWeek': 'Semana anterior',
   'summary.previousWeekTooltip': 'Ver resumen de la semana anterior',
@@ -387,7 +422,10 @@ export const es: Messages = {
   'errors.requiredName': 'El nombre es obligatorio',
   'errors.invalidDuty': 'El puesto no es válido',
   'errors.invalidContract': 'El contrato no es válido',
+  'errors.invalidContractHoursPeriod': 'El periodo de las horas de contrato no es válido',
   'errors.weeklyHours': 'Las horas semanales deben ser un número mayor que 0 y como máximo 168',
+  'errors.contractHours':
+    'Las horas de contrato deben ser un número mayor que 0 dentro del rango permitido para el periodo',
   'errors.invalidEmail': 'El correo electrónico no es válido',
   'errors.invalidPhone': 'El teléfono no es válido',
   'errors.invalidComment': 'El comentario no es válido',
@@ -399,6 +437,9 @@ export const es: Messages = {
   'errors.endNotAllowedActive': 'La fecha de fin no está permitida para los empleados activos',
   'errors.invalidActive': 'El estado activo no es válido',
   'errors.invalidHolidays': 'Las vacaciones no son válidas',
+  'errors.invalidSickLeave': 'Las fechas de la baja no son válidas',
+  'errors.sickLeaveRequired': 'Selecciona una fecha de inicio y de fin',
+  'errors.sickLeaveOverlap': 'Este periodo se solapa con otra baja',
   'errors.invalidCalendarDate': 'La fecha no es válida',
   'errors.invalidCalendarKind': 'El tipo no es válido',
   'errors.invalidCalendarEntry': 'La entrada del calendario no es válida',
@@ -481,7 +522,12 @@ export const es: Messages = {
   'demo.scenario.employees.formDuty':
     'Elige el rol que determina el color y la agrupación en las planificaciones.',
   'demo.scenario.employees.formContract': 'Selecciona el tipo de contrato.',
-  'demo.scenario.employees.formHours': 'Define las horas semanales. Este campo es obligatorio.',
+  'demo.scenario.employees.formHoursPeriod':
+    'Elige si las horas de contrato son semanales, mensuales o anuales. Lo semanal es el valor predeterminado.',
+  'demo.scenario.employees.formHoursPeriodMonth':
+    'Selecciona Por mes para introducir las horas acordadas para todo un mes.',
+  'demo.scenario.employees.formHours':
+    'Escribe las horas de contrato para ese periodo. Las cantidades mensuales y anuales se convierten a horas semanales para el planificador y el resumen.',
   'demo.scenario.employees.formStartDate':
     'Elige la fecha de inicio que decide cuándo se puede planificar al empleado.',
   'demo.scenario.employees.formComment':
@@ -510,6 +556,16 @@ export const es: Messages = {
     'Las semanas seleccionadas aparecen resaltadas. Guarda cuando termines.',
   'demo.scenario.employees.holidaysSaved':
     'Las semanas de vacaciones se guardan para este empleado.',
+  'demo.scenario.employees.sick': 'Abre el diálogo de baja por enfermedad de un empleado.',
+  'demo.scenario.employees.sickDialog':
+    'Elige el rango de fechas en el que el empleado está de baja. Esos días no se podrán planificar.',
+  'demo.scenario.employees.sickRange':
+    'Añade las fechas de inicio y fin seleccionadas como periodo de baja.',
+  'demo.scenario.employees.sickSave': 'Guarda la baja de este empleado.',
+  'demo.scenario.employees.sickConfirm':
+    'Los días seleccionados ya tienen turnos. Confirma para eliminarlos y guardar la baja.',
+  'demo.scenario.employees.sickSaved':
+    'La baja queda guardada. Esos días se bloquean en el planificador y se marcan como baja en el resumen.',
   'demo.scenario.employees.edit': 'Usa la acción del lápiz para editar un empleado existente.',
   'demo.scenario.employees.editForm': 'El formulario se abre con los valores actuales.',
   'demo.scenario.employees.editName': 'Cambia cualquier campo, por ejemplo el nombre.',
@@ -565,12 +621,20 @@ export const es: Messages = {
   'demo.scenario.scheduler.dayOffMarked':
     'La fila queda deshabilitada y el contador de días libres se actualiza.',
   'demo.scenario.scheduler.dayOffRestored': 'Selecciona el nombre de nuevo para restaurar el día.',
+  'demo.scenario.scheduler.sickDay':
+    'Selecciona otro día para ver cómo un rango de baja afecta solo a esas fechas.',
+  'demo.scenario.scheduler.sick':
+    'Los días de baja aparecen deshabilitados, así que no se puede planificar ningún turno para ese empleado.',
   'demo.scenario.scheduler.holiday':
     'Los miembros de vacaciones aparecen deshabilitados y se excluyen de la tabla de horas semanales.',
   'demo.scenario.scheduler.hours':
     'La tabla de horas semanales compara las horas planificadas con las del contrato.',
   'demo.scenario.scheduler.hoursDiff':
     'La fila de diferencia resalta las horas planificadas por debajo y por encima de cada empleado.',
+  'demo.scenario.scheduler.monthlyHours':
+    'Cuando un empleado tiene horas de contrato mensuales o anuales, la tabla añade el total del mes actual, su contrato y la diferencia. El mes sigue al lunes que inicia la semana mostrada.',
+  'demo.scenario.scheduler.monthlyHoliday':
+    'Un asterisco marca a los empleados con vacaciones dentro del mes, de modo que un total mensual más bajo puede ser esperado.',
   'demo.scenario.scheduler.settingsOpen':
     'Abre la configuración del horario. Cada opción tiene un icono de información con los detalles.',
   'demo.scenario.scheduler.settingsWindow':
@@ -677,8 +741,12 @@ export const es: Messages = {
   'demo.scenario.summary.settingsSaved': 'Guarda para aplicar las nuevas columnas a la tabla.',
   'demo.scenario.summary.hoursColumns':
     'Las columnas Total, Contrato y Diferencia comparan las horas planificadas de cada empleado con su contrato semanal.',
+  'demo.scenario.summary.hoursContract':
+    'Los contratos mensuales y anuales se convierten aquí a su equivalente semanal para que la comparación siga siendo semanal.',
   'demo.scenario.summary.hoursRow':
     'Una diferencia positiva indica más horas planificadas que el contrato; una negativa indica menos.',
+  'demo.scenario.summary.sick':
+    'Los días de baja se marcan como BAJA en el resumen y no pueden contener turnos.',
   'demo.scenario.summary.vacation':
     'Los empleados de vacaciones toda la semana aparecen como una única fila de vacaciones, y su diferencia semanal queda en blanco.',
   'demo.scenario.summary.details':

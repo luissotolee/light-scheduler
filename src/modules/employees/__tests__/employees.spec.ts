@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import type { TeamMember } from '@/types'
+import type { Shift, SickLeave, TeamMember } from '@/types'
 
 const ada: TeamMember = {
   id: 'member-1',
@@ -46,6 +46,8 @@ describe('employees store', () => {
     expect(store.editingId).toBeNull()
     expect(store.holidayVisible).toBe(false)
     expect(store.holidayTargetId).toBeNull()
+    expect(store.sicknessVisible).toBe(false)
+    expect(store.sicknessTargetId).toBeNull()
     expect(store.confirmVisible).toBe(false)
     expect(store.pendingAction).toBeNull()
     expect(store.detailsVisible).toBe(false)
@@ -57,6 +59,7 @@ describe('employees store', () => {
     expect(store.selectedMember).toBeNull()
     expect(store.editingMember).toBeNull()
     expect(store.holidayTarget).toBeNull()
+    expect(store.sicknessTarget).toBeNull()
     expect(store.detailsTarget).toBeNull()
     expect(store.manageTarget).toBeNull()
     expect(store.hideInactive).toBe(false)
@@ -257,5 +260,199 @@ describe('employees store', () => {
     store.select('missing')
 
     expect(store.selectedMember).toBeNull()
+  })
+
+  it('stores the contract hours period when adding and updating a member', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+
+    const added = store.addMember({
+      name: 'Mia Monthly',
+      duty: 'employee',
+      contract: 'part_time',
+      weeklyHours: 160,
+      contractHoursPeriod: 'month',
+    })
+
+    expect(added?.contractHoursPeriod).toBe('month')
+    expect(added?.weeklyHours).toBe(160)
+
+    expect(
+      store.updateMember(added?.id ?? '', {
+        weeklyHours: 120,
+        contractHoursPeriod: 'year',
+      }),
+    ).toBe(true)
+
+    const stored = workspace.findMember(added?.id ?? '')
+    expect(stored?.weeklyHours).toBe(120)
+    expect(stored?.contractHoursPeriod).toBe('year')
+  })
+
+  it('opens and closes the sick leave dialog for an existing member', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.openSickness(ada.id)
+
+    expect(store.sicknessVisible).toBe(true)
+    expect(store.sicknessTargetId).toBe(ada.id)
+    expect(store.sicknessTarget).toEqual(ada)
+
+    store.closeSickness()
+
+    expect(store.sicknessVisible).toBe(false)
+    expect(store.sicknessTargetId).toBeNull()
+    expect(store.sicknessTarget).toBeNull()
+  })
+
+  it('ignores an unknown member and closes sickness on UI reset and removal', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.openSickness('missing')
+    expect(store.sicknessVisible).toBe(false)
+
+    store.openSickness(ada.id)
+    store.removeMember(ada.id)
+    expect(store.sicknessVisible).toBe(false)
+
+    workspace.setMembers([ada])
+    store.openSickness(ada.id)
+    store.resetUi()
+    expect(store.sicknessVisible).toBe(false)
+  })
+
+  it('saves sick leave ranges and keeps unrelated fields', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.setSickLeaves(ada.id, [
+      { id: 'sick-b', startDate: '2026-12-01', endDate: '2026-12-02' },
+      { id: 'sick-a', startDate: '2026-11-04', endDate: '2026-11-06' },
+    ])
+
+    const stored = workspace.findMember(ada.id)
+    expect(stored?.sickLeaves).toEqual([
+      { id: 'sick-a', startDate: '2026-11-04', endDate: '2026-11-06' },
+      { id: 'sick-b', startDate: '2026-12-01', endDate: '2026-12-02' },
+    ])
+    expect(stored?.name).toBe(ada.name)
+    expect(stored?.holidays).toEqual(ada.holidays)
+  })
+
+  it('asks for confirmation and removes shifts that fall inside the sick range', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    const mondayShift: Shift = {
+      id: 'monday',
+      memberId: ada.id,
+      weekday: 'monday',
+      startMinute: 540,
+      endMinute: 600,
+    }
+    const thursdayShift: Shift = {
+      id: 'thursday',
+      memberId: ada.id,
+      weekday: 'thursday',
+      startMinute: 540,
+      endMinute: 600,
+    }
+    const otherShift: Shift = {
+      id: 'other',
+      memberId: bo.id,
+      weekday: 'thursday',
+      startMinute: 540,
+      endMinute: 600,
+    }
+    workspace.setMembers([ada, bo])
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setShiftsForWeek('2026-11-02', [mondayShift, thursdayShift, otherShift])
+
+    const leaves: SickLeave[] = [{ id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' }]
+    store.requestSetSickLeaves(ada.id, leaves)
+
+    expect(store.confirmVisible).toBe(true)
+    expect(store.pendingAction).toMatchObject({ kind: 'sickness', id: ada.id })
+    expect(workspace.schedules['2026-11-02']).toHaveLength(3)
+
+    store.confirmAction()
+
+    expect(workspace.findMember(ada.id)?.sickLeaves).toEqual(leaves)
+    expect(workspace.schedules['2026-11-02']).toEqual([mondayShift, otherShift])
+    expect(store.confirmVisible).toBe(false)
+  })
+
+  it('saves a sick range without confirmation when no shifts fall inside it', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+
+    store.requestSetSickLeaves(ada.id, [
+      { id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' },
+    ])
+
+    expect(store.confirmVisible).toBe(false)
+    expect(workspace.findMember(ada.id)?.sickLeaves).toHaveLength(1)
+  })
+
+  it('adds new members with an empty sick leave list and preserves it on edit', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+
+    const added = store.addMember({
+      name: 'Mia',
+      duty: 'employee',
+      contract: 'fulltime',
+      weeklyHours: 40,
+    })
+
+    expect(added?.sickLeaves).toEqual([])
+
+    store.setSickLeaves(added!.id, [
+      { id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' },
+    ])
+    expect(store.updateMember(added!.id, { name: 'Mia Updated' })).toBe(true)
+
+    const stored = workspace.findMember(added!.id)
+    expect(stored?.name).toBe('Mia Updated')
+    expect(stored?.sickLeaves).toEqual([
+      { id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' },
+    ])
+  })
+
+  it('preserves sick leave when reactivating a member', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    const leaves: SickLeave[] = [{ id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' }]
+    workspace.setMembers([
+      { ...bo, sickLeaves: leaves, active: false, endDate: '2026-11-01' },
+    ])
+
+    store.reactivateMember(bo.id)
+
+    expect(workspace.findMember(bo.id)?.sickLeaves).toEqual(leaves)
+  })
+
+  it('preserves the contract hours period when reactivating a member', () => {
+    const store = useEmployeesStore()
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([
+      {
+        ...bo,
+        weeklyHours: 1900,
+        contractHoursPeriod: 'year',
+        active: false,
+        endDate: '2026-11-01',
+      },
+    ])
+
+    store.reactivateMember(bo.id)
+
+    expect(workspace.findMember(bo.id)?.contractHoursPeriod).toBe('year')
+    expect(workspace.findMember(bo.id)?.weeklyHours).toBe(1900)
   })
 })

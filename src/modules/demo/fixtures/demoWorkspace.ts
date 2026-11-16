@@ -1,13 +1,44 @@
-import type { CalendarData, TeamMember, Shift, DayOff, WeekKey } from '@/types'
+import type { CalendarData, HolidayWeek, TeamMember, Shift, DayOff, WeekKey } from '@/types'
 import type { PersistedWorkspace } from '@/shared/utils/persistence'
 import { WORKSPACE_SCHEMA_VERSION } from '@/shared/utils/persistence'
-import { addWeeks, getIsoWeek, getWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
+import {
+  addDays,
+  addWeeks,
+  getIsoWeek,
+  getIsoWeekStart,
+  getWeekKey,
+  isoDateToDate,
+  weekdayIsoDate,
+} from '@/shared/utils/calendar'
+import { DEFAULT_CONTRACT_HOURS_PERIOD } from '@/shared/utils/contractHours'
 import { normalizeHolidays } from '@/shared/utils/employee'
 import { createId } from '@/shared/utils/id'
 import { MOCK_EMPLOYEES } from '@/shared/fixtures/employees'
 
 const HOLIDAY_MEMBER_ID = 'emp-mock-05'
 const REST_WARNING_MEMBER_ID = 'emp-mock-04'
+const MONTHLY_CONTRACT_MEMBER_ID = 'emp-mock-02'
+const MONTH_HOLIDAY_MEMBER_ID = 'emp-mock-03'
+
+function holidayWeekWithinMonth(referenceDate: Date): HolidayWeek {
+  const current = getIsoWeek(referenceDate)
+  const monthStart = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1)
+  const monthEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0)
+  const candidates = [
+    getIsoWeek(addWeeks(referenceDate, -1)),
+    getIsoWeek(addWeeks(referenceDate, 1)),
+  ]
+
+  for (const candidate of candidates) {
+    if (candidate.year === current.year && candidate.week === current.week) continue
+
+    const weekStart = getIsoWeekStart(candidate.year, candidate.week)
+    const weekEnd = addDays(weekStart, 6)
+    if (weekStart <= monthEnd && weekEnd >= monthStart) return candidate
+  }
+
+  return current
+}
 
 function buildShiftsForWeek(
   _weekKey: WeekKey,
@@ -69,14 +100,42 @@ export function buildDemoWorkspace(now: Date = new Date()): PersistedWorkspace {
   const prevWeekKey = getWeekKey(addWeeks(now, -1))
   const nextWeekKey = getWeekKey(addWeeks(now, 1))
 
-  const members = MOCK_EMPLOYEES.map((member) =>
-    member.id === HOLIDAY_MEMBER_ID
-      ? {
-          ...member,
-          holidays: normalizeHolidays([...member.holidays, getIsoWeek(now)]),
-        }
-      : member,
-  )
+  const monthHoliday = holidayWeekWithinMonth(isoDateToDate(currentWeekKey))
+  const sickDate = weekdayIsoDate(currentWeekKey, 'thursday')
+  const members = MOCK_EMPLOYEES.map((member): TeamMember => {
+    if (member.id === HOLIDAY_MEMBER_ID) {
+      return {
+        ...member,
+        contractHoursPeriod: member.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
+        holidays: normalizeHolidays([...member.holidays, getIsoWeek(now)]),
+        sickLeaves: member.sickLeaves ?? [],
+      }
+    }
+
+    if (member.id === MONTHLY_CONTRACT_MEMBER_ID) {
+      return {
+        ...member,
+        weeklyHours: 160,
+        contractHoursPeriod: 'month',
+        sickLeaves: member.sickLeaves ?? [],
+      }
+    }
+
+    if (member.id === MONTH_HOLIDAY_MEMBER_ID) {
+      return {
+        ...member,
+        contractHoursPeriod: member.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
+        holidays: normalizeHolidays([...member.holidays, monthHoliday]),
+        sickLeaves: [{ id: 'sick-demo-01', startDate: sickDate, endDate: sickDate }],
+      }
+    }
+
+    return {
+      ...member,
+      contractHoursPeriod: member.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
+      sickLeaves: member.sickLeaves ?? [],
+    }
+  })
   const activeMembers = members.filter((m) => m.active)
   const holidayMemberIds = new Set([HOLIDAY_MEMBER_ID])
 
@@ -93,6 +152,10 @@ export function buildDemoWorkspace(now: Date = new Date()): PersistedWorkspace {
     startMinute: 21 * 60,
     endMinute: 25 * 60,
   })
+
+  schedules[currentWeekKey] = schedules[currentWeekKey].filter(
+    (shift) => !(shift.memberId === MONTH_HOLIDAY_MEMBER_ID && shift.weekday === 'thursday'),
+  )
 
   const dayOffs: Record<WeekKey, DayOff[]> = {
     [currentWeekKey]: buildDayOffsForWeek(currentWeekKey, activeMembers),

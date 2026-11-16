@@ -90,6 +90,16 @@ describe('DemoModeButton', () => {
       en['demo.picker.summary'],
     )
     expect(body().find('[data-test="demo-option-archive"]').exists()).toBe(false)
+    expect(
+      body()
+        .findAll('[data-test^="demo-option-"]')
+        .map((option) => option.attributes('data-test')),
+    ).toEqual([
+      'demo-option-scheduler',
+      'demo-option-summary',
+      'demo-option-calendar',
+      'demo-option-employees',
+    ])
     expect(startDemo).not.toHaveBeenCalled()
   })
 

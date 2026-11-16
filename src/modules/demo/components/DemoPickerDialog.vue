@@ -67,18 +67,18 @@ interface DemoPickerOption {
 
 const options: DemoPickerOption[] = [
   {
-    id: 'employees-demo',
-    key: 'employees',
-    icon: 'pi pi-users',
-    titleKey: 'demo.picker.employees',
-    descriptionKey: 'demo.picker.employeesDescription',
-  },
-  {
     id: 'scheduler-demo',
     key: 'scheduler',
     icon: 'pi pi-calendar',
     titleKey: 'demo.picker.scheduler',
     descriptionKey: 'demo.picker.schedulerDescription',
+  },
+  {
+    id: 'summary-demo',
+    key: 'summary',
+    icon: 'pi pi-table',
+    titleKey: 'demo.picker.summary',
+    descriptionKey: 'demo.picker.summaryDescription',
   },
   {
     id: 'calendar-demo',
@@ -88,11 +88,11 @@ const options: DemoPickerOption[] = [
     descriptionKey: 'demo.picker.calendarDescription',
   },
   {
-    id: 'summary-demo',
-    key: 'summary',
-    icon: 'pi pi-table',
-    titleKey: 'demo.picker.summary',
-    descriptionKey: 'demo.picker.summaryDescription',
+    id: 'employees-demo',
+    key: 'employees',
+    icon: 'pi pi-users',
+    titleKey: 'demo.picker.employees',
+    descriptionKey: 'demo.picker.employeesDescription',
   },
 ]
 

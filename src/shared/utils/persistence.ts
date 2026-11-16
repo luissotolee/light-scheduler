@@ -15,8 +15,13 @@ import {
   isDuty,
   isValidEmpId,
   normalizeHolidays,
-  parseWeeklyHours,
 } from '@/shared/utils/employee'
+import {
+  DEFAULT_CONTRACT_HOURS_PERIOD,
+  parseContractHoursAmount,
+  parseContractHoursPeriod,
+} from '@/shared/utils/contractHours'
+import { parseSickLeaves } from '@/shared/utils/sickness'
 
 export const WORKSPACE_STORAGE_KEY = 'light-scheduler.workspace'
 export const WORKSPACE_SCHEMA_VERSION = 2
@@ -118,14 +123,22 @@ function parseHolidayWeeks(value: unknown): HolidayWeek[] | null {
 }
 
 function isMembersShape(value: unknown): boolean {
+  if (!isRecord(value)) return false
+
+  const contractHoursPeriod =
+    value.contractHoursPeriod === undefined
+      ? DEFAULT_CONTRACT_HOURS_PERIOD
+      : parseContractHoursPeriod(value.contractHoursPeriod)
+  if (contractHoursPeriod === null) return false
+
   return (
-    isRecord(value) &&
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
     isDuty(value.duty) &&
     isContract(value.contract) &&
-    parseWeeklyHours(value.weeklyHours) !== null &&
+    parseContractHoursAmount(value.weeklyHours, contractHoursPeriod) !== null &&
     parseHolidayWeeks(value.holidays) !== null &&
+    parseSickLeaves(value.sickLeaves) !== null &&
     typeof value.active === 'boolean' &&
     parseIsoDate(value.startDate) !== null &&
     isOptionalString(value.email) &&
@@ -133,6 +146,16 @@ function isMembersShape(value: unknown): boolean {
     isOptionalString(value.comment) &&
     isOptionalIsoDate(value.endDate)
   )
+}
+
+function withDefaultContractHoursPeriod(member: TeamMember): TeamMember {
+  if (member.contractHoursPeriod !== undefined) return member
+  return { ...member, contractHoursPeriod: DEFAULT_CONTRACT_HOURS_PERIOD }
+}
+
+function withDefaultSickLeaves(member: TeamMember): TeamMember {
+  if (member.sickLeaves !== undefined) return member
+  return { ...member, sickLeaves: [] }
 }
 
 export function isTeamMember(value: unknown): value is TeamMember {
@@ -193,7 +216,7 @@ export function parsePersistedWorkspace(value: unknown): PersistedWorkspace | nu
 
     return {
       version: WORKSPACE_SCHEMA_VERSION,
-      members,
+      members: members.map(withDefaultContractHoursPeriod).map(withDefaultSickLeaves),
       schedules,
       dayOffs,
       currentWeekKey,
@@ -211,7 +234,9 @@ export function parsePersistedWorkspace(value: unknown): PersistedWorkspace | nu
 
     return {
       version: WORKSPACE_SCHEMA_VERSION,
-      members: migrateV1Members(members),
+      members: migrateV1Members(members)
+        .map(withDefaultContractHoursPeriod)
+        .map(withDefaultSickLeaves),
       schedules,
       dayOffs,
       currentWeekKey,

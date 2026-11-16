@@ -600,6 +600,31 @@ describe('SchedulerView', () => {
     expect(wrapper.find('[data-test="weekly-hours-row-member-2"]').exists()).toBe(true)
   })
 
+  it('renders sick members as disabled on sick dates', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setCurrentWeekKey('2026-11-02')
+    workspace.setMembers([
+      {
+        ...ada,
+        sickLeaves: [{ id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' }],
+      },
+      bo,
+    ])
+    const wrapper = mountView()
+
+    await wrapper.find('[data-test="weekday-tab-thursday"]').trigger('click')
+    await nextTick()
+
+    const row = wrapper.find('[data-test="shift-row-member-1"]')
+    expect(row.classes()).toContain('shift-row--sick')
+    expect(row.find('[data-test="shift-row-name-toggle"]').attributes('disabled')).toBeDefined()
+    expect(row.find('[data-test="shift-track"]').attributes('aria-disabled')).toBe('true')
+    expect(row.find('.medical-cross-icon').exists()).toBe(true)
+    expect(wrapper.find('[data-test="shift-row-member-2"]').classes()).not.toContain(
+      'shift-row--sick',
+    )
+  })
+
   it('renders Spanish weekday labels and dates live', async () => {
     const workspace = useWorkspaceStore()
     workspace.setCurrentWeekKey('2026-11-02')

@@ -166,6 +166,34 @@ describe('EmployeeTable', () => {
     expect(wrapper.find('[data-test="remove-member-1"] .pi-trash').exists()).toBe(true)
   })
 
+  it('places the sick action third in the action column with a heart icon', () => {
+    const wrapper = mountTable()
+    const actionIds = Array.from(
+      wrapper.find('[data-test="edit-member-1"]').element.parentElement!.querySelectorAll('button'),
+    ).map((button) => button.getAttribute('data-test'))
+
+    expect(actionIds).toEqual([
+      'edit-member-1',
+      'holidays-member-1',
+      'sick-member-1',
+      'deactivate-member-1',
+      'remove-member-1',
+    ])
+    expect(wrapper.find('[data-test="sick-member-1"] .medical-cross-icon').exists()).toBe(true)
+    expect(wrapper.find('[data-test="sick-member-1"]').attributes('aria-label')).toBe(
+      'Sick leave for Ada',
+    )
+  })
+
+  it('emits sick with the member id and hides the action for inactive members', async () => {
+    const wrapper = mountTable()
+
+    await wrapper.find('[data-test="sick-member-1"]').trigger('click')
+
+    expect(wrapper.emitted('sick')).toEqual([['member-1']])
+    expect(wrapper.find('[data-test="sick-member-2"]').exists()).toBe(false)
+  })
+
   it('shows edit and holiday actions for active members', () => {
     const wrapper = mountTable()
 

@@ -12,6 +12,8 @@ const knownTargets = [
   'week-1',
   'weekday-tab-tuesday',
   'weekday-tab-sunday',
+  'weekday-tab-thursday',
+  'shift-row-emp-mock-03',
   'shift-row-emp-mock-04',
   'weekday-calendar-marker-tuesday',
   'scheduler-day-entries',
@@ -25,6 +27,8 @@ const knownTargets = [
   'day-off-count',
   'weekly-hours',
   'weekly-hours-metric-diff',
+  'weekly-hours-metric-month-current',
+  'weekly-hours-row-emp-mock-03-month-holiday',
   'scheduler-settings',
   'scheduler-settings-form',
   'settings-start',
@@ -141,10 +145,10 @@ describe('demoScenarios registry', () => {
     const list = listDemoScenarios()
     expect(list).toHaveLength(4)
     expect(list.map((scenario) => scenario.id)).toEqual([
-      'employees-demo',
       'scheduler-demo',
-      'calendar-demo',
       'summary-demo',
+      'calendar-demo',
+      'employees-demo',
     ])
   })
 })

@@ -37,6 +37,7 @@ const COLORS = {
   headerFill: [0.843, 0.89, 0.945] as const,
   employeeFill: [0.929, 0.953, 0.976] as const,
   offFill: [0.886, 0.914, 0.941] as const,
+  sickFill: [0.996, 0.886, 0.886] as const,
   vacationFill: [0.996, 0.953, 0.78] as const,
 }
 
@@ -208,7 +209,7 @@ function drawRow(
   layout: PdfLayout,
   row: SummaryRow,
   days: readonly SummaryDayHeader[],
-  labels: { off: string; vacations: string; dash: string },
+  labels: { off: string; sick: string; vacations: string; dash: string },
   showWeeklyHours: boolean,
 ): void {
   const height = rowHeight(row, days)
@@ -274,6 +275,9 @@ function drawRow(
     if (cell.kind === 'off') {
       layout.ops.push(pdfColor(COLORS.offFill, 'rg'))
       layout.ops.push(`${pdfNumber(x)} ${pdfNumber(bottom)} ${pdfNumber(width)} ${pdfNumber(height)} re f`)
+    } else if (cell.kind === 'sick') {
+      layout.ops.push(pdfColor(COLORS.sickFill, 'rg'))
+      layout.ops.push(`${pdfNumber(x)} ${pdfNumber(bottom)} ${pdfNumber(width)} ${pdfNumber(height)} re f`)
     }
 
     layout.ops.push(`${pdfNumber(x)} ${pdfNumber(bottom)} ${pdfNumber(width)} ${pdfNumber(height)} re S`)
@@ -284,6 +288,8 @@ function drawRow(
 
     if (cell.kind === 'off') {
       layout.ops.push(...drawTextAt(centerX, centerY, labels.off, BODY_SIZE, false, 'center'))
+    } else if (cell.kind === 'sick') {
+      layout.ops.push(...drawTextAt(centerX, centerY, labels.sick, BODY_SIZE, true, 'center'))
     } else if (cell.kind === 'shifts') {
       const lines = cell.shifts.map((shift) => fitText(shift.label, maxWidth, BODY_SIZE))
       const blockHeight = lines.length * LINE_HEIGHT
@@ -314,6 +320,7 @@ export function buildSummaryPdf(input: SummaryPdfInput): Uint8Array<ArrayBuffer>
 
   const labels = {
     off: translate(messages[input.locale], 'summary.off'),
+    sick: translate(messages[input.locale], 'summary.sick'),
     vacations: translate(messages[input.locale], 'summary.vacations'),
     dash: translate(messages[input.locale], 'common.dash'),
   }

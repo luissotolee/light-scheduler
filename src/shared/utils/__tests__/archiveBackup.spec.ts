@@ -126,6 +126,7 @@ describe('buildBackup', () => {
         duty: 'manager',
         contract: 'fulltime',
         weeklyHours: 40,
+        contractHoursPeriod: 'week',
         holidays: [
           { year: 2026, week: 10 },
           { year: 2026, week: 11 },
@@ -133,6 +134,7 @@ describe('buildBackup', () => {
         email: 'ada@example.com',
         phone: '+1 555 010 0000',
         comment: 'No morning shifts',
+        sickLeaves: [],
         active: true,
         startDate: '2025-01-15',
       },
@@ -142,7 +144,9 @@ describe('buildBackup', () => {
         duty: 'employee',
         contract: 'part_time',
         weeklyHours: 20,
+        contractHoursPeriod: 'week',
         holidays: [],
+        sickLeaves: [],
         active: false,
         startDate: '2025-02-01',
         endDate: '2026-12-31',
@@ -327,6 +331,113 @@ describe('parseBackup', () => {
       { memberId: parsed.data.members[0].id, weekday: 'thursday' },
       { memberId: parsed.data.members[1].id, weekday: 'wednesday' },
     ])
+  })
+
+  it('restores a legacy employee without a contract hours period using the weekly default', () => {
+    const parsed = parseBackup(backupRecord({ employees: [employeeRecord()] }))
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.members[0]?.contractHoursPeriod).toBe('week')
+  })
+
+  it('restores a legacy employee without sick leaves using an empty default', () => {
+    const parsed = parseBackup(backupRecord({ employees: [employeeRecord()] }))
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.members[0]?.sickLeaves).toEqual([])
+  })
+
+  it('round-trips sick leaves and re-exports them without internal ids', () => {
+    const sick: TeamMember = {
+      ...ada,
+      sickLeaves: [
+        { id: 'sick-2', startDate: '2026-12-01', endDate: '2026-12-02' },
+        { id: 'sick-1', startDate: '2026-11-04', endDate: '2026-11-06' },
+      ],
+    }
+    const backup = buildBackup([sick], {}, {}, '2026-11-02')
+
+    expect(backup.employees[0]?.sickLeaves).toEqual([
+      { startDate: '2026-11-04', endDate: '2026-11-06' },
+      { startDate: '2026-12-01', endDate: '2026-12-02' },
+    ])
+
+    const parsed = parseBackup(JSON.parse(JSON.stringify(backup)))
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.members[0]?.sickLeaves).toEqual([
+      expect.objectContaining({ startDate: '2026-11-04', endDate: '2026-11-06' }),
+      expect.objectContaining({ startDate: '2026-12-01', endDate: '2026-12-02' }),
+    ])
+    expect(parsed.data.members[0]?.sickLeaves?.every((leave) => leave.id.length > 0)).toBe(true)
+  })
+
+  it('ignores unknown employee fields while parsing sick leaves', () => {
+    const parsed = parseBackup(
+      backupRecord({
+        employees: [
+          employeeRecord({
+            sickLeaves: [{ startDate: '2026-11-04', endDate: '2026-11-06' }],
+            futureEmployeeField: 'ignored',
+          }),
+        ],
+      }),
+    )
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.members[0]?.sickLeaves?.[0]).toMatchObject({
+      startDate: '2026-11-04',
+      endDate: '2026-11-06',
+    })
+  })
+
+  it('rejects invalid sick leave records', () => {
+    expect(
+      parseBackup(
+        backupRecord({ employees: [employeeRecord({ sickLeaves: 'nope' })] }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.invalidSickLeave' })
+    expect(
+      parseBackup(
+        backupRecord({
+          employees: [
+            employeeRecord({
+              sickLeaves: [{ startDate: '2026-11-06', endDate: '2026-11-04' }],
+            }),
+          ],
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.invalidSickLeave' })
+    expect(
+      parseBackup(
+        backupRecord({
+          employees: [
+            employeeRecord({
+              sickLeaves: [{ startDate: 'nope', endDate: '2026-11-04' }],
+            }),
+          ],
+        }),
+      ),
+    ).toEqual({ ok: false, error: 'errors.invalidSickLeave' })
+  })
+
+  it('round-trips a monthly contract hours period and re-exports it', () => {
+    const monthly: TeamMember = { ...ada, weeklyHours: 160, contractHoursPeriod: 'month' }
+    const backup = buildBackup([monthly], {}, {}, '2026-11-02')
+
+    expect(backup.employees[0]?.contractHoursPeriod).toBe('month')
+
+    const parsed = parseBackup(JSON.parse(JSON.stringify(backup)))
+
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.data.members[0]).toMatchObject({
+      weeklyHours: 160,
+      contractHoursPeriod: 'month',
+    })
   })
 
   it('accepts a backup without schedules, days off, or a current week', () => {

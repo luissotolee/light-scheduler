@@ -1,16 +1,18 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { HolidayWeek, NewTeamMember, TeamMember } from '@/types'
+import type { HolidayWeek, NewTeamMember, SickLeave, TeamMember } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
-import { holidayToWeekKey, todayIsoDate } from '@/shared/utils/calendar'
+import { holidayToWeekKey, todayIsoDate, weekdayIsoDate } from '@/shared/utils/calendar'
 import {
   createEmpId,
   exceedsHolidayLimit,
   normalizeHolidays,
   validateEmployeeForm,
 } from '@/shared/utils/employee'
+import { DEFAULT_CONTRACT_HOURS_PERIOD } from '@/shared/utils/contractHours'
 import { createId } from '@/shared/utils/id'
+import { isDateInSickLeaves, normalizeSickLeaves } from '@/shared/utils/sickness'
 
 interface EmployeesStatus {
   loading: boolean
@@ -20,6 +22,7 @@ interface EmployeesStatus {
 type PendingAction =
   | { kind: 'remove' | 'deactivate'; id: string }
   | { kind: 'holidays'; id: string; holidays: HolidayWeek[] }
+  | { kind: 'sickness'; id: string; leaves: SickLeave[] }
 
 export const useEmployeesStore = defineStore('employees', () => {
   const search = ref('')
@@ -29,6 +32,8 @@ export const useEmployeesStore = defineStore('employees', () => {
   const editingId = ref<string | null>(null)
   const holidayVisible = ref(false)
   const holidayTargetId = ref<string | null>(null)
+  const sicknessVisible = ref(false)
+  const sicknessTargetId = ref<string | null>(null)
   const confirmVisible = ref(false)
   const pendingAction = ref<PendingAction | null>(null)
   const detailsVisible = ref(false)
@@ -65,6 +70,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     cancelAction()
     closeForm()
     closeHolidays()
+    closeSickness()
     closeDetails()
     closeManage()
     hideInactive.value = false
@@ -99,6 +105,11 @@ export const useEmployeesStore = defineStore('employees', () => {
     return workspace().members.find((member) => member.id === holidayTargetId.value) ?? null
   })
 
+  const sicknessTarget = computed(() => {
+    if (!sicknessTargetId.value) return null
+    return workspace().members.find((member) => member.id === sicknessTargetId.value) ?? null
+  })
+
   const detailsTarget = computed(() => {
     if (!detailsTargetId.value) return null
     return workspace().members.find((member) => member.id === detailsTargetId.value) ?? null
@@ -121,6 +132,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       duty: payload.duty,
       contract: payload.contract,
       weeklyHours: payload.weeklyHours,
+      contractHoursPeriod: payload.contractHoursPeriod,
       email: payload.email ?? '',
       phone: payload.phone ?? '',
       comment: payload.comment ?? '',
@@ -140,7 +152,9 @@ export const useEmployeesStore = defineStore('employees', () => {
       duty: value.duty,
       contract: value.contract,
       weeklyHours: value.weeklyHours,
+      contractHoursPeriod: value.contractHoursPeriod,
       holidays: value.holidays ?? [],
+      sickLeaves: [],
       active: true,
       startDate: value.startDate ?? todayIsoDate(),
       ...(value.phone ? { phone: value.phone } : {}),
@@ -162,6 +176,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       duty: patch.duty ?? member.duty,
       contract: patch.contract ?? member.contract,
       weeklyHours: patch.weeklyHours ?? member.weeklyHours,
+      contractHoursPeriod: patch.contractHoursPeriod ?? member.contractHoursPeriod,
       holidays: patch.holidays ?? member.holidays,
       email: patch.email ?? member.email ?? '',
       phone: patch.phone ?? member.phone ?? '',
@@ -181,7 +196,9 @@ export const useEmployeesStore = defineStore('employees', () => {
       duty: value.duty,
       contract: value.contract,
       weeklyHours: value.weeklyHours,
+      contractHoursPeriod: value.contractHoursPeriod,
       holidays: value.holidays ?? [],
+      sickLeaves: member.sickLeaves ?? [],
       active: member.active,
       startDate: value.startDate ?? member.startDate,
       ...(member.endDate ? { endDate: member.endDate } : {}),
@@ -239,6 +256,45 @@ export const useEmployeesStore = defineStore('employees', () => {
     setHolidays(id, normalized)
   }
 
+  function hasShiftsForSickLeaves(id: string, leaves: readonly SickLeave[]): boolean {
+    if (leaves.length === 0) return false
+
+    for (const [weekKey, shifts] of Object.entries(workspace().schedules)) {
+      for (const shift of shifts) {
+        if (shift.memberId !== id) continue
+        const date = weekdayIsoDate(weekKey, shift.weekday)
+        if (isDateInSickLeaves(leaves, date)) return true
+      }
+    }
+
+    return false
+  }
+
+  function setSickLeaves(id: string, leaves: SickLeave[]): void {
+    const member = workspace().findMember(id)
+    if (!member) return
+
+    const normalized = normalizeSickLeaves(leaves)
+    workspace().upsertMember({ ...member, sickLeaves: normalized })
+    workspace().removeMemberShiftsForSickLeaves(id, normalized)
+    setError(null)
+  }
+
+  function requestSetSickLeaves(id: string, leaves: SickLeave[]): void {
+    const member = workspace().findMember(id)
+    if (!member) return
+
+    const normalized = normalizeSickLeaves(leaves)
+    if (hasShiftsForSickLeaves(id, normalized)) {
+      pendingAction.value = { kind: 'sickness', id, leaves: normalized }
+      confirmVisible.value = true
+      setError(null)
+      return
+    }
+
+    setSickLeaves(id, normalized)
+  }
+
   function deactivateMember(id: string): void {
     const member = workspace().findMember(id)
     if (!member || !member.active) return
@@ -258,7 +314,9 @@ export const useEmployeesStore = defineStore('employees', () => {
       duty: member.duty,
       contract: member.contract,
       weeklyHours: member.weeklyHours,
+      contractHoursPeriod: member.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
       holidays: member.holidays,
+      sickLeaves: member.sickLeaves ?? [],
       active: true,
       startDate: member.startDate,
       ...(member.email ? { email: member.email } : {}),
@@ -285,6 +343,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     if (action?.kind === 'remove') removeMember(action.id)
     if (action?.kind === 'deactivate') deactivateMember(action.id)
     if (action?.kind === 'holidays') setHolidays(action.id, action.holidays)
+    if (action?.kind === 'sickness') setSickLeaves(action.id, action.leaves)
     cancelAction()
   }
 
@@ -319,6 +378,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     if (selectedId.value === id) selectedId.value = null
     if (editingId.value === id) closeForm()
     if (holidayTargetId.value === id) closeHolidays()
+    if (sicknessTargetId.value === id) closeSickness()
     if (detailsTargetId.value === id) closeDetails()
     if (manageTargetId.value === id) closeManage()
     if (pendingAction.value?.id === id) cancelAction()
@@ -373,6 +433,17 @@ export const useEmployeesStore = defineStore('employees', () => {
     holidayTargetId.value = null
   }
 
+  function openSickness(id: string): void {
+    if (!workspace().findMember(id)) return
+    sicknessTargetId.value = id
+    sicknessVisible.value = true
+  }
+
+  function closeSickness(): void {
+    sicknessVisible.value = false
+    sicknessTargetId.value = null
+  }
+
   function loadMembers(members: TeamMember[]): void {
     workspace().setMembers(members)
     resetUi()
@@ -387,6 +458,8 @@ export const useEmployeesStore = defineStore('employees', () => {
     editingId,
     holidayVisible,
     holidayTargetId,
+    sicknessVisible,
+    sicknessTargetId,
     confirmVisible,
     pendingAction,
     detailsVisible,
@@ -400,6 +473,7 @@ export const useEmployeesStore = defineStore('employees', () => {
     selectedMember,
     editingMember,
     holidayTarget,
+    sicknessTarget,
     detailsTarget,
     manageTarget,
     pendingMember,
@@ -409,6 +483,8 @@ export const useEmployeesStore = defineStore('employees', () => {
     updateMember,
     setHolidays,
     requestSetHolidays,
+    setSickLeaves,
+    requestSetSickLeaves,
     deactivateMember,
     reactivateMember,
     requestRemove,
@@ -428,6 +504,8 @@ export const useEmployeesStore = defineStore('employees', () => {
     submitForm,
     openHolidays,
     closeHolidays,
+    openSickness,
+    closeSickness,
     openExport,
     closeExport,
     loadMembers,

@@ -100,6 +100,27 @@ describe('SummaryTable', () => {
     expect(wrapper.get('[data-test="summary-cell-member-1-tuesday"]').text()).toBe('OFF')
   })
 
+  it('renders SICK in sick weekday cells', () => {
+    const wrapper = mountTable([
+      row({
+        cells: {
+          monday: { kind: 'sick' },
+          tuesday: { kind: 'off' },
+          wednesday: { kind: 'off' },
+          thursday: { kind: 'off' },
+          friday: { kind: 'off' },
+          saturday: { kind: 'off' },
+          sunday: { kind: 'off' },
+        },
+      }),
+    ])
+
+    expect(wrapper.get('[data-test="summary-cell-member-1-monday"]').text()).toBe('SICK')
+    expect(wrapper.get('[data-test="summary-cell-member-1-monday"]').classes()).toContain(
+      'summary-table__cell--sick',
+    )
+  })
+
   it('renders a vacation row spanning every weekday', () => {
     const wrapper = mountTable([
       row({

@@ -5,10 +5,10 @@ import { schedulerDemoScenario } from './schedulerDemo'
 import { summaryDemoScenario } from './summaryDemo'
 
 export const demoScenarios: Record<string, DemoScenario> = {
-  [employeesDemoScenario.id]: employeesDemoScenario,
   [schedulerDemoScenario.id]: schedulerDemoScenario,
-  [calendarDemoScenario.id]: calendarDemoScenario,
   [summaryDemoScenario.id]: summaryDemoScenario,
+  [calendarDemoScenario.id]: calendarDemoScenario,
+  [employeesDemoScenario.id]: employeesDemoScenario,
 }
 
 export function getDemoScenario(id: string): DemoScenario | undefined {

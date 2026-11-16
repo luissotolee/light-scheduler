@@ -19,6 +19,7 @@ const member: TeamMember = {
   duty: 'employee',
   contract: 'fulltime',
   weeklyHours: 40,
+  contractHoursPeriod: 'week',
   holidays: [{ year: 2026, week: 10 }],
   email: 'ada@example.com',
   comment: 'No morning shifts',
@@ -123,11 +124,83 @@ describe('parsePersistedWorkspace', () => {
     expect(parsePersistedWorkspace(serializeWorkspace(payload))).toEqual({
       version: WORKSPACE_SCHEMA_VERSION,
       ...payload,
+      members: [{ ...member, sickLeaves: [] }],
     })
   })
 
   it('stamps the current schema version when serializing', () => {
     expect(serializeWorkspace(payload).version).toBe(WORKSPACE_SCHEMA_VERSION)
+  })
+
+  it('defaults a legacy member without a contract hours period to weekly', () => {
+    const legacyMember: TeamMember = { ...member }
+    delete legacyMember.contractHoursPeriod
+
+    const parsed = parsePersistedWorkspace(
+      serializeWorkspace({ ...payload, members: [legacyMember] }),
+    )
+
+    expect(parsed?.members[0]?.contractHoursPeriod).toBe('week')
+  })
+
+  it('defaults a legacy member without sick leaves to an empty list', () => {
+    const legacyMember: TeamMember = { ...member }
+    delete legacyMember.sickLeaves
+
+    const parsed = parsePersistedWorkspace(
+      serializeWorkspace({ ...payload, members: [legacyMember] }),
+    )
+
+    expect(parsed?.members[0]?.sickLeaves).toEqual([])
+  })
+
+  it('preserves valid sick leaves and ignores unknown member fields', () => {
+    const parsed = parsePersistedWorkspace(
+      serializeWorkspace({
+        ...payload,
+        members: [
+          {
+            ...member,
+            sickLeaves: [{ id: 'sick-1', startDate: '2026-11-04', endDate: '2026-11-06' }],
+            futureField: 'ignored',
+          } as TeamMember,
+        ],
+      }),
+    )
+
+    expect(parsed?.members[0]?.sickLeaves).toEqual([
+      { id: 'sick-1', startDate: '2026-11-04', endDate: '2026-11-06' },
+    ])
+  })
+
+  it('rejects invalid sick leaves', () => {
+    const valid = serializeWorkspace(payload)
+
+    expect(
+      parsePersistedWorkspace({
+        ...valid,
+        members: [{ ...member, sickLeaves: 'none' }],
+      }),
+    ).toBeNull()
+    expect(
+      parsePersistedWorkspace({
+        ...valid,
+        members: [
+          {
+            ...member,
+            sickLeaves: [{ id: 'sick-1', startDate: '2026-11-06', endDate: '2026-11-04' }],
+          },
+        ],
+      }),
+    ).toBeNull()
+    expect(
+      parsePersistedWorkspace({
+        ...valid,
+        members: [
+          { ...member, sickLeaves: [{ id: 'sick-1', startDate: 'nope', endDate: '2026-11-04' }] },
+        ],
+      }),
+    ).toBeNull()
   })
 
   it('rejects values that are not objects', () => {

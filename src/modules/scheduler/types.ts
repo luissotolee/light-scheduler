@@ -35,6 +35,7 @@ export interface DayRow {
   dailyHours: number
   isOff: boolean
   isHoliday: boolean
+  isSick: boolean
   daysOffCount: number
 }
 

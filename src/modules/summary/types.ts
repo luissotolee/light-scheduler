@@ -15,12 +15,16 @@ export interface SummaryOffCell {
   kind: 'off'
 }
 
+export interface SummarySickCell {
+  kind: 'sick'
+}
+
 export interface SummaryShiftsCell {
   kind: 'shifts'
   shifts: SummaryShift[]
 }
 
-export type SummaryCell = SummaryVacationCell | SummaryOffCell | SummaryShiftsCell
+export type SummaryCell = SummaryVacationCell | SummaryOffCell | SummarySickCell | SummaryShiftsCell
 
 export interface SummaryRow {
   memberId: string

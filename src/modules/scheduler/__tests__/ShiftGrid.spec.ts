@@ -41,8 +41,8 @@ const shift: Shift = {
 }
 
 const rows: DayRow[] = [
-  { member: ada, bars: [shift], dailyHours: 2, isOff: false, isHoliday: false, daysOffCount: 0 },
-  { member: bo, bars: [], dailyHours: 0, isOff: false, isHoliday: false, daysOffCount: 0 },
+  { member: ada, bars: [shift], dailyHours: 2, isOff: false, isHoliday: false, isSick: false, daysOffCount: 0 },
+  { member: bo, bars: [], dailyHours: 0, isOff: false, isHoliday: false, isSick: false, daysOffCount: 0 },
 ]
 
 describe('ShiftGrid', () => {
@@ -289,6 +289,7 @@ describe('ShiftGrid', () => {
         dailyHours: 1,
         isOff: false,
         isHoliday: false,
+        isSick: false,
         daysOffCount: 0,
       },
       {
@@ -297,6 +298,7 @@ describe('ShiftGrid', () => {
         dailyHours: 1,
         isOff: false,
         isHoliday: false,
+        isSick: false,
         daysOffCount: 0,
       },
     ]
@@ -307,6 +309,7 @@ describe('ShiftGrid', () => {
         dailyHours: 1.5,
         isOff: false,
         isHoliday: false,
+        isSick: false,
         daysOffCount: 0,
       },
       {
@@ -315,6 +318,7 @@ describe('ShiftGrid', () => {
         dailyHours: 1.5,
         isOff: false,
         isHoliday: false,
+        isSick: false,
         daysOffCount: 0,
       },
     ]

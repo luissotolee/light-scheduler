@@ -6,6 +6,7 @@ import type { Directive } from 'vue'
 import PrimeVue from 'primevue/config'
 import Tooltip from 'primevue/tooltip'
 import EmployeesView from '@/modules/employees/views/EmployeesView.vue'
+import EmployeeSicknessDialog from '@/modules/employees/components/EmployeeSicknessDialog.vue'
 import { useEmployeesStore } from '@/modules/employees/stores/employees'
 import { useLocaleStore } from '@/shared/stores/locale'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
@@ -172,6 +173,30 @@ describe('EmployeesView', () => {
     await input.setValue(false)
     await nextTick()
     expect(wrapper.findAll('.employee-table__name')).toHaveLength(2)
+  })
+
+  it('opens the sick leave dialog and saves the selected ranges', async () => {
+    const workspace = useWorkspaceStore()
+    workspace.setMembers([ada])
+    const wrapper = mountView()
+
+    await wrapper.find('[data-test="sick-member-1"]').trigger('click')
+    await nextTick()
+
+    const dialog = wrapper.findComponent(EmployeeSicknessDialog)
+    expect(dialog.props('visible')).toBe(true)
+    expect(dialog.props('memberName')).toBe('Ada')
+
+    dialog.vm.$emit('save', [
+      { id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' },
+    ])
+    dialog.vm.$emit('update:visible', false)
+    await nextTick()
+
+    expect(workspace.findMember('member-1')?.sickLeaves).toEqual([
+      { id: 'sick', startDate: '2026-11-05', endDate: '2026-11-05' },
+    ])
+    expect(dialog.props('visible')).toBe(false)
   })
 
   it('shows the all-inactive empty state when every employee is deactivated', async () => {

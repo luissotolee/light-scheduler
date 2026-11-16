@@ -1,5 +1,6 @@
 import type {
   Contract,
+  ContractHoursPeriod,
   Duty,
   EmployeeCsvRecord,
   EmployeeFormErrors,
@@ -13,6 +14,11 @@ import type {
 } from '@/types'
 import type { MessageKey } from '@/shared/i18n/messages/en'
 import { getIsoWeeksInYear, holidayToWeekKey, parseIsoDate } from '@/shared/utils/calendar'
+import {
+  DEFAULT_CONTRACT_HOURS_PERIOD,
+  parseContractHoursAmount,
+  parseContractHoursPeriod,
+} from '@/shared/utils/contractHours'
 
 export const MAX_HOLIDAY_WEEKS_PER_YEAR = 6
 
@@ -120,15 +126,7 @@ export function parseBoolean(value: unknown): boolean | null {
 }
 
 export function parseWeeklyHours(value: unknown): number | null {
-  const parsed =
-    typeof value === 'number'
-      ? value
-      : typeof value === 'string' && value.trim() !== ''
-        ? Number(value.trim())
-        : Number.NaN
-
-  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 168) return null
-  return parsed
+  return parseContractHoursAmount(value, DEFAULT_CONTRACT_HOURS_PERIOD)
 }
 
 export function firstEmployeeFormError(errors: EmployeeFormErrors): MessageKey {
@@ -136,6 +134,7 @@ export function firstEmployeeFormError(errors: EmployeeFormErrors): MessageKey {
     'name',
     'duty',
     'contract',
+    'contractHoursPeriod',
     'weeklyHours',
     'email',
     'phone',
@@ -163,8 +162,22 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
   const contract = parseContract(input.contract)
   if (contract === null) errors.contract = 'errors.invalidContract'
 
-  const weeklyHours = parseWeeklyHours(input.weeklyHours)
-  if (weeklyHours === null) errors.weeklyHours = 'errors.weeklyHours'
+  const contractHoursPeriod =
+    input.contractHoursPeriod === undefined
+      ? DEFAULT_CONTRACT_HOURS_PERIOD
+      : parseContractHoursPeriod(input.contractHoursPeriod)
+  if (contractHoursPeriod === null) {
+    errors.contractHoursPeriod = 'errors.invalidContractHoursPeriod'
+  }
+
+  const weeklyHours = parseContractHoursAmount(
+    input.weeklyHours,
+    contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
+  )
+  if (weeklyHours === null) {
+    errors.weeklyHours =
+      contractHoursPeriod === 'week' ? 'errors.weeklyHours' : 'errors.contractHours'
+  }
 
   const email = input.email.trim()
   if (email && !isValidEmail(email)) errors.email = 'errors.invalidEmail'
@@ -186,6 +199,7 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
   if (
     duty === null ||
     contract === null ||
+    contractHoursPeriod === null ||
     weeklyHours === null ||
     Object.keys(errors).length > 0
   ) {
@@ -199,6 +213,7 @@ export function validateEmployeeForm(input: EmployeeFormInput): EmployeeFormVali
       duty,
       contract,
       weeklyHours,
+      contractHoursPeriod,
       holidays,
       email,
       phone,
@@ -270,6 +285,7 @@ export const EMPLOYEE_HEADERS: readonly string[] = [
   'duty',
   'contract',
   'weeklyHours',
+  'contractHoursPeriod',
   'holidays',
   'email',
   'phone',
@@ -280,6 +296,12 @@ export const EMPLOYEE_HEADERS: readonly string[] = [
 ]
 
 const REQUIRED_HEADERS = ['name', 'duty', 'contract', 'weeklyHours', 'holidays']
+
+function parseCsvContractHoursPeriod(value: string): ContractHoursPeriod | null {
+  const trimmed = value.trim()
+  if (!trimmed) return DEFAULT_CONTRACT_HOURS_PERIOD
+  return parseContractHoursPeriod(trimmed)
+}
 
 export function validateEmployees(
   headers: string[],
@@ -320,9 +342,22 @@ export function validateEmployees(
       rowErrors.push({ row: rowNumber, message: 'errors.invalidContract' })
     }
 
-    const weeklyHours = parseWeeklyHours(valueAt(row, 'weeklyHours'))
+    const contractHoursPeriod = parseCsvContractHoursPeriod(
+      valueAt(row, 'contractHoursPeriod'),
+    )
+    if (contractHoursPeriod === null) {
+      rowErrors.push({ row: rowNumber, message: 'errors.invalidContractHoursPeriod' })
+    }
+
+    const weeklyHours = parseContractHoursAmount(
+      valueAt(row, 'weeklyHours'),
+      contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
+    )
     if (weeklyHours === null) {
-      rowErrors.push({ row: rowNumber, message: 'errors.weeklyHours' })
+      rowErrors.push({
+        row: rowNumber,
+        message: contractHoursPeriod === 'week' ? 'errors.weeklyHours' : 'errors.contractHours',
+      })
     }
 
     const parsedHolidays = parseHolidays(valueAt(row, 'holidays'))
@@ -339,6 +374,7 @@ export function validateEmployees(
       rowErrors.length > 0 ||
       duty === null ||
       contract === null ||
+      contractHoursPeriod === null ||
       weeklyHours === null ||
       parsedHolidays === null
     ) {
@@ -412,6 +448,7 @@ export function validateEmployees(
       duty,
       contract,
       weeklyHours,
+      contractHoursPeriod,
       holidays,
       ...(email ? { email } : {}),
       ...(phone ? { phone } : {}),
@@ -433,6 +470,7 @@ export function employeeToRow(member: TeamMember): (string | number)[] {
     member.duty,
     member.contract,
     member.weeklyHours,
+    member.contractHoursPeriod ?? DEFAULT_CONTRACT_HOURS_PERIOD,
     serializeHolidays(member.holidays),
     member.email ?? '',
     member.phone ?? '',

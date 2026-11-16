@@ -13,6 +13,7 @@ import type {
 import { useSchedulerSettingsStore } from '@/modules/scheduler/stores/schedulerSettings'
 import { useWorkspaceStore } from '@/shared/stores/workspace'
 import { addWeeks, getWeekKey, weekdayIsoDate } from '@/shared/utils/calendar'
+import { contractMonthForWeek } from '@/shared/utils/contractHours'
 import { createId } from '@/shared/utils/id'
 import {
   formatExtendedMinutes,
@@ -27,6 +28,7 @@ import {
   sumShiftMinutes,
 } from '@/modules/scheduler/utils/hours'
 import { compareMembersByDuty, isMemberInWeek, isMemberOnHoliday } from '@/shared/utils/employee'
+import { isMemberSickOnDate } from '@/shared/utils/sickness'
 import { countDaysOffByMember } from '@/modules/scheduler/utils/off'
 import { closestShiftIndex, MAX_SHIFTS_PER_ROW } from '@/modules/scheduler/utils/grid'
 import { findRestConflicts } from '@/modules/scheduler/utils/rest'
@@ -112,13 +114,21 @@ export const useSchedulerStore = defineStore('scheduler', () => {
           dailyHours: minutesToHours(sumShiftMinutes(bars)),
           isOff,
           isHoliday: isMemberOnHoliday(member, currentWeekKey.value),
+          isSick: isMemberSickOnDate(member, selectedWeekdayDate.value),
           daysOffCount: dayOffCounts.value.get(member.id) ?? 0,
         }
       })
       .sort((a, b) => compareMembersByDuty(a.member, b.member)),
   )
+  const contractMonthWeekKey = computed(() => getWeekKey(new Date()))
+  const contractMonth = computed(() => contractMonthForWeek(contractMonthWeekKey.value))
   const weeklyHoursGroups = computed(() =>
-    buildWeeklyHoursGroups(weekMembers.value, currentWeekShifts.value),
+    buildWeeklyHoursGroups(
+      weekMembers.value,
+      currentWeekShifts.value,
+      workspace().schedules,
+      contractMonthWeekKey.value,
+    ),
   )
 
   function memberIsOnHoliday(memberId: string): boolean {
@@ -126,8 +136,18 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     return member ? isMemberOnHoliday(member, currentWeekKey.value) : false
   }
 
+  function memberIsSickOnDate(memberId: string, date: string): boolean {
+    const member = workspace().findMember(memberId)
+    return member ? isMemberSickOnDate(member, date) : false
+  }
+
+  function memberIsSickOnSelectedDay(memberId: string): boolean {
+    return memberIsSickOnDate(memberId, selectedWeekdayDate.value)
+  }
+
   function memberIsDisabledOnSelectedDay(memberId: string): boolean {
     if (memberIsOnHoliday(memberId)) return true
+    if (memberIsSickOnSelectedDay(memberId)) return true
     return currentWeekDayOffs.value.some(
       (off) => off.memberId === memberId && off.weekday === selectedWeekday.value,
     )
@@ -255,6 +275,9 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       return null
     }
     if (memberIsOnHoliday(payload.memberId)) return null
+    if (memberIsSickOnDate(payload.memberId, weekdayIsoDate(currentWeekKey.value, payload.weekday))) {
+      return null
+    }
 
     const candidate: Shift = {
       id: createId(),
@@ -277,6 +300,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
       return null
     }
     if (memberIsOnHoliday(input.memberId)) return null
+    if (memberIsSickOnSelectedDay(input.memberId)) return null
 
     const candidate: Shift = {
       id: createId(),
@@ -292,6 +316,14 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const existing = currentWeekShifts.value.find((shift) => shift.id === input.id)
     if (!existing) return null
     if (memberIsOnHoliday(existing.memberId)) return null
+    if (
+      memberIsSickOnDate(
+        existing.memberId,
+        weekdayIsoDate(currentWeekKey.value, existing.weekday),
+      )
+    ) {
+      return null
+    }
 
     const range = normalizeGridRange(
       input.startMinute,
@@ -312,6 +344,14 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const existing = currentWeekShifts.value.find((shift) => shift.id === input.id)
     if (!existing) return null
     if (memberIsOnHoliday(existing.memberId)) return null
+    if (
+      memberIsSickOnDate(
+        existing.memberId,
+        weekdayIsoDate(currentWeekKey.value, existing.weekday),
+      )
+    ) {
+      return null
+    }
     if (input.memberId === existing.memberId) return updateShiftRange(input)
 
     const target = workspace().members.find((member) => member.id === input.memberId)
@@ -340,6 +380,14 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const existing = currentWeekShifts.value.find((shift) => shift.id === id)
     if (!existing) return
     if (memberIsOnHoliday(existing.memberId)) return
+    if (
+      memberIsSickOnDate(
+        existing.memberId,
+        weekdayIsoDate(currentWeekKey.value, existing.weekday),
+      )
+    ) {
+      return
+    }
 
     workspace().setShiftsForWeek(
       currentWeekKey.value,
@@ -358,6 +406,14 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const existing = currentWeekShifts.value.find((shift) => shift.id === id)
     if (!existing) return
     if (memberIsOnHoliday(existing.memberId)) return
+    if (
+      memberIsSickOnDate(
+        existing.memberId,
+        weekdayIsoDate(currentWeekKey.value, existing.weekday),
+      )
+    ) {
+      return
+    }
 
     const start = patch.start ?? formatMinutesToHhmm(existing.startMinute)
     const end = patch.end ?? formatMinutesToHhmm(existing.endMinute)
@@ -390,6 +446,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     const member = workspace().members.find((item) => item.id === memberId)
     if (!member || !member.active) return
     if (isMemberOnHoliday(member, currentWeekKey.value)) return
+    if (isMemberSickOnDate(member, selectedWeekdayDate.value)) return
 
     const current = currentWeekDayOffs.value
     const alreadyOff = current.some(
@@ -429,6 +486,7 @@ export const useSchedulerStore = defineStore('scheduler', () => {
     pendingRestWarning,
     selectedWeekday,
     currentWeekKey,
+    contractMonth,
     currentWeekShifts,
     currentWeekDayOffs,
     calendarData,

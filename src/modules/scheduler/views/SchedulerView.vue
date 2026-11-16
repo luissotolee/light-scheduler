@@ -123,7 +123,7 @@
       </div>
     </div>
 
-    <WeeklyHoursTable :groups="weeklyHoursGroups" />
+    <WeeklyHoursTable :groups="weeklyHoursGroups" :month-label="contractMonthLabel" />
 
     <HolidayWeeksDialog
       mode="week"
@@ -187,6 +187,7 @@ import { useI18n } from '@/shared/i18n'
 import {
   WEEKDAY_ORDER,
   formatFullDate,
+  formatMonthLabel,
   formatWeekRange,
   weekdayDayOfMonth,
   weekdayIsoDate,
@@ -200,6 +201,7 @@ const store = useSchedulerStore()
 const settingsStore = useSchedulerSettingsStore()
 const {
   calendarData,
+  contractMonth,
   currentWeekKey,
   dayRows,
   error,
@@ -229,6 +231,12 @@ const selectedDayEntries = computed(() =>
   entriesForDate(calendarData.value, selectedWeekdayDate.value),
 )
 const weekRangeLabel = computed(() => formatWeekRange(currentWeekKey.value, locale.value))
+const contractMonthLabel = computed(() =>
+  formatMonthLabel(
+    new Date(contractMonth.value.year, contractMonth.value.month, 1),
+    locale.value,
+  ),
+)
 const errorMessage = computed(() => (error.value ? t(error.value.key, error.value.params) : ''))
 const restWarningMessage = computed(() => {
   const warning = pendingRestWarning.value

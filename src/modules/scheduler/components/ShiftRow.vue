@@ -1,7 +1,7 @@
 <template>
   <div
     class="shift-row"
-    :class="{ 'shift-row--drop-target': dropTarget }"
+    :class="{ 'shift-row--drop-target': dropTarget, 'shift-row--sick': row.isSick }"
     :data-test="`shift-row-${row.member.id}`"
   >
     <div
@@ -9,8 +9,9 @@
       :class="[
         `shift-row__name--${dutyModifier(row.member.duty)}`,
         {
-          'shift-row__name--disabled': row.isOff || row.isHoliday,
-          'shift-row__name--holiday': row.isHoliday,
+          'shift-row__name--disabled': row.isOff || row.isHoliday || row.isSick,
+          'shift-row__name--holiday': row.isHoliday || row.isSick,
+          'shift-row__name--sick': row.isSick,
         },
       ]"
       :title="row.member.name"
@@ -22,12 +23,17 @@
         :title="row.member.name"
         :aria-pressed="row.isOff"
         :aria-label="toggleAriaLabel"
-        :disabled="row.isHoliday"
+        :disabled="row.isHoliday || row.isSick"
         data-test="shift-row-name-toggle"
         @click="emit('toggleOff', row.member.id)"
       >
         {{ displayName }}
       </button>
+      <MedicalCrossIcon
+        v-if="row.isSick"
+        class="shift-row__sick-icon"
+        :title="t('shiftRow.sick')"
+      />
       <span
         v-if="!row.isHoliday"
         v-tooltip.top="
@@ -134,6 +140,7 @@ import {
   windowFromSlots,
 } from '@/modules/scheduler/utils/grid'
 import ShiftBar from '@/modules/scheduler/components/ShiftBar.vue'
+import MedicalCrossIcon from '@/shared/components/MedicalCrossIcon.vue'
 import { useI18n } from '@/shared/i18n'
 import { dutyModifier, initialsOf } from '@/shared/utils/employee'
 import { formatHours } from '@/modules/scheduler/utils/hours'
@@ -248,13 +255,14 @@ const emit = defineEmits<{
   moveCancel: []
 }>()
 
-const disabled = computed(() => props.row.isOff || props.row.isHoliday)
+const disabled = computed(() => props.row.isOff || props.row.isHoliday || props.row.isSick)
 
-const toggleAriaLabel = computed(() =>
-  props.row.isOff
+const toggleAriaLabel = computed(() => {
+  if (props.row.isSick) return t('shiftRow.sickFor', { name: props.row.member.name })
+  return props.row.isOff
     ? t('shiftRow.markOn', { name: props.row.member.name })
-    : t('shiftRow.markOff', { name: props.row.member.name }),
-)
+    : t('shiftRow.markOff', { name: props.row.member.name })
+})
 
 const track = ref<HTMLElement | null>(null)
 const dragging = ref(false)
@@ -472,6 +480,12 @@ function handleKeydown(event: KeyboardEvent): void {
 
 .shift-row__name-toggle:disabled {
   cursor: not-allowed;
+}
+
+.shift-row__sick-icon {
+  flex-shrink: 0;
+  color: var(--color-danger);
+  font-size: 0.7rem;
 }
 
 .shift-row__day-off-chip {

@@ -22,6 +22,8 @@ export type Duty = 'manager' | 'employee' | 'assistant' | 'head_manager'
 
 export type Contract = 'fulltime' | 'part_time' | 'weekends'
 
+export type ContractHoursPeriod = 'week' | 'month' | 'year'
+
 export interface HolidayWeek {
   year: number
   week: number
@@ -53,6 +55,14 @@ export interface CalendarData {
   entries: CalendarEntry[]
 }
 
+export interface SickLeave {
+  id: string
+  /** Local calendar date, ISO `YYYY-MM-DD`, inclusive. */
+  startDate: string
+  /** Local calendar date, ISO `YYYY-MM-DD`, inclusive. */
+  endDate: string
+}
+
 export interface NewCalendarEntry {
   date: string
   name: string
@@ -64,8 +74,16 @@ export interface TeamMember {
   name: string
   duty: Duty
   contract: Contract
+  /**
+   * Contract hours amount. Its meaning depends on `contractHoursPeriod`:
+   * weekly hours, monthly hours, or yearly hours. Missing means weekly hours
+   * for backups and workspaces created before contract periods existed.
+   */
   weeklyHours: number
+  contractHoursPeriod?: ContractHoursPeriod
   holidays: HolidayWeek[]
+  /** Date ranges when the employee is on sick leave. Missing means none. */
+  sickLeaves?: SickLeave[]
   email?: string
   phone?: string
   comment?: string
@@ -80,6 +98,7 @@ export interface NewTeamMember {
   duty: Duty
   contract: Contract
   weeklyHours: number
+  contractHoursPeriod?: ContractHoursPeriod
   holidays?: HolidayWeek[]
   email?: string
   phone?: string
@@ -98,6 +117,7 @@ export interface EmployeeFormInput {
   duty: unknown
   contract: unknown
   weeklyHours: unknown
+  contractHoursPeriod?: unknown
   email: string
   phone: string
   comment: string
@@ -109,6 +129,7 @@ export interface EmployeeFormErrors {
   name?: MessageKey
   duty?: MessageKey
   contract?: MessageKey
+  contractHoursPeriod?: MessageKey
   weeklyHours?: MessageKey
   email?: MessageKey
   phone?: MessageKey

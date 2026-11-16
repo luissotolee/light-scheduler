@@ -38,6 +38,19 @@
           v-if="member.active"
           type="button"
           class="employee-manage__action"
+          :label="t('common.sickLeave')"
+          severity="warn"
+          :data-test="`sick-${member.id}`"
+          @click="emit('sick', member.id)"
+        >
+          <template #icon>
+            <MedicalCrossIcon />
+          </template>
+        </Button>
+        <Button
+          v-if="member.active"
+          type="button"
+          class="employee-manage__action"
           :label="t('common.deactivate')"
           icon="pi pi-user-minus"
           severity="warn"
@@ -83,6 +96,7 @@ import { computed } from 'vue'
 import Button from 'primevue/button'
 import AppDialog from '@/shared/components/AppDialog.vue'
 import EmployeeDetailsContent from '@/shared/components/EmployeeDetailsContent.vue'
+import MedicalCrossIcon from '@/shared/components/MedicalCrossIcon.vue'
 import type { TeamMember } from '@/types'
 import { useI18n } from '@/shared/i18n'
 
@@ -95,6 +109,7 @@ const emit = defineEmits<{
   'update:visible': [visible: boolean]
   edit: [id: string]
   holidays: [id: string]
+  sick: [id: string]
   deactivate: [id: string]
   reactivate: [id: string]
   remove: [id: string]

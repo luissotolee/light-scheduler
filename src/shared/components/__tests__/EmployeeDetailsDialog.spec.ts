@@ -59,7 +59,7 @@ describe('EmployeeDetailsDialog', () => {
     expect(body.find('[data-test="details-emp-id"]').text()).toBe('EMP-0001')
     expect(body.find('[data-test="details-duty"]').text()).toBe('Head manager')
     expect(body.find('[data-test="details-contract"]').text()).toBe('Part-time')
-    expect(body.find('[data-test="details-hours"]').text()).toBe('32')
+    expect(body.find('[data-test="details-hours"]').text()).toBe('32 h/week')
     expect(body.find('[data-test="details-email"]').text()).toBe('ada@example.com')
     expect(body.find('[data-test="details-phone"]').text()).toBe('+1 555 010 0000')
     expect(body.find('[data-test="details-comment"]').text()).toBe('No morning shifts')
@@ -81,6 +81,24 @@ describe('EmployeeDetailsDialog', () => {
     await mountDialog({ ...ada, holidays: [] })
 
     expect(dialogBody().find('[data-test="details-no-holidays"]').text()).toBe('No holidays')
+  })
+
+  it('shows an empty sick leave message when there are none', async () => {
+    await mountDialog()
+
+    expect(dialogBody().find('[data-test="details-no-sick"]').text()).toBe('No sick leave')
+  })
+
+  it('lists sick leave ranges', async () => {
+    await mountDialog({
+      ...ada,
+      sickLeaves: [{ id: 'sick-1', startDate: '2026-11-04', endDate: '2026-11-06' }],
+    })
+
+    const item = dialogBody().find('[data-test="details-sick-sick-1"]')
+    expect(item.text()).toContain('Nov 4, 2026')
+    expect(item.text()).toContain('Nov 6, 2026')
+    expect(dialogBody().find('[data-test="details-no-sick"]').exists()).toBe(false)
   })
 
   it('shows inactive status and the end date when present', async () => {
